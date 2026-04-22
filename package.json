@@ -1,0 +1,18 @@
+{
+  "name": "pellet-hl",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Pellet — agent infrastructure layer for Hyperliquid. Identity, execution, accountability.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pelletfi/pellet-hl"
+  },
+  "license": "MIT",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build:contracts": "cd packages/hl-contracts && forge build",
+    "test:contracts": "cd packages/hl-contracts && forge test -vv"
+  }
+}

@@ -1,0 +1,41 @@
+# Node
+node_modules/
+.npm/
+.yarn/
+
+# Build outputs
+dist/
+.next/
+out/
+cache/
+broadcast/
+
+# Env
+.env
+.env.*
+!.env.example
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Testing
+coverage/
+
+# Foundry (also covered per-package in packages/hl-contracts/.gitignore)
+packages/hl-contracts/lib/
+packages/hl-contracts/out/
+packages/hl-contracts/cache/
+packages/hl-contracts/broadcast/
