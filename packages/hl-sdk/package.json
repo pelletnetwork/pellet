@@ -1,0 +1,40 @@
+{
+  "name": "@pelletfi/hl",
+  "version": "0.1.0",
+  "description": "TypeScript SDK for Pellet's Hyperliquid agent infrastructure — mint identities, read reputations, submit validations.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "prepublishOnly": "npm run build"
+  },
+  "peerDependencies": {
+    "viem": "^2.0.0"
+  },
+  "keywords": [
+    "hyperliquid",
+    "agent",
+    "erc-8004",
+    "pellet",
+    "identity",
+    "reputation"
+  ],
+  "author": "Pellet",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pelletnetwork/pellet"
+  }
+}
