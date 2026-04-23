@@ -4,7 +4,11 @@
 
 **Goal:** Ship the minimum viable "agent identity layer for Hyperliquid" — three ERC-8004 registry contracts on HyperEVM, a TypeScript SDK, an MCP server, a public registry dashboard, and supporting indexer — in 4 weeks.
 
-**Architecture:** HyperEVM-deployed Solidity contracts (Foundry) expose identity/reputation/validation registries. A Next.js cron indexer writes events to Postgres (Drizzle). Public `app/hl/` route tree renders registry state. `@pelletfi/hl` SDK gives agents a typed client; `@pelletfi/hl-mcp` exposes the same through MCP tools. All HL code lives in isolated directories with no imports from existing Tempo-side Pellet code.
+**Repo:** Standalone `pelletnetwork/pellet` monorepo at `/Users/jake/pellet/` with `apps/web` + `packages/*` layout (next-forge-ish). Brand v2 is already wired into `apps/web`.
+
+**Note:** The Tempo-era Pellet codebase was extracted to `pelletnetwork/pellet-tempo-archive` 2026-04-22. This repo is standalone; there's no cross-project code coupling to worry about.
+
+**Architecture:** HyperEVM-deployed Solidity contracts (Foundry) expose identity/reputation/validation registries. A Next.js cron indexer writes events to Postgres (Drizzle). Public `apps/web/app/hl/` route tree renders registry state. `@pelletfi/hl` SDK gives agents a typed client; `@pelletfi/hl-mcp` exposes the same through MCP tools.
 
 **Tech Stack:** Solidity 0.8.x + Foundry, TypeScript + viem, Next.js 16 App Router, Drizzle ORM + Neon Postgres, npm workspaces, MCP SDK.
 
@@ -20,7 +24,7 @@ This plan covers **Phase 1 only** from the spec [2026-04-22-pellet-hl-agent-infr
 - Cron indexer reading contract events
 - `@pelletfi/hl` SDK (mint + read methods)
 - `@pelletfi/hl-mcp` MCP server (4 core tools)
-- `app/hl/` public dashboard (registry list + per-agent profile)
+- `apps/web/app/hl/` public dashboard (registry list + per-agent profile)
 - Brand v2 application to HL surfaces (IBM Plex Mono + Inter, blue palette)
 
 **Out of scope (deferred):**
@@ -49,39 +53,39 @@ This plan covers **Phase 1 only** from the spec [2026-04-22-pellet-hl-agent-infr
 - `packages/hl-contracts/.gitignore`
 - `packages/hl-contracts/deployments/hyperevm-testnet.json` — deployed addresses
 
-### New files — HL library (`lib/hl/`)
+### New files — HL library (`apps/web/lib/hl/`)
 
-- `lib/hl/client.ts` — viem HyperEVM public client
-- `lib/hl/types.ts` — shared TypeScript types for HL module
-- `lib/hl/abi/identity.ts` — TypeScript ABI for IdentityRegistry
-- `lib/hl/abi/reputation.ts`
-- `lib/hl/abi/validation.ts`
-- `lib/hl/addresses.ts` — deployed contract addresses (env-aware)
-- `lib/hl/indexers/identity.ts` — Identity event indexer
-- `lib/hl/indexers/reputation.ts`
-- `lib/hl/indexers/validation.ts`
+- `apps/web/lib/hl/client.ts` — viem HyperEVM public client
+- `apps/web/lib/hl/types.ts` — shared TypeScript types for HL module
+- `apps/web/lib/hl/abi/identity.ts` — TypeScript ABI for IdentityRegistry
+- `apps/web/lib/hl/abi/reputation.ts`
+- `apps/web/lib/hl/abi/validation.ts`
+- `apps/web/lib/hl/addresses.ts` — deployed contract addresses (env-aware)
+- `apps/web/lib/hl/indexers/identity.ts` — Identity event indexer
+- `apps/web/lib/hl/indexers/reputation.ts`
+- `apps/web/lib/hl/indexers/validation.ts`
 
 ### New files — Cron routes
 
-- `app/api/cron/hl-identity-index/route.ts`
-- `app/api/cron/hl-reputation-index/route.ts`
-- `app/api/cron/hl-validation-index/route.ts`
+- `apps/web/app/api/cron/hl-identity-index/route.ts`
+- `apps/web/app/api/cron/hl-reputation-index/route.ts`
+- `apps/web/app/api/cron/hl-validation-index/route.ts`
 
 ### Modified files
 
-- `lib/db/schema.ts` — add `hlAgentIds`, `hlAttestations`, `hlValidations` tables (append, do not modify existing tables)
-- `vercel.json` — add 3 cron entries (daily cadence per maintenance-mode pattern)
+- `apps/web/lib/db/schema.ts` — add `hlAgentIds`, `hlAttestations`, `hlValidations` tables (append, do not modify existing tables)
+- `apps/web/vercel.json` — add 3 cron entries (daily cadence per maintenance-mode pattern)
 
-### New files — Frontend (`app/hl/`)
+### New files — Frontend (`apps/web/app/hl/`)
 
-- `app/hl/layout.tsx` — HL-specific layout (brand v2, no site-wide nav)
-- `app/hl/page.tsx` — registry landing, agent list
-- `app/hl/agent/[id]/page.tsx` — per-agent profile
-- `app/hl/docs/page.tsx` — guide placeholder (full content is parallel work)
-- `app/hl/styles.css` — brand v2 styles (fonts + palette + monospace accents)
-- `components/hl/RegistryTable.tsx` — agent list table
-- `components/hl/AgentProfile.tsx` — per-agent profile card
-- `components/hl/BrandMark.tsx` — new Pellet mark (SVG component)
+- `apps/web/app/hl/layout.tsx` — HL-specific layout (brand v2, no site-wide nav)
+- `apps/web/app/hl/page.tsx` — registry landing, agent list
+- `apps/web/app/hl/agent/[id]/page.tsx` — per-agent profile
+- `apps/web/app/hl/docs/page.tsx` — guide placeholder (full content is parallel work)
+- `apps/web/app/hl/styles.css` — brand v2 styles (fonts + palette + monospace accents)
+- `apps/web/components/hl/RegistryTable.tsx` — agent list table
+- `apps/web/components/hl/AgentProfile.tsx` — per-agent profile card
+- `apps/web/components/hl/BrandMark.tsx` — new Pellet mark (SVG component)
 
 ### New files — SDK (`packages/hl-sdk/`)
 
@@ -93,7 +97,7 @@ This plan covers **Phase 1 only** from the spec [2026-04-22-pellet-hl-agent-infr
 - `packages/hl-sdk/src/reputation.ts` — readReputation, attachAttestation
 - `packages/hl-sdk/src/validation.ts` — submitValidation
 - `packages/hl-sdk/src/types.ts`
-- `packages/hl-sdk/src/abi/*.ts` — (re-exports from lib/hl if possible, else duplicated minimally)
+- `packages/hl-sdk/src/abi/*.ts` — (duplicated from `apps/web/lib/hl/abi/` to avoid cross-package imports)
 - `packages/hl-sdk/README.md`
 
 ### New files — MCP server (`packages/hl-mcp/`)
@@ -112,7 +116,7 @@ This plan covers **Phase 1 only** from the spec [2026-04-22-pellet-hl-agent-infr
 - **Branch per task:** not required; commit frequently on `main` (Jake's preference, solo workflow)
 - **Commit format:** Conventional Commits (`feat(hl):`, `test(hl):`, `chore(hl):`, `docs(hl):`)
 - **Code style:** follow existing codebase (eslint config already configured)
-- **No imports across boundary:** HL code never imports from `lib/pipeline/`, `lib/oli/`, `app/explorer/`, or any existing Tempo library. Verify at task end with grep.
+- **Monorepo boundaries:** frontend + indexer code lives under `apps/web/`; shared publishable code lives under `packages/*`. No Tempo-era code exists in this repo (extracted to `pelletnetwork/pellet-tempo-archive`).
 
 ---
 
@@ -969,25 +973,26 @@ git commit -m "chore(hl-contracts): deploy registries to HyperEVM testnet"
 
 ## Week 2 — Indexer
 
-### Task 8: Create `lib/hl/` structure + viem HyperEVM client
+### Task 8: Create `apps/web/lib/hl/` structure + viem HyperEVM client ✓ SHIPPED
+
+**Status:** DONE as of 2026-04-22. Commit: `2e91de2` on `pelletnetwork/pellet` main. Scaffolded `apps/web/lib/hl/` with types, addresses (placeholder `0x0000...` until Task 7b), viem client, and the three auto-generated ABIs.
 
 **Files:**
-- Create: `lib/hl/client.ts`
-- Create: `lib/hl/types.ts`
-- Create: `lib/hl/addresses.ts`
+- Create: `apps/web/lib/hl/client.ts`
+- Create: `apps/web/lib/hl/types.ts`
+- Create: `apps/web/lib/hl/addresses.ts`
 
 - [ ] **Step 1: Create the directory**
 
 ```bash
-mkdir -p /Users/jake/pellet/lib/hl/abi
-mkdir -p /Users/jake/pellet/lib/hl/indexers
+mkdir -p /Users/jake/pellet/apps/web/lib/hl/abi
+mkdir -p /Users/jake/pellet/apps/web/lib/hl/indexers
 ```
 
-- [ ] **Step 2: Write `lib/hl/types.ts`**
+- [ ] **Step 2: Write `apps/web/lib/hl/types.ts`**
 
 ```typescript
 // Shared types for the HL (Hyperliquid) module.
-// This file must not import from any Tempo-side Pellet code.
 
 export type AgentId = bigint;
 
@@ -1026,7 +1031,7 @@ export interface ValidationRecord {
 export type HlChain = "testnet" | "mainnet";
 ```
 
-- [ ] **Step 3: Write `lib/hl/addresses.ts`**
+- [ ] **Step 3: Write `apps/web/lib/hl/addresses.ts`**
 
 ```typescript
 import type { HlChain } from "./types";
@@ -1058,7 +1063,7 @@ export function getRegistryAddresses(chain: HlChain = "testnet") {
 
 After deployment in Task 7, update the testnet addresses from `packages/hl-contracts/deployments/hyperevm-testnet.json`.
 
-- [ ] **Step 4: Write `lib/hl/client.ts`**
+- [ ] **Step 4: Write `apps/web/lib/hl/client.ts`**
 
 ```typescript
 import { createPublicClient, http, type PublicClient } from "viem";
@@ -1099,7 +1104,7 @@ export function getHlClient(chain: HlChain = "testnet"): PublicClient {
 
 ```bash
 cd /Users/jake/pellet
-git add lib/hl/types.ts lib/hl/addresses.ts lib/hl/client.ts
+git add apps/web/lib/hl/types.ts apps/web/lib/hl/addresses.ts apps/web/lib/hl/client.ts
 git commit -m "feat(hl): add viem client + types + address registry"
 ```
 
@@ -1108,9 +1113,9 @@ git commit -m "feat(hl): add viem client + types + address registry"
 ### Task 9: Generate TypeScript ABIs from compiled contracts
 
 **Files:**
-- Create: `lib/hl/abi/identity.ts`
-- Create: `lib/hl/abi/reputation.ts`
-- Create: `lib/hl/abi/validation.ts`
+- Create: `apps/web/lib/hl/abi/identity.ts`
+- Create: `apps/web/lib/hl/abi/reputation.ts`
+- Create: `apps/web/lib/hl/abi/validation.ts`
 
 - [ ] **Step 1: Extract ABIs from Foundry build artifacts**
 
@@ -1121,7 +1126,7 @@ forge build
 
 ABIs are at `packages/hl-contracts/out/IdentityRegistry.sol/IdentityRegistry.json` (inside `.abi` field).
 
-- [ ] **Step 2: Write `lib/hl/abi/identity.ts`**
+- [ ] **Step 2: Write `apps/web/lib/hl/abi/identity.ts`**
 
 Extract the `abi` array from the compiled JSON and export as TypeScript const:
 
@@ -1130,36 +1135,36 @@ node -e "
 const fs = require('fs');
 const abi = JSON.parse(fs.readFileSync('/Users/jake/pellet/packages/hl-contracts/out/IdentityRegistry.sol/IdentityRegistry.json')).abi;
 const ts = 'export const identityRegistryAbi = ' + JSON.stringify(abi, null, 2) + ' as const;';
-fs.writeFileSync('/Users/jake/pellet/lib/hl/abi/identity.ts', ts);
+fs.writeFileSync('/Users/jake/pellet/apps/web/lib/hl/abi/identity.ts', ts);
 "
 ```
 
-- [ ] **Step 3: Write `lib/hl/abi/reputation.ts`**
+- [ ] **Step 3: Write `apps/web/lib/hl/abi/reputation.ts`**
 
 ```bash
 node -e "
 const fs = require('fs');
 const abi = JSON.parse(fs.readFileSync('/Users/jake/pellet/packages/hl-contracts/out/ReputationRegistry.sol/ReputationRegistry.json')).abi;
 const ts = 'export const reputationRegistryAbi = ' + JSON.stringify(abi, null, 2) + ' as const;';
-fs.writeFileSync('/Users/jake/pellet/lib/hl/abi/reputation.ts', ts);
+fs.writeFileSync('/Users/jake/pellet/apps/web/lib/hl/abi/reputation.ts', ts);
 "
 ```
 
-- [ ] **Step 4: Write `lib/hl/abi/validation.ts`**
+- [ ] **Step 4: Write `apps/web/lib/hl/abi/validation.ts`**
 
 ```bash
 node -e "
 const fs = require('fs');
 const abi = JSON.parse(fs.readFileSync('/Users/jake/pellet/packages/hl-contracts/out/ValidationRegistry.sol/ValidationRegistry.json')).abi;
 const ts = 'export const validationRegistryAbi = ' + JSON.stringify(abi, null, 2) + ' as const;';
-fs.writeFileSync('/Users/jake/pellet/lib/hl/abi/validation.ts', ts);
+fs.writeFileSync('/Users/jake/pellet/apps/web/lib/hl/abi/validation.ts', ts);
 "
 ```
 
 - [ ] **Step 5: Verify by reading one file**
 
 ```bash
-head -20 /Users/jake/pellet/lib/hl/abi/identity.ts
+head -20 /Users/jake/pellet/apps/web/lib/hl/abi/identity.ts
 ```
 
 Expected: Starts with `export const identityRegistryAbi = [` followed by JSON-like ABI entries.
@@ -1168,7 +1173,7 @@ Expected: Starts with `export const identityRegistryAbi = [` followed by JSON-li
 
 ```bash
 cd /Users/jake/pellet
-git add lib/hl/abi/
+git add apps/web/lib/hl/abi/
 git commit -m "feat(hl): generate TypeScript ABIs for registries"
 ```
 
@@ -1177,18 +1182,18 @@ git commit -m "feat(hl): generate TypeScript ABIs for registries"
 ### Task 10: Add Drizzle schema for `hl_*` tables
 
 **Files:**
-- Modify: `lib/db/schema.ts` (append)
+- Modify: `apps/web/lib/db/schema.ts` (append)
 
 - [ ] **Step 1: Read the existing schema file to understand conventions**
 
 ```bash
-wc -l /Users/jake/pellet/lib/db/schema.ts
-tail -30 /Users/jake/pellet/lib/db/schema.ts
+wc -l /Users/jake/pellet/apps/web/lib/db/schema.ts
+tail -30 /Users/jake/pellet/apps/web/lib/db/schema.ts
 ```
 
 Understand: naming convention (camelCase export), pgTable with snake_case column names.
 
-- [ ] **Step 2: Append HL tables to `lib/db/schema.ts`**
+- [ ] **Step 2: Append HL tables to `apps/web/lib/db/schema.ts`**
 
 Add at the end of the file (before any default export, if one exists):
 
@@ -1196,7 +1201,6 @@ Add at the end of the file (before any default export, if one exists):
 // =============================================================================
 // HL (Hyperliquid) — agent infrastructure layer
 // Added Phase 1, 2026-04-22.
-// Isolated from Tempo tables. No foreign keys to existing tables.
 // =============================================================================
 
 export const hlAgentIds = pgTable("hl_agent_ids", {
@@ -1258,17 +1262,17 @@ export const hlIndexerCursors = pgTable("hl_indexer_cursors", {
 - [ ] **Step 3: Generate migration**
 
 ```bash
-cd /Users/jake/pellet
+cd /Users/jake/pellet/apps/web
 npx drizzle-kit generate
 ```
 
-Expected: New file in `drizzle/` or equivalent migration directory. Output says "Migration created".
+Expected: New file in `apps/web/drizzle/` or equivalent migration directory. Output says "Migration created".
 
 - [ ] **Step 4: Review the generated migration**
 
 ```bash
-ls -lt /Users/jake/pellet/drizzle/ | head -5
-cat /Users/jake/pellet/drizzle/<latest-migration>.sql
+ls -lt /Users/jake/pellet/apps/web/drizzle/ | head -5
+cat /Users/jake/pellet/apps/web/drizzle/<latest-migration>.sql
 ```
 
 Expected: `CREATE TABLE hl_agent_ids`, `CREATE TABLE hl_attestations`, `CREATE TABLE hl_validations`, `CREATE TABLE hl_indexer_cursors`.
@@ -1276,7 +1280,7 @@ Expected: `CREATE TABLE hl_agent_ids`, `CREATE TABLE hl_attestations`, `CREATE T
 - [ ] **Step 5: Apply the migration to Neon**
 
 ```bash
-cd /Users/jake/pellet
+cd /Users/jake/pellet/apps/web
 npx drizzle-kit migrate
 ```
 
@@ -1286,7 +1290,7 @@ Expected: "Applying migration..." then "Migration applied successfully."
 
 ```bash
 cd /Users/jake/pellet
-git add lib/db/schema.ts drizzle/
+git add apps/web/lib/db/schema.ts apps/web/drizzle/
 git commit -m "feat(hl): add hl_* tables + indexer cursor table"
 ```
 
@@ -1295,7 +1299,7 @@ git commit -m "feat(hl): add hl_* tables + indexer cursor table"
 ### Task 11: Write Identity indexer
 
 **Files:**
-- Create: `lib/hl/indexers/identity.ts`
+- Create: `apps/web/lib/hl/indexers/identity.ts`
 
 - [ ] **Step 1: Write the indexer**
 
@@ -1404,7 +1408,7 @@ Expected: No type errors. If there are, fix incrementally.
 
 ```bash
 cd /Users/jake/pellet
-git add lib/hl/indexers/identity.ts
+git add apps/web/lib/hl/indexers/identity.ts
 git commit -m "feat(hl): add Identity event indexer"
 ```
 
@@ -1413,8 +1417,8 @@ git commit -m "feat(hl): add Identity event indexer"
 ### Task 12: Write Reputation + Validation indexers
 
 **Files:**
-- Create: `lib/hl/indexers/reputation.ts`
-- Create: `lib/hl/indexers/validation.ts`
+- Create: `apps/web/lib/hl/indexers/reputation.ts`
+- Create: `apps/web/lib/hl/indexers/validation.ts`
 
 - [ ] **Step 1: Write `reputation.ts`** (mirror of identity pattern)
 
@@ -1619,7 +1623,7 @@ Expected: No type errors.
 
 ```bash
 cd /Users/jake/pellet
-git add lib/hl/indexers/reputation.ts lib/hl/indexers/validation.ts
+git add apps/web/lib/hl/indexers/reputation.ts apps/web/lib/hl/indexers/validation.ts
 git commit -m "feat(hl): add Reputation + Validation indexers"
 ```
 
@@ -1628,15 +1632,15 @@ git commit -m "feat(hl): add Reputation + Validation indexers"
 ### Task 13: Add cron routes + register in `vercel.json`
 
 **Files:**
-- Create: `app/api/cron/hl-identity-index/route.ts`
-- Create: `app/api/cron/hl-reputation-index/route.ts`
-- Create: `app/api/cron/hl-validation-index/route.ts`
-- Modify: `vercel.json`
+- Create: `apps/web/app/api/cron/hl-identity-index/route.ts`
+- Create: `apps/web/app/api/cron/hl-reputation-index/route.ts`
+- Create: `apps/web/app/api/cron/hl-validation-index/route.ts`
+- Modify: `apps/web/vercel.json`
 
 - [ ] **Step 1: Create identity cron route**
 
 ```typescript
-// app/api/cron/hl-identity-index/route.ts
+// apps/web/app/api/cron/hl-identity-index/route.ts
 import { NextResponse } from "next/server";
 import { runIdentityIndexer } from "@/lib/hl/indexers/identity";
 
@@ -1657,7 +1661,7 @@ export async function GET() {
 - [ ] **Step 2: Create reputation cron route**
 
 ```typescript
-// app/api/cron/hl-reputation-index/route.ts
+// apps/web/app/api/cron/hl-reputation-index/route.ts
 import { NextResponse } from "next/server";
 import { runReputationIndexer } from "@/lib/hl/indexers/reputation";
 
@@ -1678,7 +1682,7 @@ export async function GET() {
 - [ ] **Step 3: Create validation cron route**
 
 ```typescript
-// app/api/cron/hl-validation-index/route.ts
+// apps/web/app/api/cron/hl-validation-index/route.ts
 import { NextResponse } from "next/server";
 import { runValidationIndexer } from "@/lib/hl/indexers/validation";
 
@@ -1706,12 +1710,12 @@ Add to the existing `crons` array (keep daily cadence to match maintenance-mode 
 { "path": "/api/cron/hl-validation-index", "schedule": "25 * * * *" }
 ```
 
-Stagger by 5 minutes to avoid contention. Hourly (`{N} * * * *`) because HL has more event volume than Tempo stablecoin pipeline, and Phase 1 needs the registry to feel live.
+Stagger by 5 minutes to avoid contention. Hourly (`{N} * * * *`) because HL has meaningful event volume and Phase 1 needs the registry to feel live.
 
 - [ ] **Step 5: Test locally**
 
 ```bash
-cd /Users/jake/pellet
+cd /Users/jake/pellet/apps/web
 npm run dev
 # In another terminal:
 curl http://localhost:3000/api/cron/hl-identity-index
@@ -1723,7 +1727,7 @@ Expected: `{"ok":true,"blocksProcessed":..., "eventsIndexed":0, "lastBlock":"...
 
 ```bash
 cd /Users/jake/pellet
-git add app/api/cron/hl-identity-index app/api/cron/hl-reputation-index app/api/cron/hl-validation-index vercel.json
+git add apps/web/app/api/cron/hl-identity-index apps/web/app/api/cron/hl-reputation-index apps/web/app/api/cron/hl-validation-index apps/web/vercel.json
 git commit -m "feat(hl): add cron routes + register in vercel.json"
 ```
 
@@ -1755,7 +1759,7 @@ Expected: `"eventsIndexed": 1`.
 - [ ] **Step 3: Verify the row in Postgres**
 
 ```bash
-cd /Users/jake/pellet
+cd /Users/jake/pellet/apps/web
 npx drizzle-kit studio
 # Open browser, navigate to hl_agent_ids table
 ```
@@ -1814,7 +1818,7 @@ mkdir -p /Users/jake/pellet/packages/hl-sdk/src
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/pelletfi/pellet"
+    "url": "https://github.com/pelletnetwork/pellet"
   }
 }
 ```
@@ -1950,14 +1954,14 @@ export interface ValidationRecord {
 - [ ] **Step 2: Copy ABIs into SDK package (avoid cross-package imports)**
 
 ```bash
-cp /Users/jake/pellet/lib/hl/abi/identity.ts /Users/jake/pellet/packages/hl-sdk/src/abi-identity.ts
-cp /Users/jake/pellet/lib/hl/abi/reputation.ts /Users/jake/pellet/packages/hl-sdk/src/abi-reputation.ts
-cp /Users/jake/pellet/lib/hl/abi/validation.ts /Users/jake/pellet/packages/hl-sdk/src/abi-validation.ts
+cp /Users/jake/pellet/apps/web/lib/hl/abi/identity.ts /Users/jake/pellet/packages/hl-sdk/src/abi-identity.ts
+cp /Users/jake/pellet/apps/web/lib/hl/abi/reputation.ts /Users/jake/pellet/packages/hl-sdk/src/abi-reputation.ts
+cp /Users/jake/pellet/apps/web/lib/hl/abi/validation.ts /Users/jake/pellet/packages/hl-sdk/src/abi-validation.ts
 ```
 
 - [ ] **Step 3: Write `src/addresses.ts`**
 
-Same as `lib/hl/addresses.ts` but standalone. After deployment, keep these in sync.
+Same as `apps/web/lib/hl/addresses.ts` but standalone. After deployment, keep these in sync.
 
 ```typescript
 import type { HlChain } from "./types";
@@ -2561,14 +2565,14 @@ git push origin hl-mcp-v0.1.0
 
 ## Week 4 — Frontend + Brand
 
-### Task 22: Scaffold `app/hl/` route tree + HL-specific layout
+### Task 22: Scaffold `apps/web/app/hl/` route tree + HL-specific layout
 
 **Files:**
-- Create: `app/hl/layout.tsx`
-- Create: `app/hl/page.tsx`
-- Create: `app/hl/styles.css`
+- Create: `apps/web/app/hl/layout.tsx`
+- Create: `apps/web/app/hl/page.tsx`
+- Create: `apps/web/app/hl/styles.css`
 
-- [ ] **Step 1: Write `app/hl/styles.css`** — brand v2 styles, scoped to `.hl-root` class
+- [ ] **Step 1: Write `apps/web/app/hl/styles.css`** — brand v2 styles, scoped to `.hl-root` class
 
 ```css
 /* Pellet brand v2 — scoped to HL surfaces. Locked 2026-04-22. */
@@ -2625,7 +2629,7 @@ git push origin hl-mcp-v0.1.0
 }
 ```
 
-- [ ] **Step 2: Write `app/hl/layout.tsx`**
+- [ ] **Step 2: Write `apps/web/app/hl/layout.tsx`**
 
 ```typescript
 import type { Metadata } from "next";
@@ -2646,7 +2650,7 @@ export default function HlLayout({ children }: { children: React.ReactNode }) {
 }
 ```
 
-- [ ] **Step 3: Write `app/hl/page.tsx`** (landing page — placeholder, filled in Task 24)
+- [ ] **Step 3: Write `apps/web/app/hl/page.tsx`** (landing page — placeholder, filled in Task 24)
 
 ```typescript
 export default function HlLanding() {
@@ -2672,7 +2676,7 @@ export default function HlLanding() {
 - [ ] **Step 4: Start dev server and verify**
 
 ```bash
-cd /Users/jake/pellet
+cd /Users/jake/pellet/apps/web
 npm run dev
 ```
 
@@ -2684,8 +2688,8 @@ Expected: Blue page with white "Pellet" headline in IBM Plex Mono, card with "Re
 
 ```bash
 cd /Users/jake/pellet
-git add app/hl/
-git commit -m "feat(hl): scaffold app/hl/ route tree + brand v2 styles"
+git add apps/web/app/hl/
+git commit -m "feat(hl): scaffold apps/web/app/hl/ route tree + brand v2 styles"
 ```
 
 ---
@@ -2693,10 +2697,10 @@ git commit -m "feat(hl): scaffold app/hl/ route tree + brand v2 styles"
 ### Task 23: Build registry landing page (agent list from DB)
 
 **Files:**
-- Create: `components/hl/RegistryTable.tsx`
-- Modify: `app/hl/page.tsx`
+- Create: `apps/web/components/hl/RegistryTable.tsx`
+- Modify: `apps/web/app/hl/page.tsx`
 
-- [ ] **Step 1: Write `components/hl/RegistryTable.tsx`** (server component)
+- [ ] **Step 1: Write `apps/web/components/hl/RegistryTable.tsx`** (server component)
 
 ```typescript
 import { db } from "@/lib/db";
@@ -2755,7 +2759,7 @@ export async function RegistryTable() {
 }
 ```
 
-- [ ] **Step 2: Update `app/hl/page.tsx`**
+- [ ] **Step 2: Update `apps/web/app/hl/page.tsx`**
 
 ```typescript
 import { RegistryTable } from "@/components/hl/RegistryTable";
@@ -2792,7 +2796,7 @@ export default async function HlLanding() {
 - [ ] **Step 3: Verify in browser**
 
 ```bash
-cd /Users/jake/pellet
+cd /Users/jake/pellet/apps/web
 npm run dev
 ```
 
@@ -2802,7 +2806,7 @@ Navigate to `http://localhost:3000/hl`. Expected: registry table shows any agent
 
 ```bash
 cd /Users/jake/pellet
-git add components/hl/RegistryTable.tsx app/hl/page.tsx
+git add apps/web/components/hl/RegistryTable.tsx apps/web/app/hl/page.tsx
 git commit -m "feat(hl): implement registry landing page with agent list"
 ```
 
@@ -2811,10 +2815,10 @@ git commit -m "feat(hl): implement registry landing page with agent list"
 ### Task 24: Build per-agent profile page
 
 **Files:**
-- Create: `app/hl/agent/[id]/page.tsx`
-- Create: `components/hl/AgentProfile.tsx`
+- Create: `apps/web/app/hl/agent/[id]/page.tsx`
+- Create: `apps/web/components/hl/AgentProfile.tsx`
 
-- [ ] **Step 1: Write `components/hl/AgentProfile.tsx`**
+- [ ] **Step 1: Write `apps/web/components/hl/AgentProfile.tsx`**
 
 ```typescript
 import { db } from "@/lib/db";
@@ -2903,7 +2907,7 @@ export async function AgentProfile({ id }: { id: string }) {
 }
 ```
 
-- [ ] **Step 2: Write `app/hl/agent/[id]/page.tsx`**
+- [ ] **Step 2: Write `apps/web/app/hl/agent/[id]/page.tsx`**
 
 ```typescript
 import { AgentProfile } from "@/components/hl/AgentProfile";
@@ -2936,7 +2940,7 @@ Expected: Profile page shows the agent's controller, metadata URI, registration 
 
 ```bash
 cd /Users/jake/pellet
-git add components/hl/AgentProfile.tsx app/hl/agent/
+git add apps/web/components/hl/AgentProfile.tsx apps/web/app/hl/agent/
 git commit -m "feat(hl): implement per-agent profile page"
 ```
 
@@ -2945,7 +2949,7 @@ git commit -m "feat(hl): implement per-agent profile page"
 ### Task 25: Add `/hl/docs` placeholder
 
 **Files:**
-- Create: `app/hl/docs/page.tsx`
+- Create: `apps/web/app/hl/docs/page.tsx`
 
 - [ ] **Step 1: Write the page**
 
@@ -3027,7 +3031,7 @@ Navigate to `http://localhost:3000/hl/docs`. Expected: Docs page renders with qu
 
 ```bash
 cd /Users/jake/pellet
-git add app/hl/docs/
+git add apps/web/app/hl/docs/
 git commit -m "feat(hl): add docs placeholder with quickstart"
 ```
 
@@ -3080,14 +3084,14 @@ npx tsc --noEmit
 
 Expected: No errors.
 
-- [ ] **Step 6: Verify no imports cross the HL/Tempo boundary**
+- [ ] **Step 6: Verify package publishability (packages build clean)**
 
 ```bash
-cd /Users/jake/pellet
-grep -rE 'from "@/lib/pipeline|from "@/lib/oli|from "@/app/explorer' lib/hl app/hl app/api/cron/hl-* components/hl packages/hl-sdk packages/hl-mcp 2>/dev/null
+cd /Users/jake/pellet/packages/hl-sdk && npm run build
+cd /Users/jake/pellet/packages/hl-mcp && npm run build
 ```
 
-Expected: **no output** (no cross-boundary imports found).
+Expected: both build without errors, `dist/` directories populated.
 
 - [ ] **Step 7: Deploy to Vercel preview**
 
@@ -3123,7 +3127,7 @@ These are founder-activity tasks, done alongside the build. Not part of the exec
 1. **Outreach to Senpi, NickAI, HyperAgent, Katoshi, Based** — cold emails / DMs proposing integration. Start in week 1.
 2. **Write "Building Agents on Hyperliquid" canonical guide** — long-form content. Publish with Phase 1 launch.
 3. **Audit coordination** — engage Certora / OpenZeppelin / Spearbit / solo auditor for contract review. Target completion: week 6-8.
-4. **Brand asset integration** — when designer sends source files, integrate into `components/hl/BrandMark.tsx`, favicon, OG images.
+4. **Brand asset integration** — when designer sends source files, integrate into `apps/web/components/hl/BrandMark.tsx`, favicon, OG images.
 5. **Public launch announcement** — X thread, blog post, HypurrCo ecosystem listing submission.
 
 ---
@@ -3139,7 +3143,6 @@ After Phase 1 ships:
 - [ ] `pellet.fi/hl` serves agent registry, loads from DB
 - [ ] `pellet.fi/hl/agent/[id]` serves per-agent profile
 - [ ] `pellet.fi/hl/docs` has working quickstart
-- [ ] No imports cross HL ↔ Tempo boundary (verified by grep)
 - [ ] Type-check passes across monorepo
 - [ ] At least 1 platform partnership conversation in progress
 
