@@ -5,7 +5,7 @@
   "description": "Pellet — agent infrastructure layer for Hyperliquid. Identity, execution, accountability.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/pelletfi/pellet"
+    "url": "https://github.com/pelletnetwork/pellet"
   },
   "license": "MIT",
   "workspaces": [

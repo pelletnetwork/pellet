@@ -30,7 +30,7 @@ export default function Home() {
       <footer className="px-8 py-8 border-t border-black/10 flex items-center justify-between font-mono text-xs text-ink-4">
         <div>© 2026 Pellet</div>
         <div className="flex gap-4">
-          <a href="https://github.com/pelletfi/pellet-hl" className="hover:text-ink-1">GitHub</a>
+          <a href="https://github.com/pelletnetwork/pellet" className="hover:text-ink-1">GitHub</a>
           <a href="https://x.com/pelletinfra" className="hover:text-ink-1">X</a>
         </div>
       </footer>

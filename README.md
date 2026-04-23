@@ -55,9 +55,9 @@ cp .env.example .env
 forge script script/Deploy.s.sol --rpc-url hyperevm_testnet --broadcast
 ```
 
-## Relationship to pellet.fi
+## Relationship to earlier work
 
-Pellet-on-Tempo (stablecoin intelligence, TIP-20 indexing, `pellet.fi` main site) lives in [`pelletfi/pellet`](https://github.com/pelletfi/pellet) and stays in maintenance mode. This repo is the agent-infrastructure direction — different product, different audience, different brand system.
+Pellet-on-Tempo (stablecoin intelligence, TIP-20 indexing) is archived at [`pelletnetwork/pellet-tempo-archive`](https://github.com/pelletnetwork/pellet-tempo-archive) for historical reference. This repo is the current, active direction — agent infrastructure for Hyperliquid. Different product, different audience, different brand system.
 
 ## Brand
 
