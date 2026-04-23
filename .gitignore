@@ -3,6 +3,12 @@ node_modules/
 .npm/
 .yarn/
 
+# Next.js (apps/web)
+apps/*/node_modules/
+apps/*/.next/
+apps/*/out/
+packages/*/node_modules/
+
 # Build outputs
 dist/
 .next/
