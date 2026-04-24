@@ -29,6 +29,20 @@ const withMdx = createMdx({
 const config: NextConfig = {
   reactStrictMode: true,
   pageExtensions: ["ts", "tsx", "md", "mdx"],
+  async redirects() {
+    return [
+      // docs.pellet.network is a vanity short-URL for pellet.network/docs.
+      // Path-preserving 307 redirect — typing docs.pellet.network/architecture
+      // sends you to pellet.network/docs/architecture. One canonical URL for
+      // SEO, zero middleware complexity.
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "docs.pellet.network" }],
+        destination: "https://pellet.network/docs/:path*",
+        permanent: false,
+      },
+    ];
+  },
 };
 
 export default withMdx(config);
