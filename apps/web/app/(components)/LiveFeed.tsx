@@ -1,55 +1,20 @@
 "use client";
 
 import { motion } from "motion/react";
+import { useEffect, useState } from "react";
 
-type Item = {
-  type: "Attest" | "Validate" | "Register";
-  attest?: boolean; // styling flag — prototype sets `.type.attest` class
-  addr: string;
-  block: string;
-  time: string;
-};
-
-const ITEMS: Item[] = [
-  {
-    type: "Attest",
-    attest: true,
-    addr: "0x8a2f…c5e1  →  0x1b47…0294",
-    block: "#4,821,305",
-    time: "2s ago",
-  },
-  {
-    type: "Validate",
-    addr: "0x5f7d…b8a2  →  0x9e3c…d451",
-    block: "#4,821,304",
-    time: "9s ago",
-  },
-  {
-    type: "Attest",
-    attest: true,
-    addr: "0xaf81…230c  →  0x2d18…9abf",
-    block: "#4,821,302",
-    time: "14s ago",
-  },
-  {
-    type: "Register",
-    addr: "0x4c0e…7192  (new agent)",
-    block: "#4,821,298",
-    time: "28s ago",
-  },
-  {
-    type: "Attest",
-    attest: true,
-    addr: "0x3b59…e8d2  →  0x8004…ba21",
-    block: "#4,821,296",
-    time: "41s ago",
-  },
-];
+import { explorerAddressUrl, HL_EXPLORER } from "@/lib/hl/addresses";
+import {
+  shortAddr,
+  timeAgo,
+  useLiveFeed,
+  type FeedItem,
+} from "@/lib/hl/useLiveFeed";
 
 const container = {
   hidden: {},
   show: {
-    transition: { staggerChildren: 0.1 },
+    transition: { staggerChildren: 0.06 },
   },
 };
 
@@ -61,7 +26,21 @@ const row = {
   },
 };
 
+const EXPLORER = HL_EXPLORER.mainnet;
+
+function txUrl(txHash: string): string {
+  return `${EXPLORER}/tx/${txHash}`;
+}
+
 export function LiveFeed() {
+  const { items, loading } = useLiveFeed("mainnet");
+  // Re-render every 10s so the "X ago" labels stay fresh without re-fetching.
+  const [, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 10_000);
+    return () => clearInterval(t);
+  }, []);
+
   return (
     <motion.section
       className="live-feed"
@@ -70,32 +49,61 @@ export function LiveFeed() {
       animate="show"
     >
       <div className="f-header">
-        <h3>Live attestations</h3>
+        <h3>Live registry events</h3>
         <span className="f-meta">
           <span className="pellet-dot pellet-dot-lg" />
-          Streaming
+          {loading && items.length === 0 ? "Connecting" : "Streaming"}
         </span>
       </div>
-      {ITEMS.map((it, i) => (
-        <motion.div
-          key={i}
-          className="feed-item"
-          variants={row}
-          whileHover="hover"
-        >
-          <span className={`type${it.attest ? " attest" : ""}`}>{it.type}</span>
-          <span className="addr">{it.addr}</span>
-          <motion.span
-            className="arrow"
-            variants={{ hover: { x: 4 } }}
-            transition={{ type: "spring", stiffness: 400, damping: 22 }}
-          >
-            →
-          </motion.span>
-          <span className="block">{it.block}</span>
-          <span className="time">{it.time}</span>
-        </motion.div>
+      {items.length === 0 && !loading && (
+        <div className="feed-empty" style={{ padding: "16px 0", color: "var(--muted)", fontSize: 12 }}>
+          Awaiting the next registry event.
+        </div>
+      )}
+      {items.map((it) => (
+        <FeedRow key={`${it.txHash}-${it.logIndex}`} item={it} />
       ))}
     </motion.section>
+  );
+}
+
+function FeedRow({ item }: { item: FeedItem }) {
+  const isAttest = item.kind === "Attest";
+  const blockLabel = `#${item.block.toLocaleString()}`;
+  const timeLabel = timeAgo(item.timestamp);
+  return (
+    <motion.div className="feed-item" variants={row} whileHover="hover">
+      <span className={`type${isAttest ? " attest" : ""}`}>{item.kind}</span>
+      <span className="addr">
+        <a
+          className="addr-link"
+          href={explorerAddressUrl(item.actor)}
+          target="_blank"
+          rel="noopener noreferrer"
+          title={`View ${item.actor} on HyperScan`}
+        >
+          {shortAddr(item.actor)}
+        </a>
+        {"  →  "}
+        <span style={{ color: "var(--navy)" }}>#{item.agentId.toString()}</span>
+      </span>
+      <motion.span
+        className="arrow"
+        variants={{ hover: { x: 4 } }}
+        transition={{ type: "spring", stiffness: 400, damping: 22 }}
+      >
+        →
+      </motion.span>
+      <a
+        className="block addr-link"
+        href={txUrl(item.txHash)}
+        target="_blank"
+        rel="noopener noreferrer"
+        title={`View tx on HyperScan`}
+      >
+        {blockLabel}
+      </a>
+      <span className="time">{timeLabel}</span>
+    </motion.div>
   );
 }
