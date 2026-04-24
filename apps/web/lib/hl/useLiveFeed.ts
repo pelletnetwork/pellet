@@ -1,54 +1,23 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { parseAbiItem, type Hex } from "viem";
+import type { Hex } from "viem";
 
-import { getRegistryAddresses } from "./addresses";
-import { getHlClient } from "./client";
+import { feedItemFromWire, type FeedItem, type FeedItemWire } from "./recentEvents";
 import type { HlChain } from "./types";
 
-// HyperEVM caps eth_getLogs at 1000 blocks per call (-32602) and the public
-// RPC rate-limits aggressively (-32005). For v1 we scan a single 1000-block
-// window per poll on a relaxed cadence to stay well under the limit. Anything
-// older than that is surfaced via SEED_EVENTS — a static list of milestone
-// events that guarantees the feed is never empty even when activity is sparse
-// or when the RPC throttles us. When we ship a server-side `/api/feed` route
-// (v1.1) the client polling shortens to a single fetch and the seed merge
-// becomes a no-op for milestones that are still within indexer history.
-//
-// Event payloads include `block.timestamp` (set inside the contract), so we
-// render time-ago labels without an extra `eth_getBlockByNumber` call.
+export type { FeedKind, FeedItem } from "./recentEvents";
+
+// The hook fetches the cached `/api/feed` Route Handler — server fetches
+// the data from HyperEVM RPC once per cache window (revalidate = 30s) and
+// every visitor shares the result. Client RPC pressure: zero. The seed
+// pin below guarantees we always render at least one item even before the
+// first fetch returns or if the API is briefly unhealthy.
 const POLL_MS = 30_000;
-const HL_GETLOGS_CHUNK = 1000n;
-const LOOKBACK_CHUNKS = 1n;
 const MAX_FEED_ITEMS = 10;
+const FEED_API = "/api/feed";
 
-const AGENT_REGISTERED = parseAbiItem(
-  "event AgentRegistered(uint256 indexed agentId, address indexed controller, string metadataURI, uint256 timestamp)",
-);
-const ATTESTATION_POSTED = parseAbiItem(
-  "event AttestationPosted(uint256 indexed attestationId, uint256 indexed agentId, address indexed attester, bytes32 attestationType, int256 score, string metadataURI, uint256 timestamp)",
-);
-const VALIDATION_POSTED = parseAbiItem(
-  "event ValidationPosted(uint256 indexed validationId, uint256 indexed agentId, address indexed validator, bytes32 claimHash, string proofURI, uint256 timestamp)",
-);
-
-export type FeedKind = "Register" | "Attest" | "Validate";
-
-export interface FeedItem {
-  kind: FeedKind;
-  /** The actor: controller (Register), attester (Attest), or validator (Validate). */
-  actor: Hex;
-  /** Agent ID touched by this event. */
-  agentId: bigint;
-  block: bigint;
-  /** Unix seconds, decoded from the event itself. */
-  timestamp: number;
-  txHash: Hex;
-  logIndex: number;
-}
-
-function dedupeKey(it: FeedItem): string {
+function dedupeKey(it: { txHash: Hex; logIndex: number }): string {
   return `${it.txHash}-${it.logIndex}`;
 }
 
@@ -78,110 +47,23 @@ export function useLiveFeed(chain: HlChain = "mainnet"): {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // chain is read from the API path; if we ever support testnet we'd add
+    // ?chain=testnet to the URL. Today the route is mainnet-only.
+    void chain;
     let alive = true;
-    const client = getHlClient(chain);
-    const addrs = getRegistryAddresses(chain);
 
-    async function scanChunk(fromBlock: bigint, toBlock: bigint): Promise<FeedItem[]> {
-      // Sequential — HyperEVM RPC throttles parallel getLogs hard.
-      const identityLogs = await client
-        .getLogs({
-          address: addrs.identity,
-          event: AGENT_REGISTERED,
-          fromBlock,
-          toBlock,
-        })
-        .catch((e: unknown) => {
-          // eslint-disable-next-line no-console
-          console.warn("[useLiveFeed] identity getLogs failed:", e);
-          return [];
-        });
-      const reputationLogs = await client
-        .getLogs({
-          address: addrs.reputation,
-          event: ATTESTATION_POSTED,
-          fromBlock,
-          toBlock,
-        })
-        .catch((e: unknown) => {
-          // eslint-disable-next-line no-console
-          console.warn("[useLiveFeed] reputation getLogs failed:", e);
-          return [];
-        });
-      const validationLogs = await client
-        .getLogs({
-          address: addrs.validation,
-          event: VALIDATION_POSTED,
-          fromBlock,
-          toBlock,
-        })
-        .catch((e: unknown) => {
-          // eslint-disable-next-line no-console
-          console.warn("[useLiveFeed] validation getLogs failed:", e);
-          return [];
-        });
-
-      const out: FeedItem[] = [];
-      for (const log of identityLogs) {
-        if (log.args.agentId === undefined || log.args.controller === undefined) continue;
-        out.push({
-          kind: "Register",
-          actor: log.args.controller as Hex,
-          agentId: log.args.agentId,
-          block: log.blockNumber!,
-          timestamp: Number(log.args.timestamp ?? 0n),
-          txHash: log.transactionHash!,
-          logIndex: log.logIndex!,
-        });
-      }
-      for (const log of reputationLogs) {
-        if (log.args.agentId === undefined || log.args.attester === undefined) continue;
-        out.push({
-          kind: "Attest",
-          actor: log.args.attester as Hex,
-          agentId: log.args.agentId,
-          block: log.blockNumber!,
-          timestamp: Number(log.args.timestamp ?? 0n),
-          txHash: log.transactionHash!,
-          logIndex: log.logIndex!,
-        });
-      }
-      for (const log of validationLogs) {
-        if (log.args.agentId === undefined || log.args.validator === undefined) continue;
-        out.push({
-          kind: "Validate",
-          actor: log.args.validator as Hex,
-          agentId: log.args.agentId,
-          block: log.blockNumber!,
-          timestamp: Number(log.args.timestamp ?? 0n),
-          txHash: log.transactionHash!,
-          logIndex: log.logIndex!,
-        });
-      }
-      return out;
-    }
-
-    async function poll() {
+    async function fetchFeed() {
       try {
-        const head = await client.getBlockNumber();
-        const collected: FeedItem[] = [];
-        // Walk backward in 1000-block chunks (capped at LOOKBACK_CHUNKS to
-        // stay friendly with HyperEVM's public RPC rate limiter).
-        for (let i = 0n; i < LOOKBACK_CHUNKS; i++) {
-          const toBlock = head - i * HL_GETLOGS_CHUNK;
-          const fromBlock = toBlock > HL_GETLOGS_CHUNK ? toBlock - HL_GETLOGS_CHUNK + 1n : 0n;
-          if (toBlock < fromBlock) break;
-          const chunk = await scanChunk(fromBlock, toBlock);
-          collected.push(...chunk);
-          if (collected.length >= MAX_FEED_ITEMS) break;
-        }
+        const res = await fetch(FEED_API, { cache: "no-store" });
+        if (!res.ok) throw new Error(`/api/feed ${res.status}`);
+        const json = (await res.json()) as { items: FeedItemWire[] };
+        const live = (json.items ?? []).map(feedItemFromWire);
 
-        // Merge live results with seed events (milestones older than the
-        // lookback window). Dedupe by tx + logIndex in case a seed entry
-        // shows up live during the brief overlap window.
+        // Merge API items with seed events (milestones older than the
+        // server's lookback window). Dedupe by tx + logIndex.
         const seen = new Set<string>();
         const merged: FeedItem[] = [];
-        for (const it of [...collected, ...SEED_EVENTS]) {
+        for (const it of [...live, ...SEED_EVENTS]) {
           const k = dedupeKey(it);
           if (seen.has(k)) continue;
           seen.add(k);
@@ -193,24 +75,18 @@ export function useLiveFeed(chain: HlChain = "mainnet"): {
         });
 
         if (!alive) return;
-        // eslint-disable-next-line no-console
-        console.log("[useLiveFeed] poll OK:", {
-          live: collected.length,
-          merged: merged.length,
-          head: head.toString(),
-        });
         setItems(merged.slice(0, MAX_FEED_ITEMS));
         setLoading(false);
       } catch (e) {
         // eslint-disable-next-line no-console
-        console.error("[useLiveFeed] poll failed:", e);
-        // keep prior state (which includes seed events)
+        console.warn("[useLiveFeed] /api/feed fetch failed:", e);
         if (alive) setLoading(false);
+        // keep prior state (seed events)
       }
     }
 
-    void poll();
-    const timer = setInterval(poll, POLL_MS);
+    void fetchFeed();
+    const timer = setInterval(fetchFeed, POLL_MS);
     return () => {
       alive = false;
       clearInterval(timer);
