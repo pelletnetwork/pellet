@@ -1,0 +1,60 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "pellet-hero-preview",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8765", "--directory", "/tmp"],
+      "port": 8765
+    },
+    {
+      "name": "pellet-contour-preview",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8766", "--directory", "/tmp/contour"],
+      "port": 8766
+    },
+    {
+      "name": "pellet-nodepulse-preview",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8767", "--directory", "/tmp/nodepulse"],
+      "port": 8767
+    },
+    {
+      "name": "pellet-voronoi-preview",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8768", "--directory", "/tmp/voronoi"],
+      "port": 8768
+    },
+    {
+      "name": "pellet-orbital-preview",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8769", "--directory", "/tmp/orbital"],
+      "port": 8769
+    },
+    {
+      "name": "pellet-editorial-preview",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8770", "--directory", "/tmp/editorial"],
+      "port": 8770
+    },
+    {
+      "name": "pellet-apps-web",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--workspace", "apps/web"],
+      "port": 3005,
+      "env": { "PORT": "3005" }
+    },
+    {
+      "name": "pellet-assets-preview",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8780", "--directory", "/tmp"],
+      "port": 8780
+    },
+    {
+      "name": "pellet-hyperframes-static",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8090", "--directory", "/Users/jake/pellet/videos/pellet-hyperframes"],
+      "port": 8090
+    }
+  ]
+}
