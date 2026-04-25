@@ -61,11 +61,12 @@ Pellet-on-Tempo (stablecoin intelligence, TIP-20 indexing) is archived at [`pell
 
 ## Brand
 
-- Primary: Navy `#00006D`
-- Paper: `#E8F1F3`
-- Typography: IBM Plex Mono + Inter
-- Mark: `public/brand/pellet-mark.svg`
-- License: MIT — full exclusive usage rights per `public/brand/copyright-transfer.pdf`
+- Primary: Pellet YInMn blue `#2E5090`
+- Paper: `#FFFFFF` (`#FBFDFF` in institutional plates)
+- Typography: Courier Prime (body) + IBM Plex Mono (numeric/protocol) + Inter (sparingly)
+- Mark: [`apps/web/public/brand/pellet-mark.svg`](apps/web/public/brand/pellet-mark.svg) (also `.png` and `-white.svg` for dark surfaces)
+- Full system: [`videos/pellet-hyperframes/DESIGN.md`](videos/pellet-hyperframes/DESIGN.md) · [`videos/pellet-hyperframes/PHILOSOPHY.md`](videos/pellet-hyperframes/PHILOSOPHY.md) · live tokens in [`apps/web/app/globals.css`](apps/web/app/globals.css)
+- License: MIT — full exclusive usage rights per [`apps/web/public/brand/copyright-transfer.pdf`](apps/web/public/brand/copyright-transfer.pdf)
 
 ## Design + plans
 
@@ -74,4 +75,4 @@ Pellet-on-Tempo (stablecoin intelligence, TIP-20 indexing) is archived at [`pell
 
 ## License
 
-MIT (contracts + SDK + MCP server). Brand assets per `public/brand/copyright-transfer.pdf`.
+MIT (contracts + SDK + MCP server). Brand assets per [`apps/web/public/brand/copyright-transfer.pdf`](apps/web/public/brand/copyright-transfer.pdf).

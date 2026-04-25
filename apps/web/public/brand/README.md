@@ -1,34 +1,37 @@
-# Pellet Brand v2 — Assets
+# Pellet Brand — Assets
 
-Brand mark refreshed 2026-04-22. Delivered by Logo Branda. Full copyright + exclusive usage rights transferred to Pellet — see `copyright-transfer.pdf`.
+Brand mark delivered 2026-04-22 by Logo Branda. Full copyright + exclusive usage rights transferred to Pellet — see `copyright-transfer.pdf`.
 
 ## Files
 
 | File | Purpose |
 |---|---|
-| `pellet-mark.svg` | Primary mark — navy `#00006D` on paper |
+| `pellet-mark.svg` | Primary mark — Pellet YInMn blue `#2E5090` on paper |
 | `pellet-mark-white.svg` | Inverted mark — white on navy (for dark backgrounds) |
 | `pellet-mark.png` | Raster reference — navy, transparent bg |
 | `copyright-transfer.pdf` | Ownership transfer agreement |
+
+The site renders the mark via the inline `<PelletMark />` component at `apps/web/app/(components)/PelletMark.tsx`. These static files are for export, print, and external use.
 
 ## Color system
 
 | Role | Hex | Use |
 |---|---|---|
-| Primary | `#00006D` | Mark, primary buttons, accents |
-| Paper | `#E8F1F3` | Main background (cool pale, very faint cyan lean) |
-| White | `#FFFFFF` | Card/panel surfaces, mark on navy |
+| Primary | `#2E5090` | Pellet YInMn blue — mark, primary text, accents, buttons |
+| Active link | `#3C62A5` | Hover/active states |
+| Mist | `#6F86B8` | Secondary labels, contour marks |
+| Deep | `#0F244A` | Water + night metadata shots |
+| Paper | `#FFFFFF` | App background |
 | Ink | `#000000` | Primary text on paper |
 
-Sampled from designer-delivered preview pages. Treat these as the locked brand palette.
+Live tokens are defined in `apps/web/app/globals.css` — treat that as the canonical source of truth.
 
-## Typography pairing
+## Typography
 
-- **IBM Plex Mono** — headlines, chrome, monospace
-- **Inter** — body, UI labels, CTAs
-
-Both available on Google Fonts.
+- **Courier Prime** — body, dominant editorial face
+- **IBM Plex Mono** — numeric labels, hex strings, protocol metadata
+- **Inter** — sparingly, for sans-serif surfaces
 
 ## Scope
 
-Applied to HL surfaces (`app/hl/*`) day one. Existing Tempo surfaces (swap, briefings, explorer) remain on the current Geist-based system; migrate when bandwidth allows.
+Applies to all Pellet HL surfaces — `apps/web` (pellet.network), launch artifacts, docs, and design output.

@@ -35,7 +35,7 @@ When asked "what is Pellet," default to the HyperEVM agent-infrastructure produc
 - Plate Geometry canon — see [`videos/pellet-hyperframes/PHILOSOPHY.md`](videos/pellet-hyperframes/PHILOSOPHY.md).
 - No mock data on Pellet HL surfaces. Real numbers from real chains, always.
 - No hype, no rocket emojis, no exclamation points. *"There is no persuasion. There is only the document."*
-- Monochromatic palette: paper `#E8F1F3`, navy `#00006D`. Typography: IBM Plex Mono + Inter. No third color, no decorative motion.
+- Palette: paper `#FFFFFF` (or `#FBFDFF` in institutional plates) + Pellet YInMn blue `#2E5090`. No third hue, no decorative motion. Typography: Courier Prime (body), IBM Plex Mono (numeric/protocol), Inter (sparingly). Full system: `videos/pellet-hyperframes/DESIGN.md` + `apps/web/app/globals.css`.
 
 ## What's high leverage for agents
 
