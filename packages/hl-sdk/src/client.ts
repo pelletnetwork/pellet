@@ -112,7 +112,6 @@ export class PelletHlClient {
   async mintAgentId({
     metadataURI,
   }: {
-    controller?: Address;
     metadataURI: string;
   }): Promise<MintAgentResult> {
     const wallet = this.#requireWallet();
@@ -139,7 +138,7 @@ export class PelletHlClient {
     metadataURI: string;
   }): Promise<PostAttestationResult> {
     const wallet = this.#requireWallet();
-    const { request } = await this.#publicClient.simulateContract({
+    const { result: attestationId, request } = await this.#publicClient.simulateContract({
       address: this.#addresses.reputation,
       abi: REPUTATION_ABI,
       functionName: "postAttestation",
@@ -147,7 +146,7 @@ export class PelletHlClient {
       account: wallet.account!,
     });
     const txHash = await wallet.writeContract(request);
-    return { attestationId: 0n, txHash };
+    return { attestationId, txHash };
   }
 
   async postValidation({
@@ -160,7 +159,7 @@ export class PelletHlClient {
     proofURI: string;
   }): Promise<PostValidationResult> {
     const wallet = this.#requireWallet();
-    const { request } = await this.#publicClient.simulateContract({
+    const { result: validationId, request } = await this.#publicClient.simulateContract({
       address: this.#addresses.validation,
       abi: VALIDATION_ABI,
       functionName: "postValidation",
@@ -168,7 +167,7 @@ export class PelletHlClient {
       account: wallet.account!,
     });
     const txHash = await wallet.writeContract(request);
-    return { validationId: 0n, txHash };
+    return { validationId, txHash };
   }
 
   #requireWallet(): WalletClient {
