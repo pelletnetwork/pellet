@@ -1,6 +1,6 @@
 {
-  "name": "@pelletnetwork/hl,
-  "version": "0.1.0",
+  "name": "@pelletnetwork/hl",
+  "version": "0.1.1",
   "description": "TypeScript SDK for Pellet's Hyperliquid agent infrastructure — mint identities, read reputations, submit validations.",
   "type": "module",
   "main": "./dist/index.js",
@@ -36,5 +36,9 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/pelletnetwork/pellet"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "viem": "^2.48.4"
   }
 }
