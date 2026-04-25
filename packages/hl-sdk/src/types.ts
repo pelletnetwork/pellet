@@ -1,6 +1,6 @@
 import type { Address, Hex } from "viem";
 
-export type HlChain = "mainnet";
+export type HlChain = "mainnet" | "testnet";
 
 export type AgentRecord = {
   controller: Address;

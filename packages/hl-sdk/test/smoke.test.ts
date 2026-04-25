@@ -3,11 +3,9 @@ import assert from "node:assert";
 import { createPublicClient, createWalletClient, http } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { PelletHlClient } from "../src/index";
+import { CHAIN_CONFIG } from "../src/constants";
 
-const MAINNET_RPC = "https://rpc.hyperliquid.xyz/evm";
-const TESTNET_RPC = "https://rpc.hyperliquid-testnet.xyz/evm";
-
-const publicClient = createPublicClient({ transport: http(MAINNET_RPC) });
+const publicClient = createPublicClient({ transport: http(CHAIN_CONFIG.mainnet.rpc) });
 
 const pellet = new PelletHlClient({ publicClient });
 
@@ -34,16 +32,12 @@ describe("@pelletnetwork/hl — smoke", async () => {
     test.skip("write ops — PRIVATE_KEY not set", () => {});
   } else {
     const account = privateKeyToAccount(privateKey);
-    const walletClient = createWalletClient({ account, transport: http(TESTNET_RPC) });
-    const testnetPublic = createPublicClient({ transport: http(TESTNET_RPC) });
+    const walletClient = createWalletClient({ account, transport: http(CHAIN_CONFIG.testnet.rpc) });
+    const testnetPublic = createPublicClient({ transport: http(CHAIN_CONFIG.testnet.rpc) });
     const testnetPellet = new PelletHlClient({
       publicClient: testnetPublic,
       walletClient,
-      addressOverrides: {
-        identity: "0x5081cb0aa11249e9d3171875dc87f39191e8969d",
-        reputation: "0xb37c56d3c366c89a08dce8669aee6bb077038772",
-        validation: "0x830f29785b6347888ac038986673ccd15a869edd",
-      },
+      chain: "testnet",
     });
 
     test("mintAgentId on testnet", async () => {
