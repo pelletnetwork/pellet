@@ -1,5 +1,6 @@
 import type { PublicClient, WalletClient, Address, Hex } from "viem";
 import type {
+  HlChain,
   AgentRecord,
   AttestationRecord,
   ValidationRecord,
@@ -12,6 +13,7 @@ import { CONTRACTS, IDENTITY_ABI, REPUTATION_ABI, VALIDATION_ABI } from "./const
 type ClientOptions = {
   publicClient: PublicClient;
   walletClient?: WalletClient;
+  chain?: HlChain;
   addressOverrides?: Partial<Record<"identity" | "reputation" | "validation", Address>>;
 };
 
@@ -23,10 +25,11 @@ export class PelletHlClient {
   constructor(opts: ClientOptions) {
     this.#publicClient = opts.publicClient;
     this.#walletClient = opts.walletClient;
+    const chainAddresses = CONTRACTS[opts.chain ?? "mainnet"];
     this.#addresses = {
-      identity: opts.addressOverrides?.identity ?? CONTRACTS.identity,
-      reputation: opts.addressOverrides?.reputation ?? CONTRACTS.reputation,
-      validation: opts.addressOverrides?.validation ?? CONTRACTS.validation,
+      identity: opts.addressOverrides?.identity ?? chainAddresses.identity,
+      reputation: opts.addressOverrides?.reputation ?? chainAddresses.reputation,
+      validation: opts.addressOverrides?.validation ?? chainAddresses.validation,
     };
   }
 

@@ -136,12 +136,25 @@ export const CHAIN_CONFIG = {
     rpc: "https://rpc.hyperliquid.xyz/evm",
     explorer: "https://www.hyperscan.com",
   },
+  testnet: {
+    id: 998,
+    name: "HyperEVM Testnet",
+    rpc: "https://rpc.hyperliquid-testnet.xyz/evm",
+    explorer: "https://testnet.purrsec.com",
+  },
 } as const;
 
 export const CONTRACTS = {
-  identity: "0x2bfcb081c8c5F98261efcdEC3971D0b1bc7ad943" as Address,
-  reputation: "0x8cA1f4E2335271f12E5E14Cd8378B558fd14114b" as Address,
-  validation: "0x7c44Dc7Fb45D723455DB1b69EE08Bd718998e5B4" as Address,
-};
+  mainnet: {
+    identity: "0x2bfcb081c8c5F98261efcdEC3971D0b1bc7ad943" as Address,
+    reputation: "0x8cA1f4E2335271f12E5E14Cd8378B558fd14114b" as Address,
+    validation: "0x7c44Dc7Fb45D723455DB1b69EE08Bd718998e5B4" as Address,
+  },
+  testnet: {
+    identity: "0x5081cb0aa11249e9d3171875DC87f39191E8969d" as Address,
+    reputation: "0xB37C56d3C366C89a08dCe8669aeE6bB077038772" as Address,
+    validation: "0x830F29785b6347888Ac038986673CcD15a869EDD" as Address,
+  },
+} as const;
 
 export { IDENTITY_ABI, REPUTATION_ABI, VALIDATION_ABI };
