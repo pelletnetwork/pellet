@@ -8,7 +8,7 @@
 
 **Note:** The Tempo-era Pellet codebase was extracted to `pelletnetwork/pellet-tempo-archive` 2026-04-22. This repo is standalone; there's no cross-project code coupling to worry about.
 
-**Architecture:** HyperEVM-deployed Solidity contracts (Foundry) expose identity/reputation/validation registries. A Next.js cron indexer writes events to Postgres (Drizzle). Public `apps/web/app/hl/` route tree renders registry state. `@pelletfi/hl` SDK gives agents a typed client; `@pelletfi/hl-mcp` exposes the same through MCP tools.
+**Architecture:** HyperEVM-deployed Solidity contracts (Foundry) expose identity/reputation/validation registries. A Next.js cron indexer writes events to Postgres (Drizzle). Public `apps/web/app/hl/` route tree renders registry state. `@pelletnetwork/hl SDK gives agents a typed client; `@pelletnetwork/hl-mcp` exposes the same through MCP tools.
 
 **Tech Stack:** Solidity 0.8.x + Foundry, TypeScript + viem, Next.js 16 App Router, Drizzle ORM + Neon Postgres, npm workspaces, MCP SDK.
 
@@ -22,8 +22,8 @@ This plan covers **Phase 1 only** from the spec [2026-04-22-pellet-hl-agent-infr
 - 3 ERC-8004 contracts (Identity, Reputation, Validation) deployed to HyperEVM testnet
 - Drizzle schema + migrations for `hl_*` tables
 - Cron indexer reading contract events
-- `@pelletfi/hl` SDK (mint + read methods)
-- `@pelletfi/hl-mcp` MCP server (4 core tools)
+- `@pelletnetwork/hl SDK (mint + read methods)
+- `@pelletnetwork/hl-mcp` MCP server (4 core tools)
 - `apps/web/app/hl/` public dashboard (registry list + per-agent profile)
 - Brand v2 application to HL surfaces (IBM Plex Mono + Inter, blue palette)
 
@@ -1774,7 +1774,7 @@ Record in a scratch notes file: "Indexer validated on <date>: agent 1 minted + i
 
 ## Week 3 — SDK + MCP
 
-### Task 15: Scaffold `@pelletfi/hl` SDK package
+### Task 15: Scaffold `@pelletnetwork/hl SDK package
 
 **Files:**
 - Create: `packages/hl-sdk/package.json`
@@ -1792,7 +1792,7 @@ mkdir -p /Users/jake/pellet/packages/hl-sdk/src
 
 ```json
 {
-  "name": "@pelletfi/hl",
+  "name": "@pelletnetwork/hl,
   "version": "0.1.0",
   "description": "TypeScript SDK for Pellet's Hyperliquid agent infrastructure — mint identities, read reputations, submit validations.",
   "type": "module",
@@ -1857,20 +1857,20 @@ export type { HlChain, AgentRecord, AttestationRecord, ValidationRecord } from "
 - [ ] **Step 5: Write `README.md`**
 
 ```markdown
-# @pelletfi/hl
+# @pelletnetwork/hl
 
 TypeScript SDK for the Pellet agent infrastructure layer on Hyperliquid.
 
 ## Install
 
 ```bash
-npm install @pelletfi/hl viem
+npm install @pelletnetwork/hlviem
 ```
 
 ## Quick start
 
 ```typescript
-import { PelletHlClient } from "@pelletfi/hl";
+import { PelletHlClient } from "@pelletnetwork/hl;
 import { createWalletClient, http } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 
@@ -1898,7 +1898,7 @@ See `pellet.network/docs` for the full guide.
 
 ```bash
 cd /Users/jake/pellet
-npm install --workspace=@pelletfi/hl viem
+npm install --workspace=@pelletnetwork/hlviem
 ```
 
 - [ ] **Step 7: Commit scaffold**
@@ -1906,7 +1906,7 @@ npm install --workspace=@pelletfi/hl viem
 ```bash
 cd /Users/jake/pellet
 git add packages/hl-sdk/
-git commit -m "chore(hl-sdk): scaffold @pelletfi/hl package"
+git commit -m "chore(hl-sdk): scaffold @pelletnetwork/hlpackage"
 ```
 
 ---
@@ -2167,7 +2167,7 @@ git commit -m "feat(hl-sdk): implement PelletHlClient with identity/reputation/v
 ```bash
 mkdir -p /tmp/hl-smoke && cd /tmp/hl-smoke
 cat > test.ts <<'EOF'
-import { PelletHlClient } from "@pelletfi/hl";
+import { PelletHlClient } from "@pelletnetwork/hl;
 import { createWalletClient, http } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 
@@ -2191,7 +2191,7 @@ EOF
 
 ```bash
 cd /Users/jake/pellet/packages/hl-sdk && npm link
-cd /tmp/hl-smoke && npm link @pelletfi/hl
+cd /tmp/hl-smoke && npm link @pelletnetwork/hl
 npm install viem tsx
 PRIVATE_KEY=0x<your-testnet-key> npx tsx test.ts
 ```
@@ -2204,7 +2204,7 @@ Note: success → SDK is wired correctly end-to-end against testnet.
 
 ---
 
-### Task 18: Publish `@pelletfi/hl` to npm (dry run first)
+### Task 18: Publish `@pelletnetwork/hl to npm (dry run first)
 
 **Files:** none
 
@@ -2232,12 +2232,12 @@ cd /Users/jake/pellet/packages/hl-sdk
 npm publish --access public
 ```
 
-Expected: `+ @pelletfi/hl@0.1.0` in output.
+Expected: `+ @pelletnetwork/hl0.1.0` in output.
 
 - [ ] **Step 4: Verify package on npmjs.com**
 
 ```bash
-npm view @pelletfi/hl
+npm view @pelletnetwork/hl
 ```
 
 Expected: Package info printed with version 0.1.0.
@@ -2252,7 +2252,7 @@ git push origin hl-sdk-v0.1.0
 
 ---
 
-### Task 19: Scaffold `@pelletfi/hl-mcp` MCP server
+### Task 19: Scaffold `@pelletnetwork/hl-mcp` MCP server
 
 **Files:**
 - Create: `packages/hl-mcp/package.json`
@@ -2271,7 +2271,7 @@ mkdir -p /Users/jake/pellet/packages/hl-mcp/src /Users/jake/pellet/packages/hl-m
 
 ```json
 {
-  "name": "@pelletfi/hl-mcp",
+  "name": "@pelletnetwork/hl-mcp",
   "version": "0.1.0",
   "description": "MCP server exposing Pellet's Hyperliquid agent infrastructure as tools for AI agents.",
   "type": "module",
@@ -2287,7 +2287,7 @@ mkdir -p /Users/jake/pellet/packages/hl-mcp/src /Users/jake/pellet/packages/hl-m
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
-    "@pelletfi/hl": "^0.1.0",
+    "@pelletnetwork/hl: "^0.1.0",
     "viem": "^2.0.0"
   },
   "keywords": ["mcp", "hyperliquid", "agent", "pellet"],
@@ -2340,7 +2340,7 @@ console.log("pellet-hl-mcp starting...");
 
 ```bash
 cd /Users/jake/pellet
-npm install --workspace=@pelletfi/hl-mcp @modelcontextprotocol/sdk @pelletfi/hl viem
+npm install --workspace=@pelletnetwork/hl-mcp @modelcontextprotocol/sdk @pelletnetwork/hlviem
 ```
 
 - [ ] **Step 7: Commit scaffold**
@@ -2348,7 +2348,7 @@ npm install --workspace=@pelletfi/hl-mcp @modelcontextprotocol/sdk @pelletfi/hl 
 ```bash
 cd /Users/jake/pellet
 git add packages/hl-mcp/
-git commit -m "chore(hl-mcp): scaffold @pelletfi/hl-mcp package"
+git commit -m "chore(hl-mcp): scaffold @pelletnetwork/hl-mcp package"
 ```
 
 ---
@@ -2362,7 +2362,7 @@ git commit -m "chore(hl-mcp): scaffold @pelletfi/hl-mcp package"
 - [ ] **Step 1: Write `src/tools.ts`**
 
 ```typescript
-import { PelletHlClient } from "@pelletfi/hl";
+import { PelletHlClient } from "@pelletnetwork/hl;
 import { createWalletClient, createPublicClient, http } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import type { Server } from "@modelcontextprotocol/sdk/server/index.js";
@@ -2536,7 +2536,7 @@ git commit -m "feat(hl-mcp): implement 4 core MCP tools"
 
 ---
 
-### Task 21: Publish `@pelletfi/hl-mcp` to npm
+### Task 21: Publish `@pelletnetwork/hl-mcp` to npm
 
 - [ ] **Step 1: Dry-run publish**
 
@@ -2551,7 +2551,7 @@ npm publish --dry-run --access public
 npm publish --access public
 ```
 
-Expected: `+ @pelletfi/hl-mcp@0.1.0`.
+Expected: `+ @pelletnetwork/hl-mcp@0.1.0`.
 
 - [ ] **Step 3: Tag**
 
@@ -2970,11 +2970,11 @@ export default function DocsPage() {
         <h2 className="hl-display" style={{ fontSize: 20, marginBottom: 16 }}>Quickstart</h2>
         <p>Install the SDK:</p>
         <pre className="hl-mono" style={{ background: "#f6f6f6", padding: 12, borderRadius: 4, overflow: "auto", fontSize: 13 }}>
-{`npm install @pelletfi/hl viem`}
+{`npm install @pelletnetwork/hlviem`}
         </pre>
         <p style={{ marginTop: 16 }}>Mint an agent ID:</p>
         <pre className="hl-mono" style={{ background: "#f6f6f6", padding: 12, borderRadius: 4, overflow: "auto", fontSize: 13 }}>
-{`import { PelletHlClient } from "@pelletfi/hl";
+{`import { PelletHlClient } from "@pelletnetwork/hl;
 import { createWalletClient, http } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 
@@ -2995,7 +2995,7 @@ const { agentId } = await pellet.mintAgentId({
         <h2 className="hl-display" style={{ fontSize: 20, marginBottom: 16 }}>MCP</h2>
         <p>Install the MCP server:</p>
         <pre className="hl-mono" style={{ background: "#f6f6f6", padding: 12, borderRadius: 4, overflow: "auto", fontSize: 13 }}>
-{`npx @pelletfi/hl-mcp`}
+{`npx @pelletnetwork/hl-mcp`}
         </pre>
         <p style={{ marginTop: 16 }}>Tools exposed:</p>
         <ul className="hl-mono" style={{ fontSize: 14, lineHeight: 1.8 }}>
@@ -3061,8 +3061,8 @@ Load both in browser. Confirm data renders from DB.
 cd /tmp
 mkdir hl-install-test && cd hl-install-test
 npm init -y
-npm install @pelletfi/hl viem
-node -e "import('@pelletfi/hl').then(m => console.log(m))"
+npm install @pelletnetwork/hlviem
+node -e "import('@pelletnetwork/hl).then(m => console.log(m))"
 ```
 
 Expected: Module imports without errors.
@@ -3070,7 +3070,7 @@ Expected: Module imports without errors.
 - [ ] **Step 4: Verify MCP server starts**
 
 ```bash
-PELLET_HL_PRIVATE_KEY=0x0000000000000000000000000000000000000000000000000000000000000001 npx @pelletfi/hl-mcp
+PELLET_HL_PRIVATE_KEY=0x0000000000000000000000000000000000000000000000000000000000000001 npx @pelletnetwork/hl-mcp
 ```
 
 Expected: Server starts (you can Ctrl-C after it prints startup message).
@@ -3138,8 +3138,8 @@ After Phase 1 ships:
 
 - [ ] All 3 contracts deployed to HyperEVM testnet, addresses recorded
 - [ ] All 3 indexers running hourly without errors
-- [ ] `@pelletfi/hl` published to npm, installable
-- [ ] `@pelletfi/hl-mcp` published to npm, installable
+- [ ] `@pelletnetwork/hl published to npm, installable
+- [ ] `@pelletnetwork/hl-mcp` published to npm, installable
 - [ ] `pellet.network` serves agent registry, loads from DB
 - [ ] `pellet.network/agent/[id]` serves per-agent profile
 - [ ] `pellet.network/docs` has working quickstart

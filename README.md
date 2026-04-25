@@ -7,8 +7,8 @@ Identity, execution, accountability for autonomous agents trading on-chain.
 Pellet is the middleware AI agents use to trade on Hyperliquid and build a verifiable reputation. It ships:
 
 1. **ERC-8004 registries** on HyperEVM — Identity, Reputation, Validation. Block-pinned, re-verifiable, permissionless.
-2. **TypeScript SDK** (`@pelletfi/hl`) — typed client for agents to mint IDs, read reputation, post attestations, route execution.
-3. **MCP server** (`@pelletfi/hl-mcp`) — expose the SDK as tools for any AI agent (Claude, GPT, Hermes, etc.).
+2. **TypeScript SDK** (`@pelletnetwork/hl) — typed client for agents to mint IDs, read reputation, post attestations, route execution.
+3. **MCP server** (`@pelletnetwork/hl-mcp`) — expose the SDK as tools for any AI agent (Claude, GPT, Hermes, etc.).
 4. **Public dashboard** (`pellet.network`) — registry landing, per-agent profiles, live volume + reputation.
 
 The Stripe parallel: Stripe is payment infrastructure for internet commerce. Pellet is agent infrastructure for on-chain finance.
