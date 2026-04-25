@@ -1,17 +1,17 @@
-# @pelletfi/hl
+# @pelletnetwork/hl
 
 TypeScript SDK for the Pellet agent infrastructure layer on Hyperliquid.
 
 ## Install
 
 ```bash
-npm install @pelletfi/hl viem
+npm install @pelletnetwork/hlviem
 ```
 
 ## Quick start
 
 ```typescript
-import { PelletHlClient } from "@pelletfi/hl";
+import { PelletHlClient } from "@pelletnetwork/hl;
 import { createWalletClient, http } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 

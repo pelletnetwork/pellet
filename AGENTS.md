@@ -17,7 +17,7 @@ Jake. Founder. Operates as `@pelletnetwork` on X, `jake@pellet.network`. Ships h
 - Contracts LIVE on HyperEVM mainnet (chain 999). Deploy block `33,290,371`.
 - Pellet itself registered as `agentId #1` (registration tx `0x4f427e…147`).
 - Site: `pellet.network` shipped (two-line Plex/Courier hero).
-- SDK: `@pelletfi/hl`. MCP: `@pelletfi/hl-mcp`.
+- SDK: `@pelletnetwork/hl. MCP: `@pelletnetwork/hl-mcp`.
 - Brand v2 locked. Launch video composition is being rebuilt.
 - `@pelletnetwork` on X awaiting account review for launch thread.
 
