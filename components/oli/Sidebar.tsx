@@ -16,6 +16,7 @@ const sections = [
     label: "Reference",
     items: [
       { label: "Rails",       href: "/oli/rails" },
+      { label: "Skills",      href: "/oli/skills" },
       { label: "Methodology", href: "/oli/methodology" },
     ],
   },
