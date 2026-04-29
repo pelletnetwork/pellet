@@ -266,6 +266,13 @@ function PegChart() {
 
 // ── Page ────────────────────────────────────────────────────────────────────
 
+type OliSnap = {
+  txCount: number;
+  agentsActive: number;
+  amountSumWei: string;
+  providersDetected: number;
+};
+
 export default function LandingPage() {
   // Live Tempo block height for the folio rule — polls /api/v1/health
   // every 1s. Tempo blocks land ~570ms apart so the number visibly ticks
@@ -281,6 +288,22 @@ export default function LandingPage() {
     };
     fetchBlock();
     const id = setInterval(fetchBlock, 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  // Live OLI snapshot — drives the stats strip below the hero. Refreshed
+  // every 60s so the front page reads as a live ticker, not static copy.
+  const [snap, setSnap] = useState<OliSnap | null>(null);
+  useEffect(() => {
+    const fetchSnap = async () => {
+      try {
+        const r = await fetch("/api/oli/dashboard?w=24h");
+        const d = (await r.json()) as OliSnap;
+        setSnap(d);
+      } catch {}
+    };
+    fetchSnap();
+    const id = setInterval(fetchSnap, 60_000);
     return () => clearInterval(id);
   }, []);
 
@@ -699,39 +722,51 @@ export default function LandingPage() {
           </motion.div>
         </div>
 
-        {/* Stats strip */}
+        {/* Stats strip — live from /api/oli/dashboard?w=24h, refreshed 60s */}
         <motion.div variants={fadeUp} className="stats-strip">
           <div className="stats-row">
             {[
               {
-                label: "Stablecoins",
-                target: 12,
-                format: (n: number) => Math.round(n).toString(),
+                label: "MPP txs · 24h",
+                target: snap?.txCount ?? 0,
+                format: (n: number) => Math.round(n).toLocaleString(),
                 delay: 0,
               },
               {
-                label: "24h Volume",
-                target: 172,
-                format: (n: number) => `$${Math.round(n)}K`,
+                label: "Service revenue · 24h",
+                target: snap ? Number(snap.amountSumWei) / 1_000_000 : 0,
+                format: (n: number) =>
+                  n >= 1_000_000
+                    ? `$${(n / 1_000_000).toFixed(2)}M`
+                    : n >= 1_000
+                    ? `$${(n / 1_000).toFixed(1)}k`
+                    : `$${n.toFixed(2)}`,
                 delay: 0.08,
               },
               {
-                label: "Total Supply",
-                target: 2.81,
-                format: (n: number) => `$${n.toFixed(2)}M`,
+                label: "Providers detected",
+                target: snap?.providersDetected ?? 0,
+                format: (n: number) => Math.round(n).toString(),
                 delay: 0.16,
               },
             ].map((s) => (
               <div key={s.label} className="stat">
                 <span className="stat-label">{s.label}</span>
                 <span className="stat-value">
-                  <AnimatedStat target={s.target} format={s.format} delay={s.delay} />
+                  <AnimatedStat
+                    key={`${s.label}-${s.target}`}
+                    target={s.target}
+                    format={s.format}
+                    delay={s.delay}
+                  />
                 </span>
               </div>
             ))}
           </div>
           <span className="stats-version">
-            MPP-Native · v1.3.0 · Methodology v1.0
+            <Link href="/oli" style={{ color: "inherit", textDecoration: "none", borderBottom: "1px solid var(--color-border-subtle)" }}>
+              live · open ledger of the agent economy
+            </Link>
           </span>
         </motion.div>
       </motion.div>
