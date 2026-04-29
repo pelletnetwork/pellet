@@ -1,8 +1,10 @@
 # Pellet — Open-Ledger Interface (OLI)
 
+> **Status update 2026-04-29 (afternoon):** v0 implementation surface narrowed to MPP-aware dashboard — see [`2026-04-29-pellet-oli-mpp-dashboard.md`](./2026-04-29-pellet-oli-mpp-dashboard.md). The OLI-on-Tempo strategic thesis in this spec is unchanged; the agent-spectator-feed framing is replaced by a dashboard-first analytics surface centered on MPP service activity. Stablecoin reconciliation (originally part of this spec) is deferred to v0.5+. Read this spec for the strategic frame; read the v3 spec for the v0 build.
+
 **Spec date:** 2026-04-29 (v2 — supersedes `2026-04-29-pellet-agentics-terminal-design.md`)
 **Author:** Jake Maynard (@pelletnetwork)
-**Status:** Approved for implementation planning
+**Status:** Strategic thesis (current); v0 implementation moved to `2026-04-29-pellet-oli-mpp-dashboard.md`
 **Domain:** pellet.network
 **Repo:** github.com/pelletnetwork/pellet
 **Source archive (carry-forward):** github.com/pelletnetwork/pellet-tempo-archive
