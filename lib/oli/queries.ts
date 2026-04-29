@@ -423,6 +423,126 @@ export async function agentDetail(id: string) {
   return serviceDetail(id); // same query shape — different page presentation
 }
 
+// ── Global search (⌘K command bar) ────────────────────────────────────────
+
+export type SearchHit = {
+  kind: "event" | "agent" | "service" | "address";
+  id: string;
+  label: string;
+  sub: string;
+  href: string;
+};
+
+export async function searchOli(q: string): Promise<SearchHit[]> {
+  const trimmed = q.trim();
+  if (trimmed.length < 2) return [];
+  const pattern = `%${trimmed}%`;
+
+  // 1. Agents/services — match id, label, or wallet address. The agents table
+  //    is the canonical entity registry; we split on id LIKE '%-mpp' to route
+  //    to the right detail page.
+  const entitiesP = db.execute<{
+    id: string;
+    label: string;
+    category: string | null;
+    wallet: string | null;
+  }>(sql`
+    SELECT
+      a.id                              AS id,
+      a.label                           AS label,
+      (a.links ->> 'category')          AS category,
+      COALESCE(a.wallets[1], NULL)      AS wallet
+    FROM agents a
+    WHERE a.active = true
+      AND (
+        a.id ILIKE ${pattern}
+        OR a.label ILIKE ${pattern}
+        OR EXISTS (
+          SELECT 1 FROM unnest(a.wallets) w WHERE w ILIKE ${pattern}
+        )
+      )
+    ORDER BY a.label ASC
+    LIMIT 8
+  `);
+
+  // 2. Events — match tx hash or counterparty address. Recent first.
+  const eventsP = db.execute<{
+    id: number;
+    ts: Date | string;
+    agent_label: string;
+    kind: string;
+    amount_wei: string | null;
+    tx_hash: string;
+  }>(sql`
+    SELECT
+      ae.id::int                        AS id,
+      ae.ts                             AS ts,
+      a.label                           AS agent_label,
+      ae.kind                           AS kind,
+      ae.amount_wei                     AS amount_wei,
+      ae.tx_hash                        AS tx_hash
+    FROM agent_events ae
+    JOIN agents a ON a.id = ae.agent_id
+    WHERE ae.tx_hash ILIKE ${pattern}
+       OR ae.counterparty_address ILIKE ${pattern}
+    ORDER BY ae.ts DESC
+    LIMIT 8
+  `);
+
+  // 3. Address labels — labeled counterparties that aren't watched agents.
+  //    Useful for searching "Stargate" or "0x789…" and seeing the label hit.
+  const labelsP = db.execute<{
+    address: string;
+    label: string;
+    category: string | null;
+  }>(sql`
+    SELECT al.address, al.label, al.category
+    FROM address_labels al
+    WHERE al.address ILIKE ${pattern} OR al.label ILIKE ${pattern}
+    ORDER BY al.label ASC
+    LIMIT 6
+  `);
+
+  const [entities, events, labels] = await Promise.all([entitiesP, eventsP, labelsP]);
+
+  const hits: SearchHit[] = [];
+
+  for (const r of entities.rows) {
+    const isService = r.id.endsWith("-mpp");
+    hits.push({
+      kind: isService ? "service" : "agent",
+      id: r.id,
+      label: r.label,
+      sub: r.wallet ?? r.category ?? r.id,
+      href: isService ? `/oli/services/${r.id}` : `/oli/agents/${r.id}`,
+    });
+  }
+
+  for (const r of events.rows) {
+    const tsDate = r.ts instanceof Date ? r.ts : new Date(r.ts as string);
+    hits.push({
+      kind: "event",
+      id: String(r.id),
+      label: `${r.agent_label} · ${r.kind}`,
+      sub: `${r.tx_hash.slice(0, 10)}…${r.tx_hash.slice(-6)} · ${tsDate.toISOString().slice(0, 16).replace("T", " ")}`,
+      href: `/oli/event/${r.id}`,
+    });
+  }
+
+  for (const r of labels.rows) {
+    hits.push({
+      kind: "address",
+      id: r.address,
+      label: r.label,
+      sub: `${r.address.slice(0, 10)}…${r.address.slice(-6)}${r.category ? ` · ${r.category}` : ""}`,
+      // No detail page for addresses yet — link out to Tempo explorer.
+      href: `https://explorer.tempo.foundation/address/${r.address}`,
+    });
+  }
+
+  return hits;
+}
+
 // ── Event detail (deep-link page) ─────────────────────────────────────────
 
 export type EventDetail = {

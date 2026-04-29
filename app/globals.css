@@ -1504,3 +1504,142 @@ main {
     margin-top: 8px;
   }
 }
+
+/* ── ⌘K Command Bar ───────────────────────────────────────────────────── */
+
+.oli-cmdk-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 12vh 16px 16px;
+}
+.oli-cmdk-modal {
+  width: 100%;
+  max-width: 560px;
+  background: var(--color-bg-base);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 12px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.02);
+  overflow: hidden;
+}
+.oli-cmdk-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+.oli-cmdk-input-prefix {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--color-text-quaternary);
+  user-select: none;
+}
+.oli-cmdk-input {
+  flex: 1;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  letter-spacing: -0.01em;
+  padding: 0;
+}
+.oli-cmdk-input::placeholder {
+  color: var(--color-text-quaternary);
+}
+.oli-cmdk-spinner {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid var(--color-border-subtle);
+  border-top-color: var(--color-accent);
+  animation: oli-cmdk-spin 0.8s linear infinite;
+}
+@keyframes oli-cmdk-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.oli-cmdk-results {
+  max-height: 56vh;
+  overflow-y: auto;
+  padding: 4px;
+}
+.oli-cmdk-hint {
+  padding: 18px 16px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-text-quaternary);
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+.oli-cmdk-result {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 36px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 0;
+  background: transparent;
+  border-radius: 6px;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  color: inherit;
+  transition: background var(--duration-fast) ease;
+}
+.oli-cmdk-result[data-selected="true"] {
+  background: var(--color-bg-subtle);
+  box-shadow: inset 2px 0 0 var(--color-accent);
+}
+.oli-cmdk-result-kind {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: var(--color-text-quaternary);
+  text-align: center;
+  padding: 3px 0;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 3px;
+}
+.oli-cmdk-result[data-selected="true"] .oli-cmdk-result-kind {
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+.oli-cmdk-result-label {
+  font-size: 13px;
+  color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.oli-cmdk-result-sub {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--color-text-tertiary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 240px;
+}
+@media (max-width: 600px) {
+  .oli-cmdk-backdrop {
+    padding: 6vh 8px 8px;
+  }
+  .oli-cmdk-result {
+    grid-template-columns: 32px 1fr;
+  }
+  .oli-cmdk-result-sub {
+    grid-column: 2 / 3;
+    max-width: none;
+  }
+}
