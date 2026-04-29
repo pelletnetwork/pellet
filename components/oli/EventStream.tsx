@@ -28,7 +28,14 @@ export function EventStream({
   const [pulseIds, setPulseIds] = useState<Set<number>>(new Set());
   const seen = useRef<Set<number>>(new Set(initialEvents.map((e) => e.id)));
 
+  // SSE live feed gated by NEXT_PUBLIC_OLI_LIVE_FEED — disabled by default.
+  // Holding open SSE connections runs Vercel functions for the full 60s
+  // maxDuration per viewer; with cron only running every 6h the realtime
+  // delta is small. Visitors see SSR'd events on each page load. Re-enable
+  // by setting NEXT_PUBLIC_OLI_LIVE_FEED=1 if/when traffic warrants.
+  const liveFeedEnabled = process.env.NEXT_PUBLIC_OLI_LIVE_FEED === "1";
   useEffect(() => {
+    if (!liveFeedEnabled) return;
     const es = new EventSource("/api/oli/feed");
     es.onmessage = (msg) => {
       try {
@@ -57,7 +64,7 @@ export function EventStream({
       // EventSource auto-reconnects on transient errors; nothing to do.
     };
     return () => es.close();
-  }, []);
+  }, [liveFeedEnabled]);
 
   if (events.length === 0) {
     return (
