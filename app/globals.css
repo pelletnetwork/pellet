@@ -1580,6 +1580,41 @@ main {
   text-align: right;
 }
 
+@media (max-width: 600px) {
+  .oli-providers-row {
+    grid-template-columns: 24px 1fr auto;
+    grid-template-areas:
+      "rank addr time"
+      ".    rev  txs";
+    row-gap: 4px;
+    column-gap: 10px;
+    padding: 10px 12px;
+  }
+  .oli-providers-rank {
+    grid-area: rank;
+  }
+  .oli-providers-addr {
+    grid-area: addr;
+  }
+  .oli-providers-time {
+    grid-area: time;
+  }
+  .oli-providers-num[data-cell="rev"] {
+    grid-area: rev;
+    text-align: left;
+    font-size: 13px;
+  }
+  .oli-providers-num[data-cell="txs"] {
+    grid-area: txs;
+    font-size: 11px;
+    color: var(--color-text-tertiary);
+  }
+  .oli-providers-num[data-cell="txs"]::before {
+    content: "× ";
+    color: var(--color-text-quaternary);
+  }
+}
+
 /* ── Token Composed Chart ──────────────────────────────────────────────── */
 
 .oli-tokenchart {

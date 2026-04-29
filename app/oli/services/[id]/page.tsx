@@ -61,8 +61,8 @@ export default async function OliServiceDetailPage({
             <div className="oli-providers-row oli-providers-row-head">
               <span className="oli-providers-rank">#</span>
               <span className="oli-providers-addr">provider</span>
-              <span className="oli-providers-num">revenue</span>
-              <span className="oli-providers-num">txs</span>
+              <span className="oli-providers-num" data-cell="rev">revenue</span>
+              <span className="oli-providers-num" data-cell="txs">txs</span>
               <span className="oli-providers-time">last</span>
             </div>
             {detail.providers.map((p, i) => (
@@ -86,8 +86,8 @@ export default async function OliServiceDetailPage({
                     );
                   })()}
                 </span>
-                <span className="oli-providers-num">{formatUsdcAmount(p.amountSumWei, 6)}</span>
-                <span className="oli-providers-num">{p.txCount.toLocaleString()}</span>
+                <span className="oli-providers-num" data-cell="rev">{formatUsdcAmount(p.amountSumWei, 6)}</span>
+                <span className="oli-providers-num" data-cell="txs">{p.txCount.toLocaleString()}</span>
                 <span className="oli-providers-time">{formatTimeAgo(p.lastTs)}</span>
               </a>
             ))}
