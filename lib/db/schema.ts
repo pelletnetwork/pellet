@@ -183,6 +183,33 @@ export const walletSessions = pgTable(
   }),
 );
 
+// Device-code pairing flow for the CLI. CLI starts a pairing → user approves
+// in the browser → CLI polls + claims the bearer. See drizzle/0005.
+export const walletDevicePairings = pgTable(
+  "wallet_device_pairings",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    code: text("code").notNull().unique(),
+    deviceId: text("device_id").notNull().unique(),
+    // 'pending' | 'approved' | 'claimed' | 'expired'
+    status: text("status").notNull().default("pending"),
+    bearerTokenHash: text("bearer_token_hash"),
+    approvedUserId: uuid("approved_user_id").references(() => walletUsers.id, { onDelete: "set null" }),
+    approvedSpendCapWei: text("approved_spend_cap_wei"),
+    approvedPerCallCapWei: text("approved_per_call_cap_wei"),
+    approvedSessionTtlSeconds: integer("approved_session_ttl_seconds"),
+    agentLabel: text("agent_label"),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    approvedAt: timestamp("approved_at", { withTimezone: true }),
+    claimedAt: timestamp("claimed_at", { withTimezone: true }),
+  },
+  (t) => ({
+    statusIdx: index("wallet_device_pairings_status_idx").on(t.status),
+    expiresIdx: index("wallet_device_pairings_expires_idx").on(t.expiresAt),
+  }),
+);
+
 export const walletSpendLog = pgTable(
   "wallet_spend_log",
   {
