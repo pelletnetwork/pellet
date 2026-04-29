@@ -21,33 +21,39 @@ import {
 export type WebAuthnEnv = {
   rpId: string;
   rpName: string;
-  origin: string;
+  // Accept both apex and www origins in production — pellet.network and
+  // www.pellet.network are valid clients of the same RP. simplewebauthn
+  // takes string | string[] for expectedOrigin.
+  origins: string[];
 };
 
 export function webauthnEnv(): WebAuthnEnv {
   // In Vercel preview/prod, NEXT_PUBLIC_BASE_URL or VERCEL_URL surfaces the
-  // host. Locally, defaults to localhost:3000. The RP id MUST match the
-  // browser's origin host (no scheme, no port) — passkeys are scoped to
-  // exactly that label.
+  // host. Locally, defaults to localhost:3000. The RP id MUST be a
+  // registrable suffix of every origin host (no scheme, no port) — passkeys
+  // are scoped to exactly that label and any subdomain of it.
   const explicit = process.env.NEXT_PUBLIC_RP_ID;
   if (explicit) {
+    const explicitOrigin = process.env.NEXT_PUBLIC_RP_ORIGIN;
     return {
       rpId: explicit,
       rpName: "Pellet Wallet",
-      origin: process.env.NEXT_PUBLIC_RP_ORIGIN ?? `https://${explicit}`,
+      origins: explicitOrigin
+        ? [explicitOrigin]
+        : [`https://${explicit}`, `https://www.${explicit}`],
     };
   }
   if (process.env.VERCEL_ENV === "production") {
     return {
       rpId: "pellet.network",
       rpName: "Pellet Wallet",
-      origin: "https://pellet.network",
+      origins: ["https://pellet.network", "https://www.pellet.network"],
     };
   }
   return {
     rpId: "localhost",
     rpName: "Pellet Wallet (dev)",
-    origin: "http://localhost:3000",
+    origins: ["http://localhost:3000"],
   };
 }
 
@@ -87,7 +93,7 @@ export async function verifyRegistration(opts: {
   return verifyRegistrationResponse({
     response: opts.response,
     expectedChallenge: opts.expectedChallenge,
-    expectedOrigin: env.origin,
+    expectedOrigin: env.origins,
     expectedRPID: env.rpId,
     requireUserVerification: false,
   });
@@ -117,7 +123,7 @@ export async function verifyAuthentication(opts: {
   return verifyAuthenticationResponse({
     response: opts.response,
     expectedChallenge: opts.expectedChallenge,
-    expectedOrigin: env.origin,
+    expectedOrigin: env.origins,
     expectedRPID: env.rpId,
     credential: opts.credential,
     requireUserVerification: false,

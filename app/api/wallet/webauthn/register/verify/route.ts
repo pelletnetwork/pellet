@@ -32,10 +32,12 @@ export async function POST(req: Request) {
       expectedChallenge: challenge,
     });
   } catch (e) {
-    return NextResponse.json(
-      { error: "verification failed", detail: String(e) },
-      { status: 400 },
-    );
+    // Surface the exact reason — origin mismatch, RP id mismatch, signature
+    // failure, etc. Helps diagnose without re-deploying. detail is safe to
+    // expose since challenge is already consumed.
+    const detail = e instanceof Error ? e.message : String(e);
+    console.error("[webauthn/register/verify]", detail);
+    return NextResponse.json({ error: "verification failed", detail }, { status: 400 });
   }
 
   if (!result.verified || !result.registrationInfo) {

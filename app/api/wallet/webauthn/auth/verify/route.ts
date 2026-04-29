@@ -50,10 +50,9 @@ export async function POST(req: Request) {
       },
     });
   } catch (e) {
-    return NextResponse.json(
-      { error: "verification failed", detail: String(e) },
-      { status: 400 },
-    );
+    const detail = e instanceof Error ? e.message : String(e);
+    console.error("[webauthn/auth/verify]", detail);
+    return NextResponse.json({ error: "verification failed", detail }, { status: 400 });
   }
 
   if (!result.verified) {
