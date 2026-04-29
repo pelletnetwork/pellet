@@ -3,17 +3,14 @@
 import { useMemo } from "react";
 import {
   ComposedChart,
-  Area,
   Bar,
   Line,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
 } from "recharts";
-import { TOKEN_COLORS } from "@/lib/oli/tokens";
 import type { TokenStackPoint, TokenStackTotals } from "@/lib/oli/queries";
 
 type Datum = {
@@ -29,13 +26,18 @@ type Datum = {
 
 const MA_WINDOW = 7;
 const ACCENT = "#6080c0";
-const ACCENT_DIM = "rgba(96, 128, 192, 0.55)";
+const FILL_USDCE = "rgba(255, 255, 255, 0.78)";
+const FILL_USDT0 = "rgba(96, 128, 192, 0.78)";
+const FILL_OTHER = "rgba(255, 255, 255, 0.22)";
 
-function fmtUsd(n: number): string {
+function fmtUsd(n: number, compact = true): string {
   if (!Number.isFinite(n) || n === 0) return "$0";
-  if (Math.abs(n) >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`;
-  if (Math.abs(n) >= 1_000) return `$${(n / 1_000).toFixed(1)}k`;
-  return `$${n.toFixed(2)}`;
+  if (compact) {
+    if (Math.abs(n) >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`;
+    if (Math.abs(n) >= 1_000) return `$${(n / 1_000).toFixed(1)}k`;
+    return `$${n.toFixed(2)}`;
+  }
+  return `$${n.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
 }
 
 function fmtTickX(ts: number, bucketHours: number): string {
@@ -44,7 +46,7 @@ function fmtTickX(ts: number, bucketHours: number): string {
     return `${String(d.getUTCHours()).padStart(2, "0")}:00`;
   }
   if (bucketHours <= 6) {
-    return `${d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })} ${String(d.getUTCHours()).padStart(2, "0")}:00`;
+    return `${d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })}`;
   }
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
 }
@@ -68,7 +70,7 @@ export function TokenStackChart({
   points,
   totals,
   bucketHours = 1,
-  height = 280,
+  height = 260,
 }: {
   points: TokenStackPoint[];
   totals: TokenStackTotals;
@@ -76,6 +78,7 @@ export function TokenStackChart({
   height?: number;
 }) {
   const grandTotal = totals.usdce + totals.usdt0 + totals.other;
+  const totalTx = points.reduce((acc, p) => acc + p.txCount, 0);
 
   const data: Datum[] = useMemo(() => {
     return points.map((p, i) => {
@@ -108,11 +111,10 @@ export function TokenStackChart({
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          fontSize: 12,
+          fontSize: 11,
           color: "var(--color-text-quaternary)",
           border: "1px solid var(--color-border-subtle)",
-          borderRadius: 8,
-          background: "var(--color-bg-subtle)",
+          background: "transparent",
           fontFamily: "var(--font-mono)",
           textTransform: "uppercase",
           letterSpacing: "0.08em",
@@ -124,35 +126,41 @@ export function TokenStackChart({
   }
 
   return (
-    <div className="oli-tokenchart" style={{ width: "100%" }}>
+    <div className="oli-tokenchart">
+      <div className="oli-tokenchart-tape">
+        <span className="oli-tokenchart-tape-cell">
+          <span className="oli-tokenchart-tape-mark" data-token="usdce" />
+          <span className="oli-tokenchart-tape-label">USDC.e</span>
+          <span className="oli-tokenchart-tape-value">{fmtUsd(totals.usdce)}</span>
+        </span>
+        <span className="oli-tokenchart-tape-sep" aria-hidden="true">·</span>
+        <span className="oli-tokenchart-tape-cell">
+          <span className="oli-tokenchart-tape-mark" data-token="usdt0" />
+          <span className="oli-tokenchart-tape-label">USDT0</span>
+          <span className="oli-tokenchart-tape-value">{fmtUsd(totals.usdt0)}</span>
+        </span>
+        <span className="oli-tokenchart-tape-sep" aria-hidden="true">·</span>
+        <span className="oli-tokenchart-tape-cell">
+          <span className="oli-tokenchart-tape-mark" data-token="other" />
+          <span className="oli-tokenchart-tape-label">other</span>
+          <span className="oli-tokenchart-tape-value">{fmtUsd(totals.other)}</span>
+        </span>
+        <span className="oli-tokenchart-tape-spacer" />
+        <span className="oli-tokenchart-tape-cell">
+          <span className="oli-tokenchart-tape-label">txs</span>
+          <span className="oli-tokenchart-tape-value">{totalTx.toLocaleString()}</span>
+        </span>
+      </div>
+
       <ResponsiveContainer width="100%" height={height}>
         <ComposedChart
           data={data}
-          margin={{ top: 12, right: 12, bottom: 4, left: 0 }}
+          margin={{ top: 8, right: 8, bottom: 4, left: 0 }}
+          barCategoryGap={1}
         >
-          <defs>
-            <pattern
-              id="oli-other-pattern"
-              width="6"
-              height="6"
-              patternUnits="userSpaceOnUse"
-            >
-              <rect width="6" height="6" fill="rgba(255,255,255,0.06)" />
-              <circle cx="1.5" cy="1.5" r="0.7" fill="rgba(255,255,255,0.35)" />
-            </pattern>
-            <linearGradient id="oli-usdce-grad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="rgba(255,255,255,0.55)" />
-              <stop offset="100%" stopColor="rgba(255,255,255,0.10)" />
-            </linearGradient>
-            <linearGradient id="oli-usdt0-grad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={ACCENT_DIM} />
-              <stop offset="100%" stopColor="rgba(96,128,192,0.10)" />
-            </linearGradient>
-          </defs>
-
           <CartesianGrid
-            stroke="rgba(255,255,255,0.06)"
-            strokeDasharray="2 4"
+            stroke="rgba(255,255,255,0.05)"
+            strokeDasharray="1 5"
             vertical={false}
           />
 
@@ -162,127 +170,65 @@ export function TokenStackChart({
             domain={["dataMin", "dataMax"]}
             scale="time"
             tickFormatter={(v) => fmtTickX(v, bucketHours)}
-            stroke="rgba(255,255,255,0.18)"
-            tick={{ fill: "rgba(255,255,255,0.45)", fontSize: 10, fontFamily: "var(--font-mono)" }}
-            tickLine={{ stroke: "rgba(255,255,255,0.10)" }}
-            axisLine={{ stroke: "rgba(255,255,255,0.10)" }}
-            minTickGap={32}
+            stroke="rgba(255,255,255,0.10)"
+            tick={{ fill: "rgba(255,255,255,0.40)", fontSize: 9, fontFamily: "var(--font-mono)" }}
+            tickLine={false}
+            axisLine={false}
+            minTickGap={48}
+            padding={{ left: 4, right: 4 }}
           />
 
           <YAxis
-            yAxisId="usd"
-            orientation="left"
-            tickFormatter={fmtUsd}
-            stroke="rgba(255,255,255,0.18)"
-            tick={{ fill: "rgba(255,255,255,0.45)", fontSize: 10, fontFamily: "var(--font-mono)" }}
+            tickFormatter={(v) => fmtUsd(v, true)}
+            stroke="rgba(255,255,255,0.10)"
+            tick={{ fill: "rgba(255,255,255,0.40)", fontSize: 9, fontFamily: "var(--font-mono)" }}
             tickLine={false}
             axisLine={false}
-            width={56}
-          />
-
-          <YAxis
-            yAxisId="tx"
-            orientation="right"
-            tickFormatter={(v) => `${v}`}
-            stroke="rgba(255,255,255,0.18)"
-            tick={{ fill: "rgba(255,255,255,0.30)", fontSize: 10, fontFamily: "var(--font-mono)" }}
-            tickLine={false}
-            axisLine={false}
-            width={32}
+            width={50}
           />
 
           <Tooltip
-            cursor={{ stroke: ACCENT, strokeDasharray: "3 3", strokeWidth: 1 }}
+            cursor={{ fill: "rgba(255,255,255,0.04)" }}
+            wrapperStyle={{ outline: "none" }}
             content={(props) => <CustomTooltip {...props} />}
           />
 
           <Bar
-            yAxisId="tx"
-            dataKey="txCount"
-            fill="rgba(255,255,255,0.10)"
-            stroke="rgba(255,255,255,0.16)"
-            strokeWidth={0.5}
-            isAnimationActive
-            animationDuration={700}
-            animationEasing="ease-out"
-            radius={[2, 2, 0, 0]}
-          />
-
-          <Area
-            yAxisId="usd"
-            type="monotone"
             dataKey="other"
             stackId="rev"
-            fill="url(#oli-other-pattern)"
-            stroke="rgba(255,255,255,0.30)"
-            strokeWidth={0.75}
+            fill={FILL_OTHER}
             isAnimationActive
-            animationDuration={900}
+            animationDuration={650}
             animationEasing="ease-out"
           />
-          <Area
-            yAxisId="usd"
-            type="monotone"
+          <Bar
             dataKey="usdt0"
             stackId="rev"
-            fill="url(#oli-usdt0-grad)"
-            stroke={ACCENT}
-            strokeWidth={1}
+            fill={FILL_USDT0}
             isAnimationActive
-            animationDuration={900}
+            animationDuration={650}
             animationEasing="ease-out"
           />
-          <Area
-            yAxisId="usd"
-            type="monotone"
+          <Bar
             dataKey="usdce"
             stackId="rev"
-            fill="url(#oli-usdce-grad)"
-            stroke="rgba(255,255,255,0.85)"
-            strokeWidth={1}
+            fill={FILL_USDCE}
             isAnimationActive
-            animationDuration={900}
+            animationDuration={650}
             animationEasing="ease-out"
           />
 
           <Line
-            yAxisId="usd"
-            type="monotone"
+            type="step"
             dataKey="ma"
             stroke={ACCENT}
             strokeWidth={1.25}
-            strokeDasharray="3 3"
             dot={false}
             activeDot={false}
             isAnimationActive
-            animationDuration={1100}
+            animationDuration={900}
             animationEasing="ease-out"
             connectNulls
-          />
-
-          <Legend
-            verticalAlign="bottom"
-            height={28}
-            iconType="square"
-            iconSize={8}
-            wrapperStyle={{
-              fontFamily: "var(--font-mono)",
-              fontSize: 10,
-              letterSpacing: "0.06em",
-              textTransform: "uppercase",
-              color: "var(--color-text-tertiary)",
-              paddingTop: 4,
-            }}
-            formatter={(value) => {
-              const map: Record<string, string> = {
-                usdce: "USDC.e",
-                usdt0: "USDT0",
-                other: "other",
-                txCount: "tx count",
-                ma: "ma · 7",
-              };
-              return map[value] ?? value;
-            }}
           />
         </ComposedChart>
       </ResponsiveContainer>
@@ -290,9 +236,8 @@ export function TokenStackChart({
   );
 }
 
-// Custom tooltip — mono fixed-width numerals, accent left rule, bucket header.
-// Recharts' tooltip payload entries have a wider dataKey type than we use; we
-// only read .payload (the row datum), so we accept any-shape entries.
+// Hairline tooltip — no shadow, no swatches, mono columns. The bucket header
+// reads on top; values stack vertically with right-aligned numerals.
 type TooltipEntry = { payload?: Datum };
 function CustomTooltip({
   active,
@@ -307,62 +252,38 @@ function CustomTooltip({
   const total = d.total;
   const pct = (v: number) => (total > 0 ? `${((v / total) * 100).toFixed(0)}%` : "—");
 
-  const rows: Array<{ key: string; label: string; value: string; sub?: string; swatch: string }> = [
-    {
-      key: "usdce",
-      label: "USDC.e",
-      value: fmtUsd(d.usdce),
-      sub: pct(d.usdce),
-      swatch: TOKEN_COLORS["USDC.e"],
-    },
-    {
-      key: "usdt0",
-      label: "USDT0",
-      value: fmtUsd(d.usdt0),
-      sub: pct(d.usdt0),
-      swatch: TOKEN_COLORS.USDT0,
-    },
-    {
-      key: "other",
-      label: "other",
-      value: fmtUsd(d.other),
-      sub: pct(d.other),
-      swatch: TOKEN_COLORS.other,
-    },
-  ];
-
   return (
     <div className="oli-tokenchart-tip">
       <div className="oli-tokenchart-tip-head">{d.bucketLabel}</div>
-      <div className="oli-tokenchart-tip-rows">
-        {rows.map((r) => (
-          <div key={r.key} className="oli-tokenchart-tip-row">
-            <span className="oli-tokenchart-tip-swatch" style={{ background: r.swatch }} />
-            <span className="oli-tokenchart-tip-label">{r.label}</span>
-            <span className="oli-tokenchart-tip-value">{r.value}</span>
-            <span className="oli-tokenchart-tip-sub">{r.sub}</span>
-          </div>
-        ))}
-        <div className="oli-tokenchart-tip-divider" />
-        <div className="oli-tokenchart-tip-row">
-          <span className="oli-tokenchart-tip-swatch oli-tokenchart-tip-swatch-blank" />
-          <span className="oli-tokenchart-tip-label">total</span>
-          <span className="oli-tokenchart-tip-value oli-tokenchart-tip-value-strong">{fmtUsd(total)}</span>
-          <span className="oli-tokenchart-tip-sub" />
-        </div>
-        <div className="oli-tokenchart-tip-row">
-          <span className="oli-tokenchart-tip-swatch oli-tokenchart-tip-swatch-blank" />
-          <span className="oli-tokenchart-tip-label">tx count</span>
-          <span className="oli-tokenchart-tip-value">{d.txCount.toLocaleString()}</span>
-          <span className="oli-tokenchart-tip-sub" />
-        </div>
+      <div className="oli-tokenchart-tip-grid">
+        <span className="oli-tokenchart-tip-k">USDC.e</span>
+        <span className="oli-tokenchart-tip-v">{fmtUsd(d.usdce, false)}</span>
+        <span className="oli-tokenchart-tip-p">{pct(d.usdce)}</span>
+
+        <span className="oli-tokenchart-tip-k">USDT0</span>
+        <span className="oli-tokenchart-tip-v">{fmtUsd(d.usdt0, false)}</span>
+        <span className="oli-tokenchart-tip-p">{pct(d.usdt0)}</span>
+
+        <span className="oli-tokenchart-tip-k">other</span>
+        <span className="oli-tokenchart-tip-v">{fmtUsd(d.other, false)}</span>
+        <span className="oli-tokenchart-tip-p">{pct(d.other)}</span>
+
+        <span className="oli-tokenchart-tip-rule" />
+
+        <span className="oli-tokenchart-tip-k">total</span>
+        <span className="oli-tokenchart-tip-v oli-tokenchart-tip-v-strong">{fmtUsd(d.total, false)}</span>
+        <span className="oli-tokenchart-tip-p" />
+
+        <span className="oli-tokenchart-tip-k">txs</span>
+        <span className="oli-tokenchart-tip-v">{d.txCount.toLocaleString()}</span>
+        <span className="oli-tokenchart-tip-p" />
+
         {d.ma != null && (
-          <div className="oli-tokenchart-tip-row">
-            <span className="oli-tokenchart-tip-swatch oli-tokenchart-tip-swatch-ma" />
-            <span className="oli-tokenchart-tip-label">ma · 7</span>
-            <span className="oli-tokenchart-tip-value">{fmtUsd(d.ma)}</span>
-            <span className="oli-tokenchart-tip-sub" />
-          </div>
+          <>
+            <span className="oli-tokenchart-tip-k">ma · 7</span>
+            <span className="oli-tokenchart-tip-v">{fmtUsd(d.ma, false)}</span>
+            <span className="oli-tokenchart-tip-p" />
+          </>
         )}
       </div>
     </div>
