@@ -30,56 +30,71 @@ type AttributionResult =
   | { kind: "fingerprint"; fingerprint: string }
   | null;
 
-// Tempo uses a non-standard tx envelope (type 0x76) where actual EVM calls
-// live in tx.calls[]. Fetches the raw tx, walks calls + receipt logs, and
-// returns either an attributed provider address (Pattern A) or the bytes32
-// ref's fingerprint (Pattern B). Returns null when neither path applies.
+// Pattern A — SQL path. Settlement events are now ingested directly into
+// the events table (lib/ingest/event-processor.ts), so we can JOIN instead
+// of walking the receipt over RPC. Topic structure:
+//   topics[0] = SETTLEMENT_TOPIC
+//   topics[1] = sessionRef (bytes32, indexed)
+//   topics[2] = serviceProvider (address, indexed) ← what we want
+//   topics[3] = gateway (address, indexed)
+async function patternAFromEvents(txHash: string): Promise<string | null> {
+  const rows = await db.execute<{ provider_topic: string }>(sql`
+    SELECT (args -> 'topics' ->> 2) AS provider_topic
+    FROM events
+    WHERE tx_hash = ${txHash}
+      AND contract = ${SETTLEMENT_CONTRACT}
+      AND LOWER(event_type) = ${SETTLEMENT_TOPIC}
+    LIMIT 1
+  `);
+  const topic = rows.rows[0]?.provider_topic;
+  if (!topic) return null;
+  return topicToAddress(topic);
+}
+
+// Pattern B — RPC path. Calldata isn't in the events table; we still need
+// to fetch the raw tx. Tempo's type-0x76 envelope keeps EVM calls in
+// tx.calls[]; viem's getTransaction doesn't surface that field, so we
+// query JSON-RPC directly.
+async function patternBFromCalldata(txHash: string): Promise<string | null> {
+  const rpcUrl = process.env.TEMPO_RPC_URL ?? "https://rpc.tempo.xyz";
+  const txRes = await fetch(rpcUrl, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      jsonrpc: "2.0",
+      id: 1,
+      method: "eth_getTransactionByHash",
+      params: [txHash],
+    }),
+  });
+  const txJson = (await txRes.json()) as {
+    result: { calls?: Array<{ input?: string }> } | null;
+  };
+  const calls = txJson.result?.calls ?? [];
+  for (const call of calls) {
+    const inp = (call.input ?? "").toLowerCase();
+    if (!inp.startsWith(PATTERN_B_SELECTOR)) continue;
+    if (inp.length < 202) continue;
+    const ref = inp.slice(138, 202);
+    const fingerprint = ref.slice(10, 30);
+    if (fingerprint && /^[0-9a-f]{20}$/.test(fingerprint)) {
+      return fingerprint;
+    }
+  }
+  return null;
+}
+
+// Try Pattern A via SQL first (free — no RPC), then Pattern B via RPC if
+// no Settlement event was ingested for this tx. Returns null when neither
+// path applies (rare; possible if a gateway tx came in via an unsupported
+// selector).
 async function attributeTx(txHash: string): Promise<AttributionResult> {
   try {
-    // Pattern A: check the receipt for Settlement events.
-    const receipt = await ingestClient.getTransactionReceipt({
-      hash: txHash as `0x${string}`,
-    });
-    for (const log of receipt.logs) {
-      if (log.address.toLowerCase() !== SETTLEMENT_CONTRACT) continue;
-      if (log.topics[0]?.toLowerCase() !== SETTLEMENT_TOPIC) continue;
-      const providerTopic = log.topics[2];
-      if (!providerTopic) continue;
-      const addr = topicToAddress(providerTopic);
-      if (addr) return { kind: "address", address: addr };
-    }
+    const addr = await patternAFromEvents(txHash);
+    if (addr) return { kind: "address", address: addr };
 
-    // Pattern B: read tx.calls[] for the user→gateway calldata pattern. Tempo
-    // returns the raw tx via JSON-RPC; viem's getTransaction doesn't include
-    // the .calls field, so we query directly.
-    const rpcUrl = process.env.TEMPO_RPC_URL ?? "https://rpc.tempo.xyz";
-    const txRes = await fetch(rpcUrl, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        jsonrpc: "2.0",
-        id: 1,
-        method: "eth_getTransactionByHash",
-        params: [txHash],
-      }),
-    });
-    const txJson = (await txRes.json()) as {
-      result: { calls?: Array<{ input?: string }> } | null;
-    };
-    const calls = txJson.result?.calls ?? [];
-    for (const call of calls) {
-      const inp = (call.input ?? "").toLowerCase();
-      if (!inp.startsWith(PATTERN_B_SELECTOR)) continue;
-      // Args: 4-byte selector + 32-byte address + 32-byte amount + 32-byte ref.
-      // The ref starts at hex offset 138 (10 selector + 64 + 64).
-      if (inp.length < 202) continue;
-      const ref = inp.slice(138, 202); // 64 hex chars = 32 bytes
-      // Fingerprint = bytes 5-14 (chars 10-29) of the ref.
-      const fingerprint = ref.slice(10, 30);
-      if (fingerprint && /^[0-9a-f]{20}$/.test(fingerprint)) {
-        return { kind: "fingerprint", fingerprint };
-      }
-    }
+    const fp = await patternBFromCalldata(txHash);
+    if (fp) return { kind: "fingerprint", fingerprint: fp };
   } catch {
     // Swallow — failures shouldn't block the cron; we'll retry next pass.
   }

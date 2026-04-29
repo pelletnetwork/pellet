@@ -104,11 +104,16 @@ function EventRow({
 
   // For gateway-routed events, show the underlying service in the summary
   // line. Pattern A (address) takes priority; Pattern B (fingerprint) falls
-  // back to a short fp prefix if no address was recovered.
+  // back to a label-or-short-fp. Fingerprint labels live in address_labels
+  // under the synthetic 'fp_<hex>' key.
+  const fpKey = event.routedFingerprint
+    ? `fp_${event.routedFingerprint}`.toLowerCase()
+    : null;
+  const fpLabel = fpKey ? labelMap[fpKey]?.label ?? null : null;
   const routedSuffix = event.routedToAddress
     ? ` → ${event.routedToLabel ?? shortHash(event.routedToAddress)}`
     : event.routedFingerprint
-    ? ` → fp:${event.routedFingerprint.slice(0, 6)}…${event.routedFingerprint.slice(-4)}`
+    ? ` → ${fpLabel ?? `fp:${event.routedFingerprint.slice(0, 6)}…${event.routedFingerprint.slice(-4)}`}`
     : "";
 
   const handleHeaderKeyDown = (e: React.KeyboardEvent) => {

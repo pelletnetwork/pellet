@@ -11,6 +11,7 @@
     "test:watch": "vitest",
     "seed": "tsx --env-file=.env.local scripts/seed.ts",
     "seed:services": "tsx --env-file=.env.local scripts/seed-services.ts",
+    "label-provider": "tsx --env-file=.env.local scripts/label-provider.ts",
     "e2e": "playwright test"
   },
   "dependencies": {

@@ -181,14 +181,15 @@ export async function topRoutedProviders(
         'fingerprint'::text                               AS kind,
         NULL::text                                        AS address,
         ae.routed_fingerprint                             AS fingerprint,
-        NULL::text                                        AS label,
+        fpl.label                                         AS label,
         COUNT(*)::text                                    AS tx_count,
         COALESCE(SUM(ae.amount_wei::numeric), 0)::text    AS amount_sum_wei
       FROM agent_events ae
+      LEFT JOIN address_labels fpl ON fpl.address = 'fp_' || ae.routed_fingerprint
       WHERE ae.ts > ${sinceCutoff}
         AND ae.routed_fingerprint IS NOT NULL
         AND ae.routed_to_address IS NULL
-      GROUP BY ae.routed_fingerprint
+      GROUP BY ae.routed_fingerprint, fpl.label
     )
     SELECT * FROM (
       SELECT * FROM addr
@@ -551,16 +552,17 @@ export async function serviceDetail(id: string) {
         'fingerprint'::text                               AS kind,
         NULL::text                                        AS address,
         ae.routed_fingerprint                             AS fingerprint,
-        NULL::text                                        AS label,
-        NULL::text                                        AS category,
+        fpl.label                                         AS label,
+        fpl.category                                      AS category,
         COUNT(*)::text                                    AS tx_count,
         COALESCE(SUM(ae.amount_wei::numeric), 0)::text    AS amount_sum_wei,
         MAX(ae.ts)                                        AS last_ts
       FROM agent_events ae
+      LEFT JOIN address_labels fpl ON fpl.address = 'fp_' || ae.routed_fingerprint
       WHERE ae.agent_id = ${id}
         AND ae.routed_fingerprint IS NOT NULL
         AND ae.routed_to_address IS NULL
-      GROUP BY ae.routed_fingerprint
+      GROUP BY ae.routed_fingerprint, fpl.label, fpl.category
     )
     SELECT * FROM (
       SELECT * FROM addr
@@ -647,9 +649,12 @@ export async function providerDetail(key: string): Promise<ProviderDetail | null
     : sql`routed_to_address = ${addr}`;
 
   // Header aggregates: lifetime + 24h + first/last seen.
-  // ON FALSE so the JOIN produces no rows for fingerprint case (no address
-  // to look up). For address case, JOIN finds the label by address.
-  const labelLookup = isFingerprint ? sql`FALSE` : sql`rl.address = ${addr}`;
+  // For address case: JOIN by address. For fingerprint case: JOIN by the
+  // synthetic 'fp_<hex>' key — labelers can tag a fingerprint group the
+  // same way they tag a real address.
+  const labelLookup = isFingerprint
+    ? sql`rl.address = ${"fp_" + (fp ?? "")}`
+    : sql`rl.address = ${addr}`;
   const head = await db.execute<{
     tx_count: string;
     amount_sum_wei: string;
