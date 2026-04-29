@@ -9,8 +9,8 @@ const fragmentMono = Fragment_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "pellet // agentics terminal",
-  description: "spectator-mode for ai agents on solana.",
+  title: "pellet // open-ledger interface",
+  description: "the canonical interface for autonomous agent activity on tempo.",
 };
 
 export default function RootLayout({

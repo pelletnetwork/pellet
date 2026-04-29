@@ -12,7 +12,7 @@ export function Header({ agentCount }: Props) {
         <div className="flex items-center gap-3">
           <PelletMark size={20} />
           <span className="text-sm tracking-tight text-fg">
-            pellet <span className="text-muted">// agentics terminal · sol</span>
+            pellet <span className="text-muted">// open-ledger interface · tempo</span>
           </span>
         </div>
         <StatusIndicator state="live" label={`${agentCount} agents · live`} />
