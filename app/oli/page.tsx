@@ -159,9 +159,7 @@ export default async function OliDashboardPage({
                 return (
                   <a
                     key={p.address}
-                    href={`https://explore.tempo.xyz/address/${p.address}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    href={`/oli/providers/${p.address}`}
                     className="oli-providers-row oli-providers-row-link"
                   >
                     <span className="oli-providers-rank">{String(i + 1).padStart(2, "0")}</span>

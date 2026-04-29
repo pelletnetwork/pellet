@@ -519,6 +519,155 @@ export async function agentDetail(id: string) {
   return serviceDetail(id); // same query shape — different page presentation
 }
 
+// ── Routed provider detail page ───────────────────────────────────────────
+
+export type ProviderDetail = {
+  address: string;
+  label: string | null;
+  category: string | null;
+  txCount: number;
+  amountSumWei: string;
+  txCount24h: number;
+  amountSumWei24h: string;
+  firstSeen: Date | null;
+  lastSeen: Date | null;
+  trend: Array<{ bucket: Date; amountWei: string; txCount: number }>;
+  recent: RecentEventRow[];
+};
+
+export async function providerDetail(address: string): Promise<ProviderDetail | null> {
+  const addr = address.toLowerCase();
+
+  // Header aggregates: lifetime + 24h + first/last seen.
+  const head = await db.execute<{
+    tx_count: string;
+    amount_sum_wei: string;
+    tx_count_24h: string;
+    amount_sum_wei_24h: string;
+    first_seen: Date | string | null;
+    last_seen: Date | string | null;
+    label: string | null;
+    category: string | null;
+  }>(sql`
+    SELECT
+      COUNT(*)::text                                              AS tx_count,
+      COALESCE(SUM(ae.amount_wei::numeric), 0)::text              AS amount_sum_wei,
+      COUNT(*) FILTER (WHERE ae.ts > now() - interval '24 hours')::text       AS tx_count_24h,
+      COALESCE(SUM(ae.amount_wei::numeric) FILTER (WHERE ae.ts > now() - interval '24 hours'), 0)::text AS amount_sum_wei_24h,
+      MIN(ae.ts)                                                  AS first_seen,
+      MAX(ae.ts)                                                  AS last_seen,
+      MAX(rl.label)                                               AS label,
+      MAX(rl.category)                                            AS category
+    FROM agent_events ae
+    LEFT JOIN address_labels rl ON rl.address = ${addr}
+    WHERE ae.routed_to_address = ${addr}
+  `);
+
+  if (head.rows.length === 0 || Number(head.rows[0].tx_count) === 0) return null;
+  const h = head.rows[0];
+
+  // 30-day daily trend.
+  const trend = await db.execute<{ bucket: Date | string; amount_wei: string; tx_count: string }>(sql`
+    SELECT
+      date_trunc('day', ts) AS bucket,
+      COALESCE(SUM(amount_wei::numeric), 0)::text AS amount_wei,
+      COUNT(*)::text AS tx_count
+    FROM agent_events
+    WHERE routed_to_address = ${addr}
+      AND ts > now() - interval '30 days'
+    GROUP BY bucket
+    ORDER BY bucket ASC
+  `);
+
+  // Recent events routed to this provider.
+  const recent = await db.execute<{
+    id: number;
+    ts: Date | string;
+    agent_id: string;
+    agent_label: string;
+    agent_category: string | null;
+    counterparty_address: string | null;
+    counterparty_label: string | null;
+    counterparty_category: string | null;
+    kind: string;
+    amount_wei: string | null;
+    token_address: string | null;
+    tx_hash: string;
+    source_block: number;
+    methodology_version: string;
+    routed_to_address: string | null;
+    routed_to_label: string | null;
+  }>(sql`
+    SELECT
+      ae.id::int                              AS id,
+      ae.ts                                   AS ts,
+      ae.agent_id                             AS agent_id,
+      a.label                                 AS agent_label,
+      (a.links ->> 'category')                AS agent_category,
+      ae.counterparty_address                 AS counterparty_address,
+      cl.label                                AS counterparty_label,
+      cl.category                             AS counterparty_category,
+      ae.kind                                 AS kind,
+      ae.amount_wei                           AS amount_wei,
+      ae.token_address                        AS token_address,
+      ae.tx_hash                              AS tx_hash,
+      ae.source_block::int                    AS source_block,
+      ae.methodology_version                  AS methodology_version,
+      ae.routed_to_address                    AS routed_to_address,
+      rl.label                                AS routed_to_label
+    FROM agent_events ae
+    JOIN agents a ON a.id = ae.agent_id
+    LEFT JOIN address_labels cl ON cl.address = LOWER(ae.counterparty_address)
+    LEFT JOIN address_labels rl ON rl.address = LOWER(ae.routed_to_address)
+    WHERE ae.routed_to_address = ${addr}
+    ORDER BY ae.ts DESC
+    LIMIT 50
+  `);
+
+  return {
+    address: addr,
+    label: h.label,
+    category: h.category,
+    txCount: Number(h.tx_count),
+    amountSumWei: h.amount_sum_wei,
+    txCount24h: Number(h.tx_count_24h),
+    amountSumWei24h: h.amount_sum_wei_24h,
+    firstSeen: h.first_seen
+      ? h.first_seen instanceof Date
+        ? h.first_seen
+        : new Date(h.first_seen as string)
+      : null,
+    lastSeen: h.last_seen
+      ? h.last_seen instanceof Date
+        ? h.last_seen
+        : new Date(h.last_seen as string)
+      : null,
+    trend: trend.rows.map((r) => ({
+      bucket: r.bucket instanceof Date ? r.bucket : new Date(r.bucket as string),
+      amountWei: r.amount_wei,
+      txCount: Number(r.tx_count),
+    })),
+    recent: recent.rows.map((r) => ({
+      id: r.id,
+      ts: r.ts instanceof Date ? r.ts : new Date(r.ts as string),
+      agentId: r.agent_id,
+      agentLabel: r.agent_label,
+      agentCategory: r.agent_category,
+      counterpartyAddress: r.counterparty_address,
+      counterpartyLabel: r.counterparty_label,
+      counterpartyCategory: r.counterparty_category,
+      kind: r.kind,
+      amountWei: r.amount_wei,
+      tokenAddress: r.token_address,
+      txHash: r.tx_hash,
+      sourceBlock: r.source_block,
+      methodologyVersion: r.methodology_version,
+      routedToAddress: r.routed_to_address,
+      routedToLabel: r.routed_to_label,
+    })),
+  };
+}
+
 // ── Per-token breakdown (dashboard stack chart) ───────────────────────────
 
 export type TokenStackPoint = {
