@@ -628,9 +628,8 @@ export default function LandingPage() {
             <motion.p variants={fadeUp} className="landing-hero-sub">
               The open ledger of the agent economy. Pellet OLI reads every
               Tempo MPP payment — block-pinned, re-verifiable, public.
-              Pellet Wallet (soon) writes them. Where Stripe Link is private
-              and centralized, Pellet is open and self-custody. Same
-              primitive, opposite trust model.
+              Pellet Wallet (soon) signs them — passkey-derived keys, USDC
+              on Tempo, every settlement recorded right back to OLI.
             </motion.p>
 
             <motion.div variants={fadeUp} className="landing-hero-links">

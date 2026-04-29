@@ -4,11 +4,11 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Pellet Wallet — open agent wallet on Tempo",
   description:
-    "An open agent wallet for autonomous payments on Tempo. Every payment auto-records to the public OLI ledger. The open alternative to Stripe Link.",
+    "An open agent wallet on Tempo. Public ledger. Self-custody. Every payment recorded for anyone to read.",
   openGraph: {
     title: "Pellet Wallet — open agent wallet on Tempo",
     description:
-      "Stripe Link is private. The Pellet Wallet is open. Same primitive, opposite trust model.",
+      "An open agent wallet on Tempo. The ledger is public. The keys are yours.",
     url: "https://pellet.network/wallet",
     type: "website",
   },
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     site: "@pelletnetwork",
     title: "Pellet Wallet — open agent wallet on Tempo",
     description:
-      "Stripe Link is private. The Pellet Wallet is open. Same primitive, opposite trust model.",
+      "An open agent wallet on Tempo. The ledger is public. The keys are yours.",
   },
 };
 
@@ -288,32 +288,31 @@ export default function WalletPage() {
         </p>
 
         <p className="wallet-pitch">
-          Stripe Link is <em>private</em>. Pellet Wallet is <em>open</em>.
+          An open agent wallet on Tempo.
           <br />
-          Same primitive, opposite trust model.
+          The ledger is <em>public</em>. The keys are <em>yours</em>.
         </p>
       </header>
 
       <section className="wallet-section">
         <header className="wallet-section-head">
           <span className="wallet-section-n">01</span>
-          <h2 className="wallet-section-h2">The seam</h2>
+          <h2 className="wallet-section-h2">Who it&rsquo;s for</h2>
         </header>
         <p>
-          Stripe just shipped Link Wallet for Agents — the convention is
-          legitimized, the install pattern is now <code>vendor.com/skill.md</code>.
-          But Link is built for users who already trust Stripe&rsquo;s custody +
-          traditional rails. There&rsquo;s a parallel population: USDC-native,
-          self-custody-leaning, public-ledger-by-default. They&rsquo;re currently
-          underserved — they roll their own or proxy through Tempo&rsquo;s MPP
-          gateway, neither of which is a wallet.
+          Agents and the people who run them, paying for usage in stables.
+          Specifically the population that wants three things together:
+          USDC-native settlement (no fiat conversion, no KYC),
+          self-custody (keys derived from your passkey, not held by a
+          provider), and a public audit trail (every payment recorded
+          on-chain and surfaced on OLI).
         </p>
         <p>
-          Pellet Wallet sits in that gap. Tempo-native. USDC.e + USDT0. No
-          fiat conversion, no KYC wrapper, no hidden settlement. The same
-          x402 challenge/response flow that the Tempo MPP Gateway uses,
-          but signed by a wallet you control — and recorded on a ledger
-          anyone can read.
+          Today that combination isn&rsquo;t served by a wallet — the options
+          are roll-your-own EOA wiring or proxying through Tempo&rsquo;s MPP
+          gateway. Pellet Wallet fills the gap with the same x402
+          challenge/response flow the gateway uses, signed by keys you
+          control, and observable from the moment it settles.
         </p>
       </section>
 
