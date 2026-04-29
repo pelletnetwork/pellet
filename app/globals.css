@@ -1204,6 +1204,19 @@ main {
 .oli-event-row:last-child {
   border-bottom: 0;
 }
+.oli-event-row-live {
+  animation: oli-event-pulse 1.6s ease-out;
+}
+@keyframes oli-event-pulse {
+  0% {
+    box-shadow: inset 2px 0 0 var(--color-accent);
+    background: rgba(201, 169, 110, 0.04);
+  }
+  100% {
+    box-shadow: inset 2px 0 0 transparent;
+    background: transparent;
+  }
+}
 .oli-event-row-header {
   width: 100%;
   display: grid;

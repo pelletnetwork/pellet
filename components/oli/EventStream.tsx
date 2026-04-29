@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { decodeEventLine, type LabelMap } from "@/lib/oli/decode";
 import {
@@ -15,13 +15,50 @@ import Link from "next/link";
 
 // ── Top-level ─────────────────────────────────────────────────────────────
 
+const MAX_EVENTS = 200; // cap memory
+
 export function EventStream({
-  events,
+  events: initialEvents,
   labelMap,
 }: {
   events: RecentEventRow[];
   labelMap: LabelMap;
 }) {
+  const [events, setEvents] = useState<RecentEventRow[]>(initialEvents);
+  const [pulseIds, setPulseIds] = useState<Set<number>>(new Set());
+  const seen = useRef<Set<number>>(new Set(initialEvents.map((e) => e.id)));
+
+  useEffect(() => {
+    const es = new EventSource("/api/oli/feed");
+    es.onmessage = (msg) => {
+      try {
+        const wire = JSON.parse(msg.data) as RecentEventRow & { ts: string };
+        if (seen.current.has(wire.id)) return;
+        seen.current.add(wire.id);
+        const event: RecentEventRow = { ...wire, ts: new Date(wire.ts) };
+        setEvents((prev) => {
+          const next = [event, ...prev];
+          return next.length > MAX_EVENTS ? next.slice(0, MAX_EVENTS) : next;
+        });
+        // amber pulse for 1.6s
+        setPulseIds((prev) => new Set([...prev, event.id]));
+        setTimeout(() => {
+          setPulseIds((prev) => {
+            const next = new Set(prev);
+            next.delete(event.id);
+            return next;
+          });
+        }, 1600);
+      } catch {
+        // malformed payload — skip
+      }
+    };
+    es.onerror = () => {
+      // EventSource auto-reconnects on transient errors; nothing to do.
+    };
+    return () => es.close();
+  }, []);
+
   if (events.length === 0) {
     return (
       <div className="oli-eventstream-empty">
@@ -33,7 +70,7 @@ export function EventStream({
   return (
     <div className="oli-eventstream">
       {events.map((e) => (
-        <EventRow key={e.id} event={e} labelMap={labelMap} />
+        <EventRow key={e.id} event={e} labelMap={labelMap} isLive={pulseIds.has(e.id)} />
       ))}
     </div>
   );
@@ -44,9 +81,11 @@ export function EventStream({
 function EventRow({
   event,
   labelMap,
+  isLive = false,
 }: {
   event: RecentEventRow;
   labelMap: LabelMap;
+  isLive?: boolean;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -71,7 +110,7 @@ function EventRow({
   };
 
   return (
-    <div className={`oli-event-row${open ? " oli-event-row-open" : ""}`}>
+    <div className={`oli-event-row${open ? " oli-event-row-open" : ""}${isLive ? " oli-event-row-live" : ""}`}>
       <div
         role="button"
         tabIndex={0}
