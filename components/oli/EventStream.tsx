@@ -1,7 +1,18 @@
+"use client";
+
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { decodeEventLine, type LabelMap } from "@/lib/oli/decode";
-import { formatTimeAgo, shortHash } from "@/lib/oli/format";
+import {
+  formatTimeAgo,
+  shortHash,
+  formatBlockNumber,
+  formatUsdcAmount,
+} from "@/lib/oli/format";
 import type { RecentEventRow } from "@/lib/oli/queries";
 import { ProvenanceBadge } from "./ProvenanceBadge";
+
+// ── Top-level ─────────────────────────────────────────────────────────────
 
 export function EventStream({
   events,
@@ -12,83 +23,292 @@ export function EventStream({
 }) {
   if (events.length === 0) {
     return (
-      <div
-        style={{
-          padding: 24,
-          textAlign: "center",
-          color: "var(--color-text-quaternary)",
-          fontSize: 13,
-          border: "1px solid var(--color-border-subtle)",
-          borderRadius: 8,
-          background: "var(--color-bg-subtle)",
-        }}
-      >
+      <div className="oli-eventstream-empty">
         no events yet — waiting for the next ingest cycle
       </div>
     );
   }
 
   return (
-    <div
-      style={{
-        border: "1px solid var(--color-border-subtle)",
-        borderRadius: 8,
-        background: "var(--color-bg-subtle)",
-      }}
-    >
-      {events.map((e) => {
-        const decoded = decodeEventLine(
-          {
-            agentId: e.agentId,
-            agentLabel: e.agentLabel,
-            kind: e.kind,
-            counterpartyAddress: e.counterpartyAddress,
-            amountWei: e.amountWei,
-            tokenAddress: e.tokenAddress,
-            ts: e.ts,
-          },
-          labelMap,
-        );
-        return (
-          <div
-            key={e.id}
-            style={{
-              display: "grid",
-              gridTemplateColumns: "70px 1fr auto auto",
-              gap: 12,
-              alignItems: "center",
-              padding: "10px 16px",
-              borderBottom: "1px solid var(--color-border-subtle)",
-              fontSize: 13,
+    <div className="oli-eventstream">
+      {events.map((e) => (
+        <EventRow key={e.id} event={e} labelMap={labelMap} />
+      ))}
+    </div>
+  );
+}
+
+// ── Row (click-to-expand) ─────────────────────────────────────────────────
+
+function EventRow({
+  event,
+  labelMap,
+}: {
+  event: RecentEventRow;
+  labelMap: LabelMap;
+}) {
+  const [open, setOpen] = useState(false);
+
+  const decoded = decodeEventLine(
+    {
+      agentId: event.agentId,
+      agentLabel: event.agentLabel,
+      kind: event.kind,
+      counterpartyAddress: event.counterpartyAddress,
+      amountWei: event.amountWei,
+      tokenAddress: event.tokenAddress,
+      ts: event.ts,
+    },
+    labelMap,
+  );
+
+  return (
+    <div className={`oli-event-row${open ? " oli-event-row-open" : ""}`}>
+      <button
+        type="button"
+        className="oli-event-row-header"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+      >
+        <span className="oli-event-row-chevron" aria-hidden="true">
+          ›
+        </span>
+        <span className="oli-event-row-time">{formatTimeAgo(event.ts)}</span>
+        <span className="oli-event-row-summary">{decoded.summary}</span>
+        <span className="oli-event-row-tx">tx {shortHash(event.txHash)}</span>
+        <ProvenanceBadge
+          sourceBlock={event.sourceBlock}
+          methodologyVersion={event.methodologyVersion}
+        />
+      </button>
+
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            className="oli-event-row-detail"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{
+              height: {
+                duration: 0.35,
+                ease: [0.16, 1, 0.3, 1],
+              },
+              opacity: {
+                duration: 0.25,
+                ease: [0.16, 1, 0.3, 1],
+              },
             }}
           >
-            <span
-              style={{
-                fontFamily: "var(--font-mono)",
-                fontSize: 11,
-                color: "var(--color-text-quaternary)",
-              }}
-            >
-              {formatTimeAgo(e.ts)}
-            </span>
-            <span style={{ color: "var(--color-text-primary)" }}>{decoded.summary}</span>
-            <a
-              href={`https://explore.tempo.xyz/tx/${e.txHash}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                fontFamily: "var(--font-mono)",
-                fontSize: 10,
-                color: "var(--color-text-tertiary)",
-                textDecoration: "none",
-              }}
-            >
-              tx {shortHash(e.txHash)}
-            </a>
-            <ProvenanceBadge sourceBlock={e.sourceBlock} methodologyVersion={e.methodologyVersion} />
-          </div>
-        );
-      })}
+            <EventDetailPanel event={event} labelMap={labelMap} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ── Detail panel ──────────────────────────────────────────────────────────
+
+type FieldDef = {
+  label: string;
+  value: string;
+  copy?: string | null;
+  external?: string;
+  sub?: string | null;
+  link?: string;
+};
+
+function EventDetailPanel({
+  event,
+  labelMap,
+}: {
+  event: RecentEventRow;
+  labelMap: LabelMap;
+}) {
+  const cpKey = event.counterpartyAddress?.toLowerCase();
+  const cpLabel = cpKey ? (labelMap[cpKey]?.label ?? null) : null;
+  const cpCategory = cpKey ? (labelMap[cpKey]?.category ?? null) : null;
+
+  const amountDisplay =
+    event.amountWei != null
+      ? `${formatUsdcAmount(event.amountWei, 6)}${event.tokenAddress ? " · USDC.e" : ""}`
+      : "—";
+
+  const fields: FieldDef[] = [
+    {
+      label: "Agent",
+      value: event.agentLabel,
+      link: `/oli/agents/${event.agentId}`,
+    },
+    {
+      label: "Counterparty",
+      value:
+        cpLabel ??
+        (event.counterpartyAddress
+          ? shortHash(event.counterpartyAddress)
+          : "—"),
+      copy: event.counterpartyAddress ?? null,
+      external: event.counterpartyAddress
+        ? `https://explore.tempo.xyz/address/${event.counterpartyAddress}`
+        : undefined,
+      sub: cpCategory,
+    },
+    {
+      label: "Amount",
+      value: amountDisplay,
+    },
+    {
+      label: "Tx",
+      value: shortHash(event.txHash),
+      copy: event.txHash,
+      external: `https://explore.tempo.xyz/tx/${event.txHash}`,
+    },
+    {
+      label: "Block",
+      value: formatBlockNumber(event.sourceBlock),
+      external: `https://explore.tempo.xyz/block/${event.sourceBlock}`,
+    },
+    {
+      label: "Kind",
+      value: event.kind,
+    },
+    {
+      label: "Provenance",
+      value: `methodology ${event.methodologyVersion}`,
+      sub: `source block ${formatBlockNumber(event.sourceBlock)}`,
+    },
+  ];
+
+  return (
+    <div className="oli-event-detail">
+      <dl className="oli-event-detail-fields">
+        {fields.map((f, i) => (
+          <FieldRow key={f.label} field={f} delay={i * 0.02} />
+        ))}
+      </dl>
+      <RawPayloadDisclosure event={event} />
+    </div>
+  );
+}
+
+// ── Individual field row (animated stagger) ───────────────────────────────
+
+function FieldRow({ field, delay }: { field: FieldDef; delay: number }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1200);
+    } catch {
+      // clipboard unavailable — silently no-op
+    }
+  };
+
+  return (
+    <motion.div
+      className="oli-event-detail-field-pair"
+      initial={{ opacity: 0, y: 4 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2, delay, ease: [0.16, 1, 0.3, 1] }}
+      style={{ display: "contents" }}
+    >
+      <dt>{field.label}</dt>
+      <dd>
+        {field.link ? (
+          <a
+            href={field.link}
+            className="oli-event-detail-action"
+            style={{ color: "var(--color-text-primary)", fontSize: 13 }}
+          >
+            {field.value}
+          </a>
+        ) : (
+          <span>{field.value}</span>
+        )}
+
+        {field.copy && (
+          <button
+            type="button"
+            className={`oli-event-detail-action${copied ? " oli-event-detail-action-copied" : ""}`}
+            onClick={() => handleCopy(field.copy!)}
+            title="Copy to clipboard"
+          >
+            {copied ? "copied" : "[copy]"}
+          </button>
+        )}
+
+        {field.external && (
+          <a
+            href={field.external}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="oli-event-detail-action"
+            title="View on explorer"
+          >
+            ↗
+          </a>
+        )}
+
+        {field.sub && (
+          <span className="oli-event-detail-sub">{field.sub}</span>
+        )}
+      </dd>
+    </motion.div>
+  );
+}
+
+// ── Raw payload disclosure ────────────────────────────────────────────────
+
+function RawPayloadDisclosure({ event }: { event: RecentEventRow }) {
+  const [open, setOpen] = useState(false);
+
+  const payload = {
+    txHash: event.txHash,
+    sourceBlock: event.sourceBlock,
+    kind: event.kind,
+    agentId: event.agentId,
+    counterpartyAddress: event.counterpartyAddress,
+    amountWei: event.amountWei,
+    tokenAddress: event.tokenAddress,
+    methodologyVersion: event.methodologyVersion,
+    ts: event.ts,
+  };
+
+  return (
+    <div className={`oli-event-detail-raw${open ? " oli-event-detail-raw-open" : ""}`}>
+      <button
+        type="button"
+        className="oli-event-detail-raw-toggle"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+      >
+        <span className="oli-event-detail-raw-toggle-chevron" aria-hidden="true">
+          ›
+        </span>
+        Raw Payload
+      </button>
+
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{
+              height: { duration: 0.25, ease: [0.16, 1, 0.3, 1] },
+              opacity: { duration: 0.18, ease: [0.16, 1, 0.3, 1] },
+            }}
+            style={{ overflow: "hidden" }}
+          >
+            <pre className="oli-event-detail-raw-payload">
+              {JSON.stringify(payload, null, 2)}
+            </pre>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

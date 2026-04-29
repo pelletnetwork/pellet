@@ -1180,3 +1180,195 @@ main {
   transform: translateX(4px);
   color: var(--color-text-primary);
 }
+
+/* ── EventStream v0.5 ── */
+.oli-eventstream {
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 8px;
+  background: var(--color-bg-subtle);
+  overflow: hidden;
+}
+.oli-eventstream-empty {
+  padding: 24px;
+  text-align: center;
+  color: var(--color-text-quaternary);
+  font-size: 13px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 8px;
+  background: var(--color-bg-subtle);
+}
+.oli-event-row {
+  border-bottom: 1px solid var(--color-border-subtle);
+  position: relative;
+}
+.oli-event-row:last-child {
+  border-bottom: 0;
+}
+.oli-event-row-header {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 16px 70px 1fr auto auto;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 16px;
+  font-size: 13px;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background var(--duration-fast) ease;
+}
+.oli-event-row-header:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+.oli-event-row-chevron {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-text-quaternary);
+  transition: transform var(--duration-normal) cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-block;
+}
+.oli-event-row-open .oli-event-row-chevron {
+  transform: rotate(90deg);
+  color: var(--color-text-primary);
+}
+.oli-event-row-time {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-text-quaternary);
+}
+.oli-event-row-summary {
+  color: var(--color-text-primary);
+}
+.oli-event-row-tx {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--color-text-tertiary);
+}
+.oli-event-row-detail {
+  overflow: hidden;
+}
+.oli-event-detail {
+  padding: 16px 16px 16px 44px;
+  background: rgba(255, 255, 255, 0.015);
+  border-top: 1px solid var(--color-border-subtle);
+}
+.oli-event-detail-fields {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 8px 16px;
+  margin: 0;
+}
+.oli-event-detail-fields dt {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-quaternary);
+  align-self: start;
+  padding-top: 2px;
+}
+.oli-event-detail-fields dd {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.oli-event-detail-action {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--color-text-quaternary);
+  cursor: pointer;
+  background: none;
+  border: 0;
+  padding: 0;
+  text-decoration: none;
+  transition: color var(--duration-fast) ease;
+}
+.oli-event-detail-action:hover {
+  color: var(--color-text-primary);
+}
+.oli-event-detail-action-copied {
+  color: var(--color-accent) !important;
+}
+.oli-event-detail-sub {
+  font-size: 11px;
+  color: var(--color-text-quaternary);
+  width: 100%;
+}
+.oli-event-detail-raw {
+  margin-top: 16px;
+}
+.oli-event-detail-raw-toggle {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-quaternary);
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.oli-event-detail-raw-toggle:hover {
+  color: var(--color-text-primary);
+}
+.oli-event-detail-raw-toggle-chevron {
+  font-size: 10px;
+  display: inline-block;
+  transition: transform var(--duration-normal) cubic-bezier(0.16, 1, 0.3, 1);
+}
+.oli-event-detail-raw-open .oli-event-detail-raw-toggle-chevron {
+  transform: rotate(90deg);
+}
+.oli-event-detail-raw-payload {
+  margin-top: 8px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  overflow: auto;
+  max-height: 320px;
+  white-space: pre;
+}
+
+@media (max-width: 767px) {
+  .oli-event-row-header {
+    grid-template-columns: 16px 1fr;
+    grid-template-rows: auto auto;
+    row-gap: 4px;
+  }
+  .oli-event-row-time {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .oli-event-row-summary {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .oli-event-row-tx,
+  .oli-event-row-header > span:last-child {
+    display: none;
+  }
+  .oli-event-detail {
+    padding-left: 24px;
+  }
+  .oli-event-detail-fields {
+    grid-template-columns: 1fr;
+    gap: 4px 0;
+  }
+  .oli-event-detail-fields dt {
+    margin-top: 8px;
+  }
+}
