@@ -1,4 +1,5 @@
 import { Header } from "@/components/header";
+import { Hero } from "@/components/hero";
 import { EventCard } from "@/components/event-card";
 
 export default function Page() {
@@ -7,6 +8,7 @@ export default function Page() {
     <main className="min-h-screen bg-bg text-fg">
       <Header agentCount={1} />
       <div className="mx-auto max-w-3xl space-y-2 px-4 py-6 sm:px-6">
+        <Hero />
         <EventCard
           event={{
             id: "sample-1",
