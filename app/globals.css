@@ -12,8 +12,8 @@
   --color-hover: #0a0a0a;
   --color-accent: #c9a96e;
 
-  --font-sans: "Iosevka", ui-monospace, monospace;
-  --font-mono: "Iosevka", ui-monospace, monospace;
+  --font-sans: var(--font-fragment-mono), ui-monospace, monospace;
+  --font-mono: var(--font-fragment-mono), ui-monospace, monospace;
 }
 
 @layer base {
@@ -25,7 +25,7 @@
     background: #000;
     color: #fff;
     min-height: 100vh;
-    font-family: "Iosevka", ui-monospace, "Courier New", monospace;
+    font-family: var(--font-fragment-mono), ui-monospace, "Courier New", monospace;
   }
 
   ::selection {

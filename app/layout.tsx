@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
-import "@fontsource/iosevka/400.css";
-import "@fontsource/iosevka/700.css";
+import { Fragment_Mono } from "next/font/google";
 import "./globals.css";
+
+const fragmentMono = Fragment_Mono({
+  variable: "--font-fragment-mono",
+  subsets: ["latin"],
+  weight: ["400"],
+});
 
 export const metadata: Metadata = {
   title: "pellet // agentics terminal",
@@ -14,7 +19,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full antialiased">
+    <html lang="en" className={`${fragmentMono.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col bg-bg text-fg">{children}</body>
     </html>
   );
