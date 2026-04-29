@@ -1,5 +1,13 @@
 # Pellet Agentics Terminal — Implementation Plan
 
+> **⚠ SUPERSEDED** by [`2026-04-29-pellet-oli-implementation.md`](./2026-04-29-pellet-oli-implementation.md).
+>
+> Spec v1 (Solana-primary "agentics terminal") was superseded by spec v2 (OLI on Tempo, with the terminal as the missing OLI interface). This plan was written against v1; the new plan reuses Tasks 1–5 (already executed) and replaces 6–18 with a port-from-archive flow that pulls forward `lib/rpc.ts`, `lib/ingest/event-processor.ts`, `lib/ingest/cron-wrapper.ts`, Drizzle schema + migrations, and the `address_labels` infrastructure from `pellet-tempo-archive`.
+>
+> Preserved as the record of where the implementation thinking landed before the OLI unlock.
+
+# (superseded — see banner above)
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development` (recommended) or `superpowers:executing-plans` to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Ship a deployable v0 of Pellet — a clean monospace web terminal showing AI agents operating on Solana in real time.
