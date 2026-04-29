@@ -114,7 +114,7 @@ export default async function OliServiceDetailPage({
             ))}
           </div>
           <p style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--color-text-quaternary)", marginTop: 8, letterSpacing: "0.04em" }}>
-            recovered from settlement event topic[2] · escrow 0x33b9…4f25
+            recovered from settlement event topic[2] · escrow 0x33b9…4f25 · <a href="/oli/methodology" style={{ color: "var(--color-accent)", textDecoration: "none", borderBottom: "1px solid var(--color-accent)" }}>methodology</a>
           </p>
         </section>
       )}

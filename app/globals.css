@@ -1512,6 +1512,115 @@ main {
   }
 }
 
+/* ── Methodology page ──────────────────────────────────────────────────── */
+
+.oli-methodology {
+  font-variant-numeric: tabular-nums;
+}
+.oli-meth-kicker {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-quaternary);
+}
+.oli-meth-h1 {
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-size: 48px;
+  font-weight: 400;
+  margin: 4px 0 12px;
+  letter-spacing: -0.02em;
+}
+.oli-meth-lede {
+  color: var(--color-text-secondary);
+  font-size: 15px;
+  line-height: 1.5;
+  margin: 0;
+  max-width: 60ch;
+}
+.oli-meth-section-n {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-accent);
+  letter-spacing: 0.06em;
+}
+.oli-meth-h2 {
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-size: 24px;
+  font-weight: 400;
+  margin: 0;
+  flex: 1;
+}
+.oli-meth-h3 {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-tertiary);
+  margin: 0 0 8px;
+}
+.oli-meth-version {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--color-text-quaternary);
+  letter-spacing: 0.04em;
+}
+.oli-meth-body p {
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  line-height: 1.65;
+  margin: 0 0 12px;
+  max-width: 65ch;
+}
+.oli-meth-body p:last-child {
+  margin-bottom: 0;
+}
+.oli-meth-mono {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-text-primary);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 1px 5px;
+  border-radius: 2px;
+}
+.oli-meth-pre {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+  background: rgba(255, 255, 255, 0.03);
+  padding: 12px 14px;
+  border-left: 2px solid var(--color-accent);
+  margin: 12px 0;
+  overflow-x: auto;
+  line-height: 1.5;
+}
+.oli-meth-list {
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  line-height: 1.7;
+  padding-left: 16px;
+  margin: 0;
+}
+.oli-meth-list li {
+  margin-bottom: 4px;
+}
+.oli-meth-foot {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-text-quaternary);
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border-subtle);
+}
+.oli-meth-link {
+  color: var(--color-accent);
+  text-decoration: none;
+  border-bottom: 1px solid var(--color-accent);
+}
+.oli-meth-link:hover {
+  color: var(--color-text-primary);
+}
+
 /* ── Underlying providers table ────────────────────────────────────────── */
 
 .oli-providers-table {

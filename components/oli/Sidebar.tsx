@@ -12,6 +12,12 @@ const sections = [
       { label: "Agents",    href: "/oli/agents" },
     ],
   },
+  {
+    label: "Reference",
+    items: [
+      { label: "Methodology", href: "/oli/methodology" },
+    ],
+  },
 ];
 
 export function Sidebar() {
