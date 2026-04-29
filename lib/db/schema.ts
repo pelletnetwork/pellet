@@ -152,6 +152,11 @@ export const walletUsers = pgTable(
     managedAddress: text("managed_address").notNull().unique(),
     displayName: text("display_name"),
     passkeySignCount: bigint("passkey_sign_count", { mode: "number" }).notNull().default(0),
+    // Uncompressed P-256 public key (0x04 || x(32) || y(32)) for direct use
+    // with viem/tempo Account.fromWebAuthnP256. Cached at enrollment time so
+    // we don't re-decode COSE on every signing call. Backfilled lazily for
+    // pre-3.B users via lib/wallet/tempo-account.ts.
+    publicKeyUncompressed: text("public_key_uncompressed"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).defaultNow().notNull(),
   },
@@ -175,6 +180,11 @@ export const walletSessions = pgTable(
     label: text("label"),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
     revokedAt: timestamp("revoked_at", { withTimezone: true }),
+    // Phase 3.B: tx hash of the AccountKeychain.authorizeKey call that
+    // granted this agent key on-chain spending authority. NULL until 3.B.2
+    // wires the actual chain call.
+    authorizeTxHash: text("authorize_tx_hash"),
+    onChainAuthorizedAt: timestamp("on_chain_authorized_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => ({
