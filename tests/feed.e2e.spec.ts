@@ -48,3 +48,43 @@ test("/api/agents returns the seeded list (legacy v0 surface)", async ({ request
   const json = await res.json();
   expect(Array.isArray(json.agents)).toBe(true);
 });
+
+test("/oli renders the dashboard with sidebar", async ({ page }) => {
+  await page.goto("/oli");
+  await expect(page.locator("aside.oli-sidebar")).toBeVisible();
+  await expect(page.locator("h1")).toContainText("Dashboard");
+});
+
+test("/oli/services lists services", async ({ request }) => {
+  const res = await request.get("/oli/services");
+  expect(res.status()).toBe(200);
+});
+
+test("/oli/agents lists agents", async ({ request }) => {
+  const res = await request.get("/oli/agents");
+  expect(res.status()).toBe(200);
+});
+
+test("/api/oli/dashboard returns snapshot shape", async ({ request }) => {
+  const res = await request.get("/api/oli/dashboard");
+  expect(res.status()).toBe(200);
+  const json = await res.json();
+  expect(typeof json.txCount).toBe("number");
+  expect(Array.isArray(json.topServices)).toBe(true);
+  expect(Array.isArray(json.topAgents)).toBe(true);
+  expect(Array.isArray(json.recentEvents)).toBe(true);
+});
+
+test("/api/oli/services returns list", async ({ request }) => {
+  const res = await request.get("/api/oli/services");
+  expect(res.status()).toBe(200);
+  const json = await res.json();
+  expect(Array.isArray(json.services)).toBe(true);
+});
+
+test("/api/oli/agents returns list", async ({ request }) => {
+  const res = await request.get("/api/oli/agents");
+  expect(res.status()).toBe(200);
+  const json = await res.json();
+  expect(Array.isArray(json.agents)).toBe(true);
+});

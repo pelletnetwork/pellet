@@ -26,7 +26,7 @@ export default async function OliServiceDetailPage({
   }));
 
   return (
-    <div style={{ padding: "32px 48px", display: "flex", flexDirection: "column", gap: 24, maxWidth: 1024 }}>
+    <div className="oli-page" style={{ padding: "32px 48px", display: "flex", flexDirection: "column", gap: 24, maxWidth: 1024 }}>
       <header>
         <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--color-text-quaternary)" }}>
           MPP Service
