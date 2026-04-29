@@ -54,7 +54,15 @@ export default function RootLayout({
         />
       </head>
       <body>
-        <RootProvider theme={{ enabled: true, defaultTheme: "dark", forcedTheme: "dark" }}>
+        {/*
+          theme.enabled = false skips the no-flash theme-init <script> that
+          next-themes (under fumadocs-ui's RootProvider) injects. We don't need
+          it since dark mode is hardcoded via the `dark` class on <html> +
+          forced color-scheme in globals.css. The provider is still needed for
+          fumadocs-ui's other context (framework, sidebar, search), so we keep
+          RootProvider but turn its theme switch off.
+        */}
+        <RootProvider theme={{ enabled: false }}>
           <Nav />
           <main>{children}</main>
           <FooterGate />

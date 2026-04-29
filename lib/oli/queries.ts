@@ -216,7 +216,9 @@ export async function recentDecoded(limit = 25): Promise<RecentEventRow[]> {
 
   return rows.rows.map((r) => ({
     id: r.id,
-    ts: r.ts,
+    // Drizzle's db.execute() (raw SQL) returns timestamps as ISO strings via
+    // neon-serverless. Coerce to Date here so consumers can call .getTime().
+    ts: r.ts instanceof Date ? r.ts : new Date(r.ts as unknown as string),
     agentId: r.agent_id,
     agentLabel: r.agent_label,
     agentCategory: r.agent_category,
@@ -318,20 +320,51 @@ export async function listAgents(): Promise<AgentListRow[]> {
     walletAddress: r.wallet_address,
     txCount24h: Number(r.tx_count_24h),
     amountSumWei24h: r.amount_sum_wei_24h,
-    lastActivity: r.last_activity,
+    // Coerce ISO string from raw SQL execute path into Date.
+    lastActivity:
+      r.last_activity == null
+        ? null
+        : r.last_activity instanceof Date
+          ? r.last_activity
+          : new Date(r.last_activity as unknown as string),
     topServiceLabel: r.top_service_label,
   }));
 }
 
 export async function serviceDetail(id: string) {
-  const recent = await db.execute<RecentEventRow>(sql`
+  // Raw SQL columns come back snake_case; we map to camelCase below to match
+  // RecentEventRow's expected shape (downstream EventStream calls e.txHash etc.).
+  const recent = await db.execute<{
+    id: number;
+    ts: Date;
+    agent_id: string;
+    agent_label: string;
+    agent_category: string | null;
+    counterparty_address: string | null;
+    counterparty_label: string | null;
+    counterparty_category: string | null;
+    kind: string;
+    amount_wei: string | null;
+    token_address: string | null;
+    tx_hash: string;
+    source_block: number;
+    methodology_version: string;
+  }>(sql`
     SELECT
-      ae.id::int AS id, ae.ts, ae.agent_id,
-      a.label AS agent_label,
-      (a.links ->> 'category') AS agent_category,
-      ae.counterparty_address, cl.label AS counterparty_label, cl.category AS counterparty_category,
-      ae.kind, ae.amount_wei, ae.token_address, ae.tx_hash,
-      ae.source_block::int, ae.methodology_version
+      ae.id::int                              AS id,
+      ae.ts                                   AS ts,
+      ae.agent_id                             AS agent_id,
+      a.label                                 AS agent_label,
+      (a.links ->> 'category')                AS agent_category,
+      ae.counterparty_address                 AS counterparty_address,
+      cl.label                                AS counterparty_label,
+      cl.category                             AS counterparty_category,
+      ae.kind                                 AS kind,
+      ae.amount_wei                           AS amount_wei,
+      ae.token_address                        AS token_address,
+      ae.tx_hash                              AS tx_hash,
+      ae.source_block::int                    AS source_block,
+      ae.methodology_version                  AS methodology_version
     FROM agent_events ae
     JOIN agents a ON a.id = ae.agent_id
     LEFT JOIN address_labels cl ON cl.address = LOWER(ae.counterparty_address)
@@ -360,9 +393,26 @@ export async function serviceDetail(id: string) {
 
   return {
     head: head[0] ?? null,
-    recent: recent.rows,
+    // Map snake_case → camelCase to match the RecentEventRow shape downstream
+    // consumers (EventStream + decoder) expect. Also coerce ts string → Date.
+    recent: recent.rows.map((r) => ({
+      id: r.id,
+      ts: r.ts instanceof Date ? r.ts : new Date(r.ts as unknown as string),
+      agentId: r.agent_id,
+      agentLabel: r.agent_label,
+      agentCategory: r.agent_category,
+      counterpartyAddress: r.counterparty_address,
+      counterpartyLabel: r.counterparty_label,
+      counterpartyCategory: r.counterparty_category,
+      kind: r.kind,
+      amountWei: r.amount_wei,
+      tokenAddress: r.token_address,
+      txHash: r.tx_hash,
+      sourceBlock: r.source_block,
+      methodologyVersion: r.methodology_version,
+    })),
     trend: trend.rows.map((r) => ({
-      bucket: r.bucket,
+      bucket: r.bucket instanceof Date ? r.bucket : new Date(r.bucket as unknown as string),
       amountWei: r.amount_wei,
       txCount: Number(r.tx_count),
     })),
