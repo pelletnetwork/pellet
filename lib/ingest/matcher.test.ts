@@ -116,3 +116,62 @@ describe("matchEvent", () => {
     expect(matchEvent(evt, [aixbt])).toHaveLength(1);
   });
 });
+
+describe("matchEvent — amount + counterparty extraction", () => {
+  it("decodes the Transfer amount from event data", () => {
+    // Transfer(address from, address to, uint256 value); value is ABI-encoded
+    // in event.data as 32-byte big-endian. 1.5 USDC.e (6 decimals) = 1_500_000.
+    const valueHex = (1_500_000).toString(16).padStart(64, "0");
+    const evt: RawEventRow = {
+      txHash: "0xabc",
+      logIndex: 0,
+      blockNumber: 100,
+      blockTimestamp: new Date(1714435200_000),
+      contract: "0x20c000000000000000000000b9537d11c60e8b50", // USDC.e
+      eventType: TRANSFER_TOPIC,
+      args: {
+        topics: [TRANSFER_TOPIC, AIXBT_TOPIC, "0x000000000000000000000000counterparty00000000000000000000000000"],
+        data: `0x${valueHex}`,
+      },
+    };
+    const matches = matchEvent(evt, [aixbt]);
+    expect(matches[0].amountWei).toBe("1500000");
+    expect(matches[0].tokenAddress).toBe("0x20c000000000000000000000b9537d11c60e8b50");
+  });
+
+  it("captures the counterparty (the OTHER party in the Transfer)", () => {
+    const valueHex = (1_000_000).toString(16).padStart(64, "0");
+    const counterpartyTopic = "0x000000000000000000000000fffefdfcfbfafaf9f8f7f6f5f4f3f2f1f0eeedef";
+    const evt: RawEventRow = {
+      txHash: "0xabc",
+      logIndex: 0,
+      blockNumber: 100,
+      blockTimestamp: new Date(1714435200_000),
+      contract: "0xToken",
+      eventType: TRANSFER_TOPIC,
+      args: {
+        // aixbt as `from` (topic1), counterparty as `to` (topic2)
+        topics: [TRANSFER_TOPIC, AIXBT_TOPIC, counterpartyTopic],
+        data: `0x${valueHex}`,
+      },
+    };
+    const matches = matchEvent(evt, [aixbt]);
+    // Counterparty is captured as a 20-byte address (lowercase, 0x + 40 hex).
+    expect(matches[0].counterpartyAddress).toBe("0xfffefdfcfbfafaf9f8f7f6f5f4f3f2f1f0eeedef");
+  });
+
+  it("yields null amount + counterparty when topics insufficient", () => {
+    const evt: RawEventRow = {
+      txHash: "0xabc",
+      logIndex: 0,
+      blockNumber: 100,
+      blockTimestamp: new Date(1714435200_000),
+      contract: "0xWeird",
+      eventType: "0xdeadbeef",
+      args: { topics: ["0xdeadbeef", AIXBT_TOPIC], data: "0x" },
+    };
+    const matches = matchEvent(evt, [aixbt]);
+    expect(matches[0].amountWei).toBeNull();
+    expect(matches[0].counterpartyAddress).toBeNull();
+  });
+});

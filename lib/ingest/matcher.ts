@@ -1,10 +1,5 @@
-// Methodology version stamped onto every match. Bump when changing how
-// summaries / kinds / agent matching work in a way that would yield different
-// rows for the same input. Pellet OLI's reproducibility guarantee depends on
-// this — a row's methodology_version + source_block reproduces its summary.
-const METHODOLOGY_VERSION = "v0.1";
+const METHODOLOGY_VERSION = "v0.2"; // bumped: amount + counterparty capture
 
-// Known event-topic-0 hashes → kinds. Extend as we identify more.
 const TRANSFER_TOPIC =
   "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
 
@@ -25,7 +20,7 @@ export type RawEventRow = {
 export type AgentLite = {
   id: string;
   label: string;
-  wallets: string[]; // Plain Tempo addresses (0x + 40 hex), not topic-padded.
+  wallets: string[];
 };
 
 export type AgentEventMatch = {
@@ -36,15 +31,35 @@ export type AgentEventMatch = {
   kind: string;
   summary: string;
   targets: Record<string, unknown>;
+  amountWei: string | null;
+  tokenAddress: string | null;
+  counterpartyAddress: string | null;
   sourceBlock: number;
   methodologyVersion: string;
 };
 
-// Convert a plain address to its 32-byte topic representation.
-// 0xabcd... → 0x000000000000000000000000abcd...
 function toTopicAddress(addr: string): string {
   const hex = addr.replace(/^0x/i, "").toLowerCase().padStart(40, "0");
   return `0x${"0".repeat(24)}${hex}`;
+}
+
+function topicToAddress(topic: string): string {
+  // Topic format: 0x + 24 zeros + 40 hex chars. Strip the leading zeros.
+  const hex = topic.replace(/^0x/i, "").toLowerCase();
+  if (hex.length !== 64) return "";
+  return `0x${hex.slice(24)}`;
+}
+
+function decodeTransferAmount(dataHex: string): string | null {
+  // Transfer.data is the uint256 value, ABI-encoded as 32-byte big-endian.
+  const hex = dataHex.replace(/^0x/i, "");
+  if (hex.length < 64) return null;
+  // Take the first 32 bytes; convert to decimal string via BigInt.
+  try {
+    return BigInt(`0x${hex.slice(0, 64)}`).toString(10);
+  } catch {
+    return null;
+  }
 }
 
 export function matchEvent(
@@ -59,13 +74,29 @@ export function matchEvent(
 
   for (const agent of agents) {
     const walletTopics = new Set(agent.wallets.map(toTopicAddress));
-    // Skip topic[0] (the event-type hash); check all indexed-arg topics.
-    const involved = topicsLower
+    const matchedTopicIdx = topicsLower
       .slice(1)
-      .some((t) => t && walletTopics.has(t));
-    if (!involved) continue;
+      .findIndex((t) => t && walletTopics.has(t));
+    if (matchedTopicIdx === -1) continue;
 
+    const isTransfer = evt.eventType.toLowerCase() === TRANSFER_TOPIC;
     const kind = KIND_BY_TOPIC[evt.eventType.toLowerCase()] ?? "custom";
+
+    let amountWei: string | null = null;
+    let tokenAddress: string | null = null;
+    let counterpartyAddress: string | null = null;
+
+    if (isTransfer && topicsLower.length >= 3) {
+      amountWei = decodeTransferAmount(evt.args.data);
+      tokenAddress = evt.contract.toLowerCase();
+      // The counterparty is whichever of topics[1]/topics[2] ISN'T the agent.
+      const fromTopic = topicsLower[1];
+      const toTopic = topicsLower[2];
+      const matchedTopic = matchedTopicIdx === 0 ? fromTopic : toTopic;
+      const otherTopic = matchedTopic === fromTopic ? toTopic : fromTopic;
+      if (otherTopic) counterpartyAddress = topicToAddress(otherTopic);
+    }
+
     matches.push({
       agentId: agent.id,
       txHash: evt.txHash,
@@ -74,6 +105,9 @@ export function matchEvent(
       kind,
       summary: buildSummary(evt, agent, kind),
       targets: { contract: evt.contract, eventType: evt.eventType },
+      amountWei,
+      tokenAddress,
+      counterpartyAddress,
       sourceBlock: evt.blockNumber,
       methodologyVersion: METHODOLOGY_VERSION,
     });
