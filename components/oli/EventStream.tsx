@@ -11,6 +11,7 @@ import {
 } from "@/lib/oli/format";
 import type { RecentEventRow } from "@/lib/oli/queries";
 import { ProvenanceBadge } from "./ProvenanceBadge";
+import Link from "next/link";
 
 // ── Top-level ─────────────────────────────────────────────────────────────
 
@@ -62,12 +63,21 @@ function EventRow({
     labelMap,
   );
 
+  const handleHeaderKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      setOpen((o) => !o);
+    }
+  };
+
   return (
     <div className={`oli-event-row${open ? " oli-event-row-open" : ""}`}>
-      <button
-        type="button"
+      <div
+        role="button"
+        tabIndex={0}
         className="oli-event-row-header"
         onClick={() => setOpen((o) => !o)}
+        onKeyDown={handleHeaderKeyDown}
         aria-expanded={open}
       >
         <span className="oli-event-row-chevron" aria-hidden="true">
@@ -75,12 +85,18 @@ function EventRow({
         </span>
         <span className="oli-event-row-time">{formatTimeAgo(event.ts)}</span>
         <span className="oli-event-row-summary">{decoded.summary}</span>
-        <span className="oli-event-row-tx">tx {shortHash(event.txHash)}</span>
+        <Link
+          href={`/oli/event/${event.id}`}
+          className="oli-event-row-tx-link"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <span className="oli-event-row-tx">tx {shortHash(event.txHash)}</span>
+        </Link>
         <ProvenanceBadge
           sourceBlock={event.sourceBlock}
           methodologyVersion={event.methodologyVersion}
         />
-      </button>
+      </div>
 
       <AnimatePresence initial={false}>
         {open && (

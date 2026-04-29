@@ -422,3 +422,138 @@ export async function serviceDetail(id: string) {
 export async function agentDetail(id: string) {
   return serviceDetail(id); // same query shape — different page presentation
 }
+
+// ── Event detail (deep-link page) ─────────────────────────────────────────
+
+export type EventDetail = {
+  id: number;
+  ts: Date;
+  agentId: string;
+  agentLabel: string;
+  agentBio: string | null;
+  agentSource: string;
+  counterpartyAddress: string | null;
+  counterpartyLabel: string | null;
+  counterpartyCategory: string | null;
+  kind: string;
+  amountWei: string | null;
+  tokenAddress: string | null;
+  txHash: string;
+  logIndex: number;
+  sourceBlock: number;
+  methodologyVersion: string;
+  matchedAt: Date;
+  // related events: other agent_events from the same tx (excluding this one)
+  related: Array<{
+    id: number;
+    agentId: string;
+    agentLabel: string;
+    kind: string;
+    amountWei: string | null;
+    counterpartyAddress: string | null;
+    counterpartyLabel: string | null;
+  }>;
+};
+
+export async function eventDetail(id: number): Promise<EventDetail | null> {
+  const main = await db.execute<{
+    id: number;
+    ts: Date | string;
+    agent_id: string;
+    agent_label: string;
+    agent_bio: string | null;
+    agent_source: string;
+    counterparty_address: string | null;
+    counterparty_label: string | null;
+    counterparty_category: string | null;
+    kind: string;
+    amount_wei: string | null;
+    token_address: string | null;
+    tx_hash: string;
+    log_index: number;
+    source_block: number;
+    methodology_version: string;
+    matched_at: Date | string;
+  }>(sql`
+    SELECT
+      ae.id::int                              AS id,
+      ae.ts                                   AS ts,
+      ae.agent_id                             AS agent_id,
+      a.label                                 AS agent_label,
+      a.bio                                   AS agent_bio,
+      a.source                                AS agent_source,
+      ae.counterparty_address                 AS counterparty_address,
+      cl.label                                AS counterparty_label,
+      cl.category                             AS counterparty_category,
+      ae.kind                                 AS kind,
+      ae.amount_wei                           AS amount_wei,
+      ae.token_address                        AS token_address,
+      ae.tx_hash                              AS tx_hash,
+      ae.log_index                            AS log_index,
+      ae.source_block::int                    AS source_block,
+      ae.methodology_version                  AS methodology_version,
+      ae.matched_at                           AS matched_at
+    FROM agent_events ae
+    JOIN agents a ON a.id = ae.agent_id
+    LEFT JOIN address_labels cl ON cl.address = LOWER(ae.counterparty_address)
+    WHERE ae.id = ${id}
+    LIMIT 1
+  `);
+
+  if (main.rows.length === 0) return null;
+  const row = main.rows[0];
+
+  // Related: other agent_events from the same tx, excluding this row.
+  const relatedRows = await db.execute<{
+    id: number;
+    agent_id: string;
+    agent_label: string;
+    kind: string;
+    amount_wei: string | null;
+    counterparty_address: string | null;
+    counterparty_label: string | null;
+  }>(sql`
+    SELECT
+      ae.id::int                              AS id,
+      ae.agent_id                             AS agent_id,
+      a.label                                 AS agent_label,
+      ae.kind                                 AS kind,
+      ae.amount_wei                           AS amount_wei,
+      ae.counterparty_address                 AS counterparty_address,
+      cl.label                                AS counterparty_label
+    FROM agent_events ae
+    JOIN agents a ON a.id = ae.agent_id
+    LEFT JOIN address_labels cl ON cl.address = LOWER(ae.counterparty_address)
+    WHERE ae.tx_hash = ${row.tx_hash} AND ae.id <> ${id}
+    ORDER BY ae.log_index ASC
+  `);
+
+  return {
+    id: row.id,
+    ts: row.ts instanceof Date ? row.ts : new Date(row.ts as string),
+    agentId: row.agent_id,
+    agentLabel: row.agent_label,
+    agentBio: row.agent_bio,
+    agentSource: row.agent_source,
+    counterpartyAddress: row.counterparty_address,
+    counterpartyLabel: row.counterparty_label,
+    counterpartyCategory: row.counterparty_category,
+    kind: row.kind,
+    amountWei: row.amount_wei,
+    tokenAddress: row.token_address,
+    txHash: row.tx_hash,
+    logIndex: row.log_index,
+    sourceBlock: row.source_block,
+    methodologyVersion: row.methodology_version,
+    matchedAt: row.matched_at instanceof Date ? row.matched_at : new Date(row.matched_at as string),
+    related: relatedRows.rows.map((r) => ({
+      id: r.id,
+      agentId: r.agent_id,
+      agentLabel: r.agent_label,
+      kind: r.kind,
+      amountWei: r.amount_wei,
+      counterpartyAddress: r.counterparty_address,
+      counterpartyLabel: r.counterparty_label,
+    })),
+  };
+}
