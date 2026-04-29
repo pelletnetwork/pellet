@@ -52,9 +52,11 @@ export async function GET(req: Request) {
     return NextResponse.json({ status: "claimed" });
   }
 
-  // status === 'approved' — first poll after browser approval. Mint the bearer,
-  // create the wallet_session, mark claimed. This block runs at most once per
-  // pairing because the next poll will see 'claimed'.
+  // status === 'approved' — first poll after browser approval. The
+  // wallet_session row was pre-created in /approve with a sentinel bearer
+  // hash and the encrypted session-key ciphertext. We mint the real bearer
+  // now, replace the sentinel, and mark the pairing claimed. Runs at most
+  // once per pairing.
   if (
     !pairing.approvedUserId ||
     !pairing.approvedSpendCapWei ||
@@ -68,25 +70,45 @@ export async function GET(req: Request) {
   }
 
   const { token, hash } = generateBearer();
-  const sessionExpiresAt = new Date(
-    Date.now() + pairing.approvedSessionTtlSeconds * 1000,
-  );
+  const sentinelHash = `pending-${pairing.id}`;
 
   await db.transaction(async (tx) => {
-    await tx.insert(walletSessions).values({
-      userId: pairing.approvedUserId!,
-      bearerTokenHash: hash,
-      spendCapWei: pairing.approvedSpendCapWei!,
-      perCallCapWei: pairing.approvedPerCallCapWei!,
-      label: pairing.agentLabel,
-      expiresAt: sessionExpiresAt,
-    });
+    // Find the pre-created session row (sentinel bearer) and finalize it.
+    const updated = await tx
+      .update(walletSessions)
+      .set({ bearerTokenHash: hash })
+      .where(eq(walletSessions.bearerTokenHash, sentinelHash))
+      .returning({ id: walletSessions.id, expiresAt: walletSessions.expiresAt });
+
+    if (updated.length === 0) {
+      // Defensive: if /approve didn't pre-create (older pairing pre-3.A),
+      // fall through to creating a fresh session row without ciphertext.
+      // This branch should be unreachable for new pairings.
+      await tx.insert(walletSessions).values({
+        userId: pairing.approvedUserId!,
+        bearerTokenHash: hash,
+        spendCapWei: pairing.approvedSpendCapWei!,
+        perCallCapWei: pairing.approvedPerCallCapWei!,
+        label: pairing.agentLabel,
+        expiresAt: new Date(Date.now() + pairing.approvedSessionTtlSeconds! * 1000),
+      });
+    }
 
     await tx
       .update(walletDevicePairings)
       .set({ status: "claimed", claimedAt: new Date(), bearerTokenHash: hash })
       .where(eq(walletDevicePairings.id, pairing.id));
   });
+
+  // Look up the finalized session for the response (we want its real expiry).
+  const sessionRows = await db
+    .select()
+    .from(walletSessions)
+    .where(eq(walletSessions.bearerTokenHash, hash))
+    .limit(1);
+  const session = sessionRows[0];
+  const sessionExpiresAt =
+    session?.expiresAt ?? new Date(Date.now() + pairing.approvedSessionTtlSeconds * 1000);
 
   return NextResponse.json({
     status: "approved",

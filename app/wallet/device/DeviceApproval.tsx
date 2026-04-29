@@ -251,10 +251,13 @@ export function DeviceApproval({ initialCode }: { initialCode: string }) {
               margin: "0 0 16px",
             }}
           >
-            ⚠ <strong>Phase 2.</strong> Passkey is real. The on-chain{" "}
-            AccountKeychain.authorizeKey tx that enforces these caps lands
-            in phase 3 — for now this records the approval against your
-            passkey-rooted user but doesn't yet write to Tempo.
+            ⚠ <strong>Phase 3.A.</strong> Approving generates a fresh
+            secp256k1 agent key, encrypts it (AES-256-GCM) and stores it
+            scoped to your passkey-rooted user. The on-chain{" "}
+            <span className="dev-mono">AccountKeychain.authorizeKey</span>{" "}
+            call that gives this key spending authority on your Tempo
+            account lands in phase 3.B — until then the key has no on-chain
+            capability, just exists server-side waiting for authorization.
           </p>
 
           <button className="dev-btn" onClick={onApprove}>
