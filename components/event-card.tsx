@@ -9,6 +9,8 @@ export type FeedEvent = {
   kind: string;
   summary: string;
   txSig: string | null;
+  sourceBlock?: number;
+  methodologyVersion?: string;
   isPellet?: boolean;
 };
 
@@ -17,12 +19,23 @@ type Props = { event: FeedEvent };
 // Pure presentational. Card wraps a single event with the box-drawing aesthetic.
 // Pellet-authored events render the actual mark inline as the agent glyph; other
 // agents get the ▣ glyph in the foreground color.
+//
+// OLI provenance (sourceBlock + methodologyVersion) is exposed via the
+// article's title attribute — subtle hover surfaces "block N · methodology X"
+// without crowding the card chrome.
 export function EventCard({ event }: Props) {
   const kindGlyph = eventKindGlyph[event.kind] ?? eventKindGlyph.custom;
   const time = formatTime(event.ts);
+  const provenance =
+    event.sourceBlock != null && event.methodologyVersion
+      ? `block ${event.sourceBlock} · methodology ${event.methodologyVersion}`
+      : undefined;
 
   return (
-    <article className="border border-border bg-bg transition-colors hover:bg-hover">
+    <article
+      className="border border-border bg-bg transition-colors hover:bg-hover"
+      title={provenance}
+    >
       <header className="flex items-center justify-between border-b border-border px-3 py-1.5 text-xs text-muted">
         <span>{time}</span>
         <span className="inline-flex items-center gap-1">
@@ -42,7 +55,7 @@ export function EventCard({ event }: Props) {
         <p className="mt-1 pl-6 text-sm text-fg">{event.summary}</p>
         {event.txSig && (
           <a
-            href={`https://solscan.io/tx/${event.txSig}`}
+            href={`https://explore.tempo.xyz/tx/${event.txSig}`}
             target="_blank"
             rel="noopener noreferrer"
             className="mt-2 inline-flex items-center gap-1 pl-6 text-xs text-muted hover:text-accent"
@@ -62,5 +75,5 @@ function formatTime(iso: string): string {
 }
 
 function short(sig: string): string {
-  return `${sig.slice(0, 4)}…${sig.slice(-4)}`;
+  return `${sig.slice(0, 6)}…${sig.slice(-4)}`;
 }
