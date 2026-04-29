@@ -2,7 +2,7 @@ import { serviceDetail } from "@/lib/oli/queries";
 import { buildLabelMap } from "@/lib/oli/labelMap";
 import { TrendChart } from "@/components/oli/TrendChart";
 import { EventStream } from "@/components/oli/EventStream";
-import { shortAddress } from "@/lib/oli/format";
+import { shortAddress, formatUsdcAmount, formatTimeAgo } from "@/lib/oli/format";
 import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -51,6 +51,47 @@ export default async function OliServiceDetailPage({
           formatY={(v) => `$${v.toFixed(2)}`}
         />
       </section>
+
+      {detail.providers.length > 0 && (
+        <section>
+          <h2 style={{ fontFamily: "var(--font-mono)", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--color-text-tertiary)", margin: "0 0 8px" }}>
+            Underlying providers · attributed on-chain
+          </h2>
+          <div className="oli-providers-table">
+            <div className="oli-providers-row oli-providers-row-head">
+              <span className="oli-providers-rank">#</span>
+              <span className="oli-providers-addr">provider</span>
+              <span className="oli-providers-num">revenue</span>
+              <span className="oli-providers-num">txs</span>
+              <span className="oli-providers-time">last</span>
+            </div>
+            {detail.providers.map((p, i) => (
+              <a
+                key={p.address}
+                href={`https://explore.tempo.xyz/address/${p.address}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="oli-providers-row oli-providers-row-link"
+              >
+                <span className="oli-providers-rank">{String(i + 1).padStart(2, "0")}</span>
+                <span className="oli-providers-addr">
+                  {p.label ? (
+                    <span className="oli-providers-addr-label">{p.label}</span>
+                  ) : (
+                    <code className="oli-providers-addr-hex">{shortAddress(p.address)}</code>
+                  )}
+                </span>
+                <span className="oli-providers-num">${formatUsdcAmount(p.amountSumWei, 6)}</span>
+                <span className="oli-providers-num">{p.txCount.toLocaleString()}</span>
+                <span className="oli-providers-time">{formatTimeAgo(p.lastTs)}</span>
+              </a>
+            ))}
+          </div>
+          <p style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--color-text-quaternary)", marginTop: 8, letterSpacing: "0.04em" }}>
+            recovered from settlement event topic[2] · escrow 0x33b9…4f25
+          </p>
+        </section>
+      )}
 
       <section>
         <h2 style={{ fontFamily: "var(--font-mono)", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--color-text-tertiary)", margin: "0 0 8px" }}>

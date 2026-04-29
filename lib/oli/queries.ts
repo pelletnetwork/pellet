@@ -406,8 +406,42 @@ export async function serviceDetail(id: string) {
     .where(eq(agents.id, id))
     .limit(1);
 
+  // Underlying-provider breakdown for gateway-style services. Empty for
+  // non-gateway services (no rows have routed_to_address set). Joins
+  // address_labels so once a provider is named, the label flows through.
+  const providers = await db.execute<{
+    address: string;
+    label: string | null;
+    category: string | null;
+    tx_count: string;
+    amount_sum_wei: string;
+    last_ts: Date | string;
+  }>(sql`
+    SELECT
+      ae.routed_to_address                                AS address,
+      rl.label                                            AS label,
+      rl.category                                         AS category,
+      COUNT(*)::text                                      AS tx_count,
+      COALESCE(SUM(ae.amount_wei::numeric), 0)::text      AS amount_sum_wei,
+      MAX(ae.ts)                                          AS last_ts
+    FROM agent_events ae
+    LEFT JOIN address_labels rl ON rl.address = LOWER(ae.routed_to_address)
+    WHERE ae.agent_id = ${id}
+      AND ae.routed_to_address IS NOT NULL
+    GROUP BY ae.routed_to_address, rl.label, rl.category
+    ORDER BY amount_sum_wei DESC
+  `);
+
   return {
     head: head[0] ?? null,
+    providers: providers.rows.map((r) => ({
+      address: r.address,
+      label: r.label,
+      category: r.category,
+      txCount: Number(r.tx_count),
+      amountSumWei: r.amount_sum_wei,
+      lastTs: r.last_ts instanceof Date ? r.last_ts : new Date(r.last_ts as string),
+    })),
     // Map snake_case → camelCase to match the RecentEventRow shape downstream
     // consumers (EventStream + decoder) expect. Also coerce ts string → Date.
     recent: recent.rows.map((r) => ({
