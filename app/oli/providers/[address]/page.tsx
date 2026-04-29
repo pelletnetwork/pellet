@@ -4,8 +4,37 @@ import { TrendChart } from "@/components/oli/TrendChart";
 import { EventStream } from "@/components/oli/EventStream";
 import { shortAddress, formatUsdcAmount, formatTimeAgo } from "@/lib/oli/format";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ address: string }>;
+}): Promise<Metadata> {
+  const { address } = await params;
+  const key = decodeURIComponent(address).toLowerCase();
+  const detail = await providerDetail(key);
+  if (!detail) return { title: "Provider not found" };
+  const display = detail.label
+    ? detail.label
+    : detail.kind === "address" && detail.address
+    ? shortAddress(detail.address)
+    : `fp:${detail.fingerprint?.slice(0, 6)}…${detail.fingerprint?.slice(-4)}`;
+  const title = `${display} — routed provider`;
+  const description = detail.label
+    ? `Underlying provider ${display} routed via the Tempo MPP Gateway. ${detail.txCount} txs lifetime.`
+    : detail.kind === "address"
+    ? `Underlying provider attributed via the Tempo MPP Gateway's Settlement event. ${detail.txCount} txs lifetime.`
+    : `Provider grouping (Pattern B fingerprint) attributed via the Tempo MPP Gateway calldata. ${detail.txCount} txs lifetime.`;
+  return {
+    title,
+    description,
+    openGraph: { title, description, url: `https://pellet.network/oli/providers/${key}`, type: "website" },
+    twitter: { card: "summary_large_image", title, description },
+  };
+}
 
 export default async function OliProviderDetailPage({
   params,

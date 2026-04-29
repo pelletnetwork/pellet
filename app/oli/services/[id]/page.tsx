@@ -4,8 +4,29 @@ import { TrendChart } from "@/components/oli/TrendChart";
 import { EventStream } from "@/components/oli/EventStream";
 import { shortAddress, formatUsdcAmount, formatTimeAgo } from "@/lib/oli/format";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const detail = await serviceDetail(id);
+  if (!detail.head) return { title: "Service not found" };
+  const title = `${detail.head.label} — MPP service`;
+  const description =
+    detail.head.bio ??
+    `MPP service tracked by Pellet OLI. Settlement, revenue, and recent activity on Tempo.`;
+  return {
+    title,
+    description,
+    openGraph: { title, description, url: `https://pellet.network/oli/services/${id}`, type: "website" },
+    twitter: { card: "summary_large_image", title, description },
+  };
+}
 
 export default async function OliServiceDetailPage({
   params,
