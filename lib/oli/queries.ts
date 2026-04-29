@@ -423,6 +423,79 @@ export async function agentDetail(id: string) {
   return serviceDetail(id); // same query shape — different page presentation
 }
 
+// ── Per-token breakdown (dashboard stack chart) ───────────────────────────
+
+export type TokenStackPoint = {
+  bucket: Date;
+  usdce: number; // display USDC.e (already /1e6)
+  usdt0: number;
+  other: number;
+};
+
+export type TokenStackTotals = {
+  usdce: number;
+  usdt0: number;
+  other: number;
+};
+
+export type TokenStackResult = {
+  points: TokenStackPoint[];
+  totals: TokenStackTotals;
+  bucketHours: number;
+};
+
+const USDCE_ADDR = "0x20c000000000000000000000b9537d11c60e8b50";
+const USDT0_ADDR = "0x20c00000000000000000000014f22ca97301eb73";
+
+export async function tokenBreakdown(windowHours: number): Promise<TokenStackResult> {
+  // Pick a bucket size that yields ~24-30 points for any window.
+  const bucketHours =
+    windowHours <= 24 ? 1 : windowHours <= 168 ? 6 : 24;
+  const bucketInterval = sql.raw(`'${bucketHours} hours'`);
+  const sinceCutoff = HOURS(windowHours);
+
+  const rows = await db.execute<{
+    bucket: Date | string;
+    usdce: string;
+    usdt0: string;
+    other: string;
+  }>(sql`
+    SELECT
+      date_bin(interval ${bucketInterval}, ts, timestamp 'epoch') AS bucket,
+      COALESCE(SUM(CASE WHEN LOWER(token_address) = ${USDCE_ADDR}
+                        THEN amount_wei::numeric ELSE 0 END), 0)::text AS usdce,
+      COALESCE(SUM(CASE WHEN LOWER(token_address) = ${USDT0_ADDR}
+                        THEN amount_wei::numeric ELSE 0 END), 0)::text AS usdt0,
+      COALESCE(SUM(CASE WHEN LOWER(token_address) NOT IN (${USDCE_ADDR}, ${USDT0_ADDR})
+                          AND token_address IS NOT NULL
+                        THEN amount_wei::numeric ELSE 0 END), 0)::text AS other
+    FROM agent_events
+    WHERE ts > ${sinceCutoff}
+      AND kind = 'transfer'
+      AND amount_wei IS NOT NULL
+    GROUP BY bucket
+    ORDER BY bucket ASC
+  `);
+
+  const points: TokenStackPoint[] = rows.rows.map((r) => ({
+    bucket: r.bucket instanceof Date ? r.bucket : new Date(r.bucket as string),
+    usdce: Number(r.usdce) / 1_000_000,
+    usdt0: Number(r.usdt0) / 1_000_000,
+    other: Number(r.other) / 1_000_000,
+  }));
+
+  const totals: TokenStackTotals = points.reduce(
+    (acc, p) => ({
+      usdce: acc.usdce + p.usdce,
+      usdt0: acc.usdt0 + p.usdt0,
+      other: acc.other + p.other,
+    }),
+    { usdce: 0, usdt0: 0, other: 0 },
+  );
+
+  return { points, totals, bucketHours };
+}
+
 // ── Global search (⌘K command bar) ────────────────────────────────────────
 
 export type SearchHit = {

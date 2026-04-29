@@ -1,8 +1,9 @@
-import { dashboardSnapshot } from "@/lib/oli/queries";
+import { dashboardSnapshot, tokenBreakdown } from "@/lib/oli/queries";
 import { buildLabelMap } from "@/lib/oli/labelMap";
 import { StatStrip } from "@/components/oli/StatStrip";
 import { Leaderboard } from "@/components/oli/Leaderboard";
 import { EventStream } from "@/components/oli/EventStream";
+import { TokenStackChart } from "@/components/oli/TokenStackChart";
 import { formatUsdcAmount } from "@/lib/oli/format";
 import { TimeWindowToggle } from "@/components/oli/TimeWindowToggle";
 import { windowHoursFromParam } from "@/lib/oli/timeWindow";
@@ -24,9 +25,10 @@ export default async function OliDashboardPage({
   const params = await searchParams;
   const windowHours = windowHoursFromParam(params.w);
   const windowLabel = WINDOW_LABELS[windowHours];
-  const [snap, labelMap] = await Promise.all([
+  const [snap, labelMap, stack] = await Promise.all([
     dashboardSnapshot(windowHours),
     buildLabelMap(),
+    tokenBreakdown(windowHours),
   ]);
 
   return (
@@ -86,6 +88,22 @@ export default async function OliDashboardPage({
           },
         ]}
       />
+
+      <section>
+        <h2
+          style={{
+            fontFamily: "var(--font-mono)",
+            fontSize: 11,
+            textTransform: "uppercase",
+            letterSpacing: "0.08em",
+            color: "var(--color-text-tertiary)",
+            margin: "0 0 8px",
+          }}
+        >
+          Service revenue by token · {windowLabel}
+        </h2>
+        <TokenStackChart points={stack.points} totals={stack.totals} />
+      </section>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
         <Leaderboard

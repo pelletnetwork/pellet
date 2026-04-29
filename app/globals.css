@@ -1505,6 +1505,43 @@ main {
   }
 }
 
+/* ── Token Stack Chart ─────────────────────────────────────────────────── */
+
+.oli-tokenstack-legend {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--color-text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+.oli-tokenstack-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.oli-tokenstack-swatch {
+  width: 8px;
+  height: 8px;
+  border-radius: 1px;
+  border: 1px solid rgba(0, 0, 0, 0.4);
+}
+.oli-tokenstack-legend-label {
+  color: var(--color-text-primary);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.oli-tokenstack-legend-value {
+  color: var(--color-text-secondary);
+  margin-left: 2px;
+}
+.oli-tokenstack-legend-pct {
+  color: var(--color-text-quaternary);
+  margin-left: 2px;
+}
+
 /* ── ⌘K Command Bar ───────────────────────────────────────────────────── */
 
 .oli-cmdk-backdrop {
