@@ -1343,6 +1343,38 @@ main {
   white-space: pre;
 }
 
+/* ── Time-window toggle ── */
+.oli-time-toggle {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 8px;
+}
+.oli-time-toggle-btn {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 4px 10px;
+  border-radius: 5px;
+  background: transparent;
+  border: 0;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  transition:
+    background var(--duration-fast) ease,
+    color var(--duration-fast) ease;
+}
+.oli-time-toggle-btn:hover {
+  color: var(--color-text-primary);
+}
+.oli-time-toggle-btn-active {
+  background: var(--color-bg-emphasis);
+  color: var(--color-text-primary);
+}
+
 @media (max-width: 767px) {
   .oli-event-row-header {
     grid-template-columns: 16px 1fr;

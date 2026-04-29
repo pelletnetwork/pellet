@@ -4,63 +4,82 @@ import { StatStrip } from "@/components/oli/StatStrip";
 import { Leaderboard } from "@/components/oli/Leaderboard";
 import { EventStream } from "@/components/oli/EventStream";
 import { formatUsdcAmount } from "@/lib/oli/format";
+import { TimeWindowToggle } from "@/components/oli/TimeWindowToggle";
+import { windowHoursFromParam } from "@/lib/oli/timeWindow";
 
 export const dynamic = "force-dynamic";
 
-export default async function OliDashboardPage() {
+const WINDOW_LABELS: Record<number, string> = {
+  24: "24h",
+  168: "7d",
+  720: "30d",
+  8760: "all",
+};
+
+export default async function OliDashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ w?: string }>;
+}) {
+  const params = await searchParams;
+  const windowHours = windowHoursFromParam(params.w);
+  const windowLabel = WINDOW_LABELS[windowHours];
   const [snap, labelMap] = await Promise.all([
-    dashboardSnapshot(24),
+    dashboardSnapshot(windowHours),
     buildLabelMap(),
   ]);
 
   return (
-    <div className="oli-page" style={{ padding: "32px 48px", display: "flex", flexDirection: "column", gap: 24, maxWidth: 1280 }}>
-      <header>
-        <h1
-          style={{
-            fontFamily: "'Instrument Serif', Georgia, serif",
-            fontSize: 36,
-            fontWeight: 400,
-            margin: 0,
-            letterSpacing: "-0.02em",
-          }}
-        >
-          Open-Ledger Interface{" "}
-          <span
+    <div className="oli-page" style={{ display: "flex", flexDirection: "column", gap: 24, maxWidth: 1280 }}>
+      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 16 }}>
+        <div>
+          <h1
             style={{
-              fontFamily: "var(--font-mono)",
-              fontSize: "0.32em",
+              fontFamily: "'Instrument Serif', Georgia, serif",
+              fontSize: 36,
               fontWeight: 400,
-              color: "var(--color-text-quaternary)",
-              letterSpacing: "0.06em",
-              marginLeft: "0.35em",
-              verticalAlign: "0",
+              margin: 0,
+              letterSpacing: "-0.02em",
             }}
           >
-            (OLI)
-          </span>
-        </h1>
-        <p style={{ color: "var(--color-text-tertiary)", marginTop: 6, fontSize: 13 }}>
-          Autonomous economic activity on Tempo, last 24 hours.
-        </p>
+            Open-Ledger Interface{" "}
+            <span
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: "0.32em",
+                fontWeight: 400,
+                color: "var(--color-text-quaternary)",
+                letterSpacing: "0.06em",
+                marginLeft: "0.35em",
+                verticalAlign: "0",
+              }}
+            >
+              (OLI)
+            </span>
+          </h1>
+          <p style={{ color: "var(--color-text-tertiary)", marginTop: 6, fontSize: 13 }}>
+            Autonomous economic activity on Tempo.
+          </p>
+        </div>
+        <TimeWindowToggle current={windowHours} />
       </header>
 
       <StatStrip
         stats={[
           {
-            label: "MPP txs · 24h",
+            label: `MPP txs · ${windowLabel}`,
             count: snap.txCount,
             valueType: "integer",
             hint: "decoded transfer events",
           },
           {
-            label: "Agents active · 24h",
+            label: `Agents active · ${windowLabel}`,
             count: snap.agentsActive,
             valueType: "integer",
             hint: "watched entities with ≥1 event",
           },
           {
-            label: "Service revenue · 24h",
+            label: `Service revenue · ${windowLabel}`,
             count: Number(snap.amountSumWei),
             valueType: "usdc",
             hint: "sum of TIP-20 inflows",
@@ -75,12 +94,7 @@ export default async function OliDashboardPage() {
           hrefFor={(r) => `/oli/services/${r.id}`}
           cols={[
             { key: "label", header: "service", cell: (r) => r.label },
-            {
-              key: "rev",
-              header: "revenue",
-              align: "right",
-              cell: (r) => formatUsdcAmount(r.amountSumWei, 6),
-            },
+            { key: "rev", header: "revenue", align: "right", cell: (r) => formatUsdcAmount(r.amountSumWei, 6) },
             { key: "tx", header: "txs", align: "right", width: "60px", cell: (r) => r.txCount.toLocaleString() },
           ]}
         />
