@@ -170,9 +170,11 @@ export async function topRoutedProviders(
         AND ae.routed_to_address IS NULL
       GROUP BY ae.routed_fingerprint
     )
-    SELECT * FROM addr
-    UNION ALL
-    SELECT * FROM fp
+    SELECT * FROM (
+      SELECT * FROM addr
+      UNION ALL
+      SELECT * FROM fp
+    ) combined
     ORDER BY amount_sum_wei::numeric DESC
     LIMIT ${limit}
   `);
@@ -535,9 +537,11 @@ export async function serviceDetail(id: string) {
         AND ae.routed_to_address IS NULL
       GROUP BY ae.routed_fingerprint
     )
-    SELECT * FROM addr
-    UNION ALL
-    SELECT * FROM fp
+    SELECT * FROM (
+      SELECT * FROM addr
+      UNION ALL
+      SELECT * FROM fp
+    ) combined
     ORDER BY amount_sum_wei::numeric DESC
   `);
 
@@ -617,7 +621,9 @@ export async function providerDetail(key: string): Promise<ProviderDetail | null
     : sql`routed_to_address = ${addr}`;
 
   // Header aggregates: lifetime + 24h + first/last seen.
-  const labelLookup = isFingerprint ? sql`NULL::text` : sql`rl.address = ${addr}`;
+  // ON FALSE so the JOIN produces no rows for fingerprint case (no address
+  // to look up). For address case, JOIN finds the label by address.
+  const labelLookup = isFingerprint ? sql`FALSE` : sql`rl.address = ${addr}`;
   const head = await db.execute<{
     tx_count: string;
     amount_sum_wei: string;
