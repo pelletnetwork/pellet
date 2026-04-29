@@ -29,6 +29,8 @@ export type DashboardSnapshot = {
   txCount: number;
   agentsActive: number;
   amountSumWei: string;
+  /** Distinct provider groups (Pattern A addresses + Pattern B fingerprints) detected in the window. */
+  providersDetected: number;
   topServices: LeaderboardRow[];
   topAgents: LeaderboardRow[];
   topProviders: ProviderRow[];
@@ -110,11 +112,27 @@ export async function dashboardSnapshot(windowHours = 24): Promise<DashboardSnap
   const topProviders = await topRoutedProviders(windowHours, 10);
   const recentEvents = await recentDecoded(25);
 
+  // Distinct provider groups in window — count distinct address OR fingerprint
+  // by collapsing both into a single synthetic key.
+  const providersAgg = await db.execute<{ count: string }>(sql`
+    SELECT COUNT(DISTINCT
+      CASE
+        WHEN routed_to_address IS NOT NULL THEN 'addr_' || routed_to_address
+        WHEN routed_fingerprint IS NOT NULL THEN 'fp_'  || routed_fingerprint
+        ELSE NULL
+      END
+    )::text AS count
+    FROM agent_events
+    WHERE ts > ${sinceCutoff}
+      AND (routed_to_address IS NOT NULL OR routed_fingerprint IS NOT NULL)
+  `);
+
   return {
     windowHours,
     txCount: Number(top.tx_count),
     agentsActive: Number(top.agents_active),
     amountSumWei: top.amount_sum_wei ?? "0",
+    providersDetected: Number(providersAgg.rows[0]?.count ?? 0),
     topServices,
     topAgents,
     topProviders,

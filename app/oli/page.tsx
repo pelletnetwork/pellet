@@ -86,6 +86,12 @@ export default async function OliDashboardPage({
             valueType: "usdc",
             hint: "sum of TIP-20 inflows",
           },
+          {
+            label: `Providers detected · ${windowLabel}`,
+            count: snap.providersDetected,
+            valueType: "integer",
+            hint: "distinct routed providers + fp groups",
+          },
         ]}
       />
 
