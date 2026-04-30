@@ -372,14 +372,17 @@ export function Dashboard({
               const pct = cap > 0 ? Math.min(100, (used / cap) * 100) : 0;
               return (
                 <div key={s.id} className="dash-row">
-                  <div>
+                  <Link
+                    href={`/wallet/dashboard/sessions/${s.id}`}
+                    style={{ textDecoration: "none", color: "inherit" }}
+                  >
                     <div className="dash-mono" style={{ fontSize: 13, color: "var(--color-text-primary)" }}>
                       {s.label ?? "—"}
                     </div>
                     <div className="dash-mono" style={{ fontSize: 10, color: "var(--color-text-quaternary)" }}>
-                      session · {s.id.slice(0, 8)}…
+                      session · {s.id.slice(0, 8)}… <span style={{ color: "var(--color-accent)" }}>↗</span>
                     </div>
-                  </div>
+                  </Link>
                   <div>
                     <div className="dash-cap-bar">
                       <div className="dash-cap-bar-fill" style={{ width: `${pct}%` }} />
