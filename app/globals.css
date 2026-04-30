@@ -1171,6 +1171,9 @@ main {
 /* 5. Animated sidebar active-state accent bar */
 .oli-nav-link {
   position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   font-size: 13px;
   padding: 6px 8px 6px 12px;
   border-radius: 6px;
@@ -1201,6 +1204,47 @@ main {
 }
 .oli-nav-link-active::before {
   transform: translateY(-50%) scaleY(1);
+}
+.oli-nav-link-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--color-text-quaternary);
+}
+.oli-nav-link:hover .oli-nav-link-icon,
+.oli-nav-link-active .oli-nav-link-icon {
+  color: var(--color-text-secondary);
+}
+.oli-nav-link-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Collapsed sidebar variant — icons only, centered. */
+.oli-sidebar-collapsed .oli-nav-link {
+  justify-content: center;
+  padding: 8px 0;
+  gap: 0;
+}
+
+.oli-sidebar-toggle {
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--color-border-subtle);
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  border-radius: 4px;
+  transition: color var(--duration-fast) ease, border-color var(--duration-fast) ease;
+}
+.oli-sidebar-toggle:hover {
+  color: var(--color-text-primary);
+  border-color: var(--color-border-emphasis);
 }
 
 /* 6. Leaderboard row hover: accent left rule */
