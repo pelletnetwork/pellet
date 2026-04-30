@@ -88,7 +88,23 @@ export function SessionDetail({ session, payments }: { session: Session; payment
             ${usedUsdc.toFixed(2)} / ${capUsdc.toFixed(2)} · {pct.toFixed(1)}%
           </span>
         </header>
-        <CapChart points={chartPoints} cap={capUsdc} createdAt={createdAt} expiresAt={expiresAt} />
+        {usedUsdc > 0 && payments.filter((p) => COMPLETED.has(p.status)).length === 0 && (
+          <div className="sd-banner">
+            This session reports ${usedUsdc.toFixed(2)} used but has no logged payments — those payments
+            predate per-tx logging. The chart shows an inferred lump-sum rather than the true sequence.
+          </div>
+        )}
+        <CapChart
+          points={chartPoints}
+          cap={capUsdc}
+          createdAt={createdAt}
+          expiresAt={expiresAt}
+          inferredUsdc={
+            usedUsdc > 0 && payments.filter((p) => COMPLETED.has(p.status)).length === 0
+              ? usedUsdc
+              : null
+          }
+        />
       </section>
 
       {/* Stats */}
@@ -203,11 +219,13 @@ function CapChart({
   cap,
   createdAt,
   expiresAt,
+  inferredUsdc,
 }: {
   points: CumulativePoint[];
   cap: number;
   createdAt: Date;
   expiresAt: Date;
+  inferredUsdc: number | null;
 }) {
   const W = 720;
   const H = 140;
@@ -221,7 +239,7 @@ function CapChart({
   const t0 = createdAt.getTime();
   const tMax = Math.max(Date.now(), expiresAt.getTime());
   const span = Math.max(1, tMax - t0);
-  const yMax = Math.max(cap, ...points.map((p) => p.usdc), 0.0001) * 1.05;
+  const yMax = Math.max(cap, inferredUsdc ?? 0, ...points.map((p) => p.usdc), 0.0001) * 1.05;
 
   const x = (t: number) => padL + ((t - t0) / span) * innerW;
   const y = (v: number) => padT + innerH - (v / yMax) * innerH;
@@ -260,6 +278,24 @@ function CapChart({
       {/* cap threshold */}
       <line x1={padL} x2={W - padR} y1={capY} y2={capY} stroke="var(--color-accent)" strokeOpacity={0.4} strokeWidth={1} strokeDasharray="3 4" />
       <text x={W - padR} y={capY - 4} textAnchor="end" className="sd-axis">cap ${cap.toFixed(2)}</text>
+      {/* inferred lump-sum line for old sessions w/o per-tx logging */}
+      {inferredUsdc !== null && (
+        <>
+          <line
+            x1={padL}
+            x2={W - padR}
+            y1={y(inferredUsdc)}
+            y2={y(inferredUsdc)}
+            stroke="var(--color-accent)"
+            strokeOpacity={0.6}
+            strokeWidth={1}
+            strokeDasharray="4 4"
+          />
+          <text x={padL + 4} y={y(inferredUsdc) - 4} className="sd-axis">
+            inferred ${inferredUsdc.toFixed(2)}
+          </text>
+        </>
+      )}
       {/* area + step line */}
       <path d={areaD} fill="var(--color-accent)" fillOpacity={0.12} />
       <path d={d} stroke="var(--color-accent)" strokeWidth={1.5} fill="none" />
@@ -476,6 +512,15 @@ const styles = `
     color: var(--color-text-quaternary);
     padding: 24px 0;
     text-align: center;
+  }
+  .sd-banner {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-text-tertiary);
+    background: rgba(96, 128, 192, 0.06);
+    border: 1px solid rgba(96, 128, 192, 0.18);
+    padding: 10px 14px;
+    line-height: 1.5;
   }
   .sd-pill {
     font-family: var(--font-mono);
