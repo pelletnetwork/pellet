@@ -9,8 +9,8 @@ import { PelletMark } from "@/components/pellet-mark";
 // confirmed by the user as keepers; pricing/studies/swap/explorer/fee-economics
 // were stablecoin-OLI-era surfaces and are deferred until they get rebuilt.
 const navLinks = [
-  { label: "Wallet", href: "/wallet" },
   { label: "OLI", href: "/oli" },
+  { label: "Wallet", href: "/wallet" },
   { label: "Docs", href: "/docs" },
 ];
 
