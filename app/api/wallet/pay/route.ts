@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db/client";
-import { walletSessions, walletUsers } from "@/lib/db/schema";
+import { walletSessions, walletSpendLog, walletUsers } from "@/lib/db/schema";
 import { decryptSessionKey } from "@/lib/wallet/session-keys";
 import { tempoChainConfig } from "@/lib/wallet/tempo-config";
 import { eq } from "drizzle-orm";
@@ -242,7 +242,21 @@ export async function POST(req: Request) {
     );
   }
 
-  // 7. Sign + send. transferWithMemo on the chosen TIP-20.
+  // 7. Insert a pending spend-log row BEFORE broadcasting. This way we still
+  // have a record if the process dies after the tx hits the chain but before
+  // we update bookkeeping, and the user can see in-flight payments.
+  const [pendingLog] = await db
+    .insert(walletSpendLog)
+    .values({
+      sessionId: session.id,
+      userId: session.userId,
+      recipient: body.to,
+      amountWei: amountWei.toString(),
+      status: "pending",
+    })
+    .returning({ id: walletSpendLog.id });
+
+  // 8. Sign + send. transferWithMemo on the chosen TIP-20.
   let txHash: `0x${string}`;
   try {
     txHash = await client.writeContract({
@@ -258,15 +272,25 @@ export async function POST(req: Request) {
   } catch (e) {
     const detail = e instanceof Error ? e.message : String(e);
     console.error("[wallet/pay] sign+send failed:", detail);
+    await db
+      .update(walletSpendLog)
+      .set({ status: "failed", reason: detail.slice(0, 500), updatedAt: new Date() })
+      .where(eq(walletSpendLog.id, pendingLog.id));
     return NextResponse.json({ error: "on-chain payment failed", detail }, { status: 500 });
   }
 
-  // 8. Persist usage. (The chain enforces caps too; this is for fast
-  // server-side lookups + audit.)
-  await db
-    .update(walletSessions)
-    .set({ spendUsedWei: (lifetimeUsed + amountWei).toString() })
-    .where(eq(walletSessions.id, session.id));
+  // 9. Persist usage + finalize the spend log row in a single transaction so
+  // session.spend_used_wei never drifts from the sum of submitted log rows.
+  await db.transaction(async (tx) => {
+    await tx
+      .update(walletSpendLog)
+      .set({ status: "submitted", txHash, updatedAt: new Date() })
+      .where(eq(walletSpendLog.id, pendingLog.id));
+    await tx
+      .update(walletSessions)
+      .set({ spendUsedWei: (lifetimeUsed + amountWei).toString() })
+      .where(eq(walletSessions.id, session.id));
+  });
 
   return NextResponse.json({
     ok: true,
