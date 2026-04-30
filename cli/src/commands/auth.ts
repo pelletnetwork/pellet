@@ -30,7 +30,11 @@ export async function authStart(opts: { agentLabel?: string; baseUrl?: string })
   const baseUrl = opts.baseUrl ?? defaultBaseUrl();
 
   process.stdout.write(`\n  ${dim("Starting connection…")}\n`);
-  process.stdout.write(`  └ ${dim("Calling pellet auth start")}\n\n`);
+  process.stdout.write(`  └ ${dim(`base url: ${baseUrl}`)}\n`);
+  if (baseUrl.includes("pellet.network")) {
+    process.stdout.write(`  └ ${dim("override with PELLET_BASE_URL=http://localhost:3000 for local dev")}\n`);
+  }
+  process.stdout.write("\n");
 
   let started: StartResponse;
   try {
