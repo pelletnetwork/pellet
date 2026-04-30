@@ -65,13 +65,25 @@ export function CommandBar({ open: openProp, onOpenChange }: CommandBarProps = {
       if (isCmdK) {
         e.preventDefault();
         setOpen((v) => !v);
-      } else if (e.key === "Escape" && open) {
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isControlled, setOpen]);
+
+  // Escape always closes the dialog when open — including when controlled
+  // by fumadocs (its provider doesn't bind Escape on our behalf).
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
         setOpen(false);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [isControlled, open, setOpen]);
+  }, [open, setOpen]);
 
   // Reset state when closing; focus input when opening.
   useEffect(() => {
