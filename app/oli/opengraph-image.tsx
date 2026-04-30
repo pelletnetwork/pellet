@@ -46,7 +46,7 @@ export default async function Image() {
             left: 0,
             right: 0,
             height: 4,
-            background: "#2e5090",
+            background: "#6080c0",
           }}
         />
 
@@ -116,7 +116,7 @@ export default async function Image() {
           }}
         >
           <span>autonomous economic activity on tempo</span>
-          <span style={{ color: "#2e5090" }}>pellet.network</span>
+          <span style={{ color: "#6080c0" }}>pellet.network</span>
         </div>
       </div>
     ),
