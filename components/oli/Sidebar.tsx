@@ -14,7 +14,6 @@ import {
   ChevronRight,
   type LucideIcon,
 } from "lucide-react";
-import { PelletMark } from "@/components/pellet-mark";
 
 type NavItem = { label: string; href: string; icon: LucideIcon };
 type Section = { label: string; items: NavItem[] };
@@ -40,7 +39,14 @@ const sections: Section[] = [
 
 const STORAGE_KEY = "pellet-oli-sidebar-collapsed";
 
-export function Sidebar() {
+type SidebarProps = {
+  /** ISO timestamp of the most-recently-advanced ingestion cursor, or null. */
+  lastSyncAtIso: string | null;
+  /** Highest block number any cursor has reached, or null if no ingest yet. */
+  lastBlock: number | null;
+};
+
+export function Sidebar({ lastSyncAtIso, lastBlock }: SidebarProps) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [hydrated, setHydrated] = useState(false);
@@ -94,27 +100,17 @@ export function Sidebar() {
     >
       <div
         style={{
-          // Collapsed: stack the logo and toggle vertically so neither has to
-          // shrink to fit a 56px-wide rail. Expanded: side-by-side row.
           display: "flex",
-          flexDirection: collapsed ? "column" : "row",
+          flexDirection: "row",
           alignItems: "center",
           justifyContent: collapsed ? "center" : "space-between",
-          gap: collapsed ? 14 : 8,
+          gap: 8,
+          minHeight: 24,
         }}
       >
-        <Link
-          href="/"
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            textDecoration: "none",
-            flexShrink: 0,
-          }}
-          aria-label="Pellet — back to home"
-        >
-          <PelletMark size={24} />
-        </Link>
+        {!collapsed && (
+          <SyncPill lastSyncAtIso={lastSyncAtIso} lastBlock={lastBlock} />
+        )}
         <button
           type="button"
           onClick={toggle}
@@ -166,4 +162,56 @@ export function Sidebar() {
       ))}
     </aside>
   );
+}
+
+function SyncPill({ lastSyncAtIso, lastBlock }: SidebarProps) {
+  // Re-render every 30s so the "Xm ago" stays honest while the user lingers.
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTick((t) => t + 1), 30_000);
+    return () => clearInterval(id);
+  }, []);
+
+  if (!lastSyncAtIso) {
+    return (
+      <span className="oli-sync-pill" data-tier="unknown" title="No ingest run recorded yet">
+        <span className="oli-sync-pill-dot" />
+        <span>not synced</span>
+      </span>
+    );
+  }
+
+  const ageMs = Date.now() - new Date(lastSyncAtIso).getTime();
+  const tier = ageMs < 30 * 60_000 ? "fresh" : ageMs < 6 * 60 * 60_000 ? "stale" : "old";
+  const agoLabel = formatAgo(ageMs);
+  const blockLabel = lastBlock != null ? formatBlock(lastBlock) : "—";
+
+  return (
+    <span
+      className="oli-sync-pill"
+      data-tier={tier}
+      title={`Last cursor advance: ${new Date(lastSyncAtIso).toLocaleString()} · block ${lastBlock?.toLocaleString() ?? "—"}`}
+    >
+      <span className="oli-sync-pill-dot" />
+      <span className="oli-sync-pill-text">
+        synced {agoLabel} · block {blockLabel}
+      </span>
+    </span>
+  );
+}
+
+function formatAgo(ms: number): string {
+  if (ms < 60_000) return "just now";
+  const minutes = Math.floor(ms / 60_000);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
+
+function formatBlock(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}k`;
+  return n.toLocaleString();
 }

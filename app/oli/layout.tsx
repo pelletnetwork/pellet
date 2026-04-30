@@ -1,5 +1,6 @@
 import { Sidebar } from "@/components/oli/Sidebar";
 import { CommandBar } from "@/components/oli/CommandBar";
+import { getLastSync } from "@/lib/oli/queries";
 import type { Metadata } from "next";
 
 const OG_DESCRIPTION =
@@ -28,10 +29,14 @@ export const metadata: Metadata = {
   },
 };
 
-export default function OliLayout({ children }: { children: React.ReactNode }) {
+export default async function OliLayout({ children }: { children: React.ReactNode }) {
+  const sync = await getLastSync();
   return (
     <div className="oli-layout-shell" style={{ display: "flex", minHeight: "100vh", background: "var(--color-bg-base)" }}>
-      <Sidebar />
+      <Sidebar
+        lastSyncAtIso={sync.updatedAt?.toISOString() ?? null}
+        lastBlock={sync.lastBlock}
+      />
       <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
       <CommandBar />
     </div>
