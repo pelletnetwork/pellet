@@ -25,9 +25,9 @@ type Datum = {
 };
 
 const MA_WINDOW = 7;
-const ACCENT = "#6f9ec4";
+const ACCENT = "#c89a6a";
 const FILL_USDCE = "rgba(255, 255, 255, 0.78)";
-const FILL_USDT0 = "rgba(111, 158, 196, 0.78)";
+const FILL_USDT0 = "rgba(200, 154, 106, 0.78)";
 const FILL_OTHER = "rgba(255, 255, 255, 0.22)";
 
 function fmtUsd(n: number, compact = true): string {
