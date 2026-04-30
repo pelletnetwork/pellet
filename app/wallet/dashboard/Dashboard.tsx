@@ -454,9 +454,18 @@ export function Dashboard({
             </div>
             {payments.map((p) => (
               <div key={p.id} className="dash-row">
-                <span className="dash-mono" style={{ fontSize: 12 }}>
-                  {p.recipient.slice(0, 10)}…{p.recipient.slice(-6)}
-                </span>
+                <div>
+                  <div className="dash-mono" style={{ fontSize: 12 }}>
+                    {p.recipient.slice(0, 10)}…{p.recipient.slice(-6)}
+                  </div>
+                  <Link
+                    href={`/wallet/dashboard/sessions/${p.sessionId}`}
+                    className="dash-mono"
+                    style={{ fontSize: 10, color: "var(--color-text-quaternary)", textDecoration: "none" }}
+                  >
+                    session {p.sessionId.slice(0, 8)}… <span style={{ color: "var(--color-accent)" }}>↗</span>
+                  </Link>
+                </div>
                 <span className="dash-mono" style={{ fontSize: 12, color: "var(--color-text-primary)" }}>
                   ${(Number(p.amountWei) / 1_000_000).toFixed(4)}
                 </span>
