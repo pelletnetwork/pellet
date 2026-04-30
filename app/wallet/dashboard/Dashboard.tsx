@@ -287,7 +287,12 @@ export function Dashboard({
       `}</style>
 
       <header style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        <span className="dash-kicker">Pellet Wallet</span>
+        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 16 }}>
+          <span className="dash-kicker">Pellet Wallet</span>
+          <Link href="/wallet/dashboard/settings" className="dash-kicker" style={{ textDecoration: "none" }}>
+            settings →
+          </Link>
+        </div>
         <div style={{ display: "flex", alignItems: "baseline", gap: 16, flexWrap: "wrap" }}>
           <h1 className="dash-h1" style={{ fontStyle: "italic" }}>
             ${totalUsd.toFixed(2)}

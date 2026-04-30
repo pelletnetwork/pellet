@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db/client";
 import { walletUsers, walletSessions, walletSpendLog } from "@/lib/db/schema";
-import { readUserSession } from "@/lib/wallet/challenge-cookie";
+import { clearUserSession, readUserSession } from "@/lib/wallet/challenge-cookie";
 import { sql, eq, and, ne, desc } from "drizzle-orm";
 
 export const runtime = "nodejs";
@@ -116,4 +116,37 @@ export async function GET() {
       created_at: p.created_at,
     })),
   });
+}
+
+// DELETE /api/wallet/me — remove the user's wallet record entirely.
+// We delete spend_log → sessions → user explicitly because spend_log.session_id
+// is ON DELETE RESTRICT, so a single cascade from wallet_users is fragile when
+// both children carry user_id cascades and ordering isn't guaranteed.
+//
+// Caveat surfaced in the UI: this kills server-side state but does NOT revoke
+// AccountKeychain access keys on-chain — those still expire on schedule unless
+// the user submits a fresh AccountKeychain.revokeKey via passkey assertion.
+export async function DELETE() {
+  const userId = await readUserSession();
+  if (!userId) {
+    return NextResponse.json({ error: "not authenticated" }, { status: 401 });
+  }
+
+  const exists = await db
+    .select({ id: walletUsers.id })
+    .from(walletUsers)
+    .where(eq(walletUsers.id, userId))
+    .limit(1);
+  if (exists.length === 0) {
+    return NextResponse.json({ error: "user not found" }, { status: 404 });
+  }
+
+  await db.transaction(async (tx) => {
+    await tx.delete(walletSpendLog).where(eq(walletSpendLog.userId, userId));
+    await tx.delete(walletSessions).where(eq(walletSessions.userId, userId));
+    await tx.delete(walletUsers).where(eq(walletUsers.id, userId));
+  });
+
+  await clearUserSession();
+  return NextResponse.json({ ok: true });
 }
