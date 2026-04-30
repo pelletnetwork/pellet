@@ -1036,16 +1036,22 @@ main {
   }
 }
 
-/* OLI mobile reshape — sidebar collapses entirely on mobile. The site Nav's
- * mobile drawer surfaces OLI sub-routes when on /oli/* (see components/Nav.tsx
- * `oliSubLinks`), so users can navigate without the horizontal scroll-strip
- * pattern that was overlapping content. */
+/* OLI mobile reshape — hide the fumadocs sidebar entirely on mobile. The
+ * site Nav's mobile drawer surfaces OLI sub-routes when on /oli/* (see
+ * components/Nav.tsx `oliSubLinks`), so users navigate from there. The
+ * fumadocs sidebar's own max-md:hidden gets bypassed when the sidebar is
+ * in collapsed state (it renders a floating card that ignores the
+ * breakpoint), so we clamp it ourselves. */
 @media (max-width: 767px) {
-  .oli-sidebar {
+  .oli-docs-shell aside,
+  .oli-docs-shell [style*="grid-area: sidebar"],
+  .oli-docs-shell [style*="grid-area:sidebar"] {
     display: none !important;
   }
-  .oli-layout-shell {
-    flex-direction: column;
+  /* Reset the grid template so the content fills the full width once the
+   * sidebar column is gone. */
+  .oli-docs-shell {
+    grid-template-columns: 1fr !important;
   }
 }
 

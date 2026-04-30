@@ -129,6 +129,11 @@ export default function OliLayout({ children }: { children: React.ReactNode }) {
         sidebar={{
           defaultOpenLevel: 1,
         }}
+        // Stable hook for our own CSS to target on mobile — fumadocs's sidebar
+        // would otherwise float over the dashboard content on phones because
+        // we're rendering inside a grid area that doesn't always honor the
+        // library's max-md:hidden tail (a Tailwind v4 layer-ordering subtlety).
+        containerProps={{ className: "oli-docs-shell" }}
       >
         {children}
       </DocsLayout>
