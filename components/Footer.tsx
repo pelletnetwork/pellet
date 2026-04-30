@@ -1,20 +1,22 @@
 import Link from "next/link";
 
 const productLinks = [
-  { label: "Explorer", href: "/explorer" },
-  { label: "Services", href: "/services" },
+  { label: "Wallet", href: "/wallet" },
+  { label: "OLI", href: "/oli" },
+  { label: "Skill", href: "/skill.md" },
 ];
 
 const resourceLinks = [
-  { label: "About", href: "/about" },
   { label: "Docs", href: "/docs" },
-  { label: "MCP Server", href: "https://www.npmjs.com/package/@pelletfi/mcp" },
+  { label: "Methodology", href: "/oli/methodology" },
+  { label: "Rails", href: "/oli/rails" },
+  { label: "Skills", href: "/oli/skills" },
 ];
 
 const socialLinks = [
-  { label: "GitHub", href: "https://github.com/pelletfi" },
-  { label: "X", href: "https://x.com/pelletinfra" },
-  { label: "Farcaster", href: "https://warpcast.com/pellet" },
+  { label: "GitHub", href: "https://github.com/pelletnetwork/pellet" },
+  { label: "X", href: "https://x.com/pelletnetwork" },
+  { label: "npm", href: "https://www.npmjs.com/package/@pelletnetwork/cli" },
 ];
 
 export function Footer() {
