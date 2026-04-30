@@ -1,6 +1,6 @@
 type Point = { ts: Date; value: number };
 
-const ACCENT = "#808080";
+const ACCENT = "#5a7a9a";
 
 function fmtCompact(n: number): string {
   if (!Number.isFinite(n)) return "—";
