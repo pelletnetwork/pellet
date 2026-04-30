@@ -76,19 +76,19 @@ const tree: PageTree.Root = {
     {
       type: "page",
       name: "Pellet Wallet",
-      url: "/wallet",
+      url: "/oli/wallet",
       icon: <Wallet />,
     },
     {
       type: "page",
       name: "CLI",
-      url: "/docs/wallet-cli",
+      url: "/oli/cli",
       icon: <Terminal />,
     },
     {
       type: "page",
       name: "MCP",
-      url: "/docs/wallet-mcp",
+      url: "/oli/mcp",
       icon: <Bot />,
     },
     { type: "separator", name: "Reference" },
