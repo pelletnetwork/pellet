@@ -278,11 +278,20 @@ export function Dashboard({
           border-bottom: 1px solid var(--color-border-subtle);
         }
         .dash-link:hover { border-color: var(--color-accent); color: var(--color-text-primary); }
+        .dash-addr-full { word-break: break-all; }
+        .dash-addr-trunc { display: none; }
         @media (max-width: 700px) {
+          .dashpage { padding: 32px 20px 80px; }
+          .dash-h1 { font-size: 36px; }
+          .dash-addr-full { display: none; }
+          .dash-addr-trunc { display: inline; }
           .dash-row {
             grid-template-columns: 1fr auto;
             row-gap: 4px;
           }
+          /* Hide the 5-col header row when data rows collapse to 2 cols —
+           * label + status pill is enough context on mobile. */
+          .dash-row-head { display: none; }
         }
       `}</style>
 
@@ -310,7 +319,10 @@ export function Dashboard({
         </div>
         <div className="dash-addr" style={{ marginTop: 8 }}>
           <span className="dash-kicker">addr</span>
-          <code style={{ wordBreak: "break-all" }}>{user.managedAddress}</code>
+          <code className="dash-addr-full" title={user.managedAddress}>{user.managedAddress}</code>
+          <code className="dash-addr-trunc" title={user.managedAddress}>
+            {user.managedAddress.slice(0, 10)}…{user.managedAddress.slice(-6)}
+          </code>
           <button className="dash-btn" onClick={copyAddress}>
             {copied ? "copied ✓" : "copy"}
           </button>
@@ -420,7 +432,7 @@ export function Dashboard({
                     {!s.revokedAt && new Date(s.expiresAt).getTime() > Date.now() && (
                       <button
                         className="dash-btn"
-                        style={{ padding: "4px 8px", fontSize: 10 }}
+                        style={{ padding: "8px 12px", fontSize: 10, minHeight: 32 }}
                         onClick={() => onRevoke(s.id)}
                         disabled={revoking === s.id}
                       >
@@ -439,7 +451,13 @@ export function Dashboard({
       <section className="dash-card">
         <header className="dash-card-head">
           <h2 className="dash-card-h2">Activity</h2>
-          <span className="dash-card-meta">last {payments.length} payment{payments.length === 1 ? "" : "s"}</span>
+          <span className="dash-card-meta">
+            {payments.length === 0
+              ? "no payments yet"
+              : payments.length >= 50
+                ? "latest 50 payments"
+                : `${payments.length} recent payment${payments.length === 1 ? "" : "s"}`}
+          </span>
         </header>
         {payments.length === 0 ? (
           <div className="dash-empty">No payments yet. Once an authorized agent calls pellet pay, they show up here.</div>
@@ -566,8 +584,10 @@ function SpendChart({ chart }: { chart: ChartPoint[] }) {
         width="100%"
         height={H}
         style={{ display: "block" }}
+        role="img"
         aria-label="7-day spend"
       >
+        <title>Spending by day, last 7 days</title>
         <line
           x1={0}
           x2={W}
@@ -595,7 +615,7 @@ function SpendChart({ chart }: { chart: ChartPoint[] }) {
                 textAnchor="middle"
                 style={{
                   fontFamily: "var(--font-mono)",
-                  fontSize: 10,
+                  fontSize: "11px",
                   fill: "var(--color-text-quaternary)",
                   letterSpacing: "0.04em",
                 }}

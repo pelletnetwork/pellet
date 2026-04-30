@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ComposedChart,
   Bar,
@@ -81,12 +81,22 @@ export function TokenStackChart({
   const totalTx = points.reduce((acc, p) => acc + p.txCount, 0);
 
   // Cap bar width so the first bucket doesn't visually dominate when there
-  // are only a handful of points. ResponsiveContainer typically gives us
-  // ~1200px; with 5 points that'd auto-size each bar to ~240px. We want
-  // hairline columns at exact time positions, so we clamp to a sensible
-  // pixel width that scales gently with bucket count.
-  const barSize =
+  // are only a handful of points. We also clamp by viewport width so 30
+  // buckets at fixed barSize=8 don't overflow on a 320px screen.
+  const [viewport, setViewport] = useState<number>(1200);
+  useEffect(() => {
+    const update = () => setViewport(window.innerWidth);
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+  const baseBarSize =
     points.length <= 8 ? 14 : points.length <= 16 ? 10 : points.length <= 32 ? 8 : 6;
+  // Reserve ~40% of viewport width for axis/legend padding; leave 60% for bars.
+  // Each bar gets at least a 2px lane (1px bar + 1px gap) on the tightest screens.
+  const widthBudget = Math.max(160, Math.floor(viewport * 0.6));
+  const maxBarFromWidth = Math.max(2, Math.floor(widthBudget / Math.max(points.length, 1)) - 1);
+  const barSize = Math.min(baseBarSize, maxBarFromWidth);
 
   const data: Datum[] = useMemo(() => {
     return points.map((p, i) => {

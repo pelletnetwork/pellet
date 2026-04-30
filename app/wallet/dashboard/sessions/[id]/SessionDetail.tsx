@@ -259,7 +259,8 @@ function CapChart({
   const capY = y(cap);
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} style={{ display: "block" }} aria-label="cap usage">
+    <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} style={{ display: "block" }} role="img" aria-label="cap usage">
+      <title>Cumulative cap usage over the session lifetime</title>
       {/* hairline grid */}
       {[0.25, 0.5, 0.75, 1].map((f) => (
         <line
@@ -448,7 +449,10 @@ const styles = `
   .sd-dim { color: var(--color-text-quaternary); font-size: 10px; letter-spacing: 0.04em; text-transform: uppercase; }
   .sd-axis {
     font-family: var(--font-mono);
-    font-size: 9px;
+    /* px-suffixed so SVG keeps the label legible at narrow viewports — without
+     * a unit, the SVG treats the size as user units and scales it with the
+     * viewBox, which collapses to ~3.5px on a 320px screen. */
+    font-size: 10px;
     fill: var(--color-text-quaternary);
     letter-spacing: 0.04em;
   }
@@ -557,6 +561,7 @@ const styles = `
   .sd-btn:disabled { opacity: 0.5; cursor: not-allowed; }
   @media (max-width: 700px) {
     .sd-row { grid-template-columns: 1fr auto; row-gap: 4px; }
+    .sd-row-head { display: none; }
     .sd-onchain { grid-template-columns: 1fr; }
   }
 `;

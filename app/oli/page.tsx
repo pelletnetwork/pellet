@@ -32,32 +32,12 @@ export default async function OliDashboardPage({
   ]);
 
   return (
-    <div className="oli-page" style={{ display: "flex", flexDirection: "column", gap: 24, maxWidth: 1280 }}>
-      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 16 }}>
+    <div className="oli-page">
+      <header className="oli-page-header">
         <div>
-          <h1
-            style={{
-              fontFamily: "'Instrument Serif', Georgia, serif",
-              fontSize: 36,
-              fontWeight: 400,
-              margin: 0,
-              letterSpacing: "-0.02em",
-            }}
-          >
+          <h1 className="oli-page-h1">
             Open-Ledger Interface{" "}
-            <span
-              style={{
-                fontFamily: "var(--font-mono)",
-                fontSize: "0.32em",
-                fontWeight: 400,
-                color: "var(--color-text-quaternary)",
-                letterSpacing: "0.06em",
-                marginLeft: "0.35em",
-                verticalAlign: "0",
-              }}
-            >
-              (OLI)
-            </span>
+            <span className="oli-page-h1-em">(OLI)</span>
           </h1>
           <p style={{ color: "var(--color-text-tertiary)", marginTop: 6, fontSize: 13 }}>
             The open ledger of the agent economy.{" "}
@@ -121,7 +101,7 @@ export default async function OliDashboardPage({
         <TokenStackChart points={stack.points} totals={stack.totals} bucketHours={stack.bucketHours} />
       </section>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+      <div className="oli-page-cols-2" style={{ gap: 16 }}>
         <Leaderboard
           title="Top services"
           rows={snap.topServices}

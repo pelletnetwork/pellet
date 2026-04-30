@@ -71,6 +71,20 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* Keyboard-only focus ring — interactive elements without a visible focus
+ * state are an a11y failure. Mouse clicks don't trigger :focus-visible, so
+ * this only shows when navigating via keyboard. Uses the accent token so
+ * it matches the rest of the system without a separate focus color. */
+:focus-visible {
+  outline: 1px solid var(--color-accent);
+  outline-offset: 2px;
+}
+button:focus-visible,
+a:focus-visible {
+  outline: 1px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -1057,9 +1071,58 @@ main {
   gap: 24px;
   max-width: 1280px;
 }
+
+/* OLI page header — flex row that wraps cleanly on small screens, with the
+ * time-window toggle dropping below the title block instead of being squeezed.
+ */
+.oli-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.oli-page-h1 {
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-size: 36px;
+  font-weight: 400;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+.oli-page-h1-em {
+  font-family: var(--font-mono);
+  font-size: 0.32em;
+  font-weight: 400;
+  color: var(--color-text-quaternary);
+  letter-spacing: 0.06em;
+  margin-left: 0.35em;
+  vertical-align: 0;
+}
+
+/* Two-column section grids inside .oli-page collapse to one on mobile.
+ * Replaces the older brittle attribute selector on `style*="1fr 1fr"`.
+ */
+.oli-page-cols-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
 @media (max-width: 767px) {
   .oli-page {
     padding: 20px 16px;
+  }
+  .oli-page-h1 {
+    font-size: 28px;
+  }
+  /* Hide the parenthetical mono (OLI) on narrow widths so the headline can't
+   * orphan onto its own line. */
+  .oli-page-h1-em {
+    display: none;
+  }
+  .oli-page-cols-2 {
+    grid-template-columns: 1fr;
   }
   .oli-page > div[style*="grid-template-columns: 1fr 1fr"] {
     grid-template-columns: 1fr !important;
@@ -1988,6 +2051,18 @@ main {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  /* Allow cells to shrink + wrap cleanly when the tape is narrower than its
+   * widest item ("USDC.e $1.23M"). Without min-width: 0 the longest cell
+   * forces overflow instead of wrapping. */
+  min-width: 0;
+}
+@media (max-width: 600px) {
+  .oli-tokenchart-tape {
+    row-gap: 4px;
+  }
+  .oli-tokenchart-tape-spacer {
+    display: none;
+  }
 }
 .oli-tokenchart-tape-mark {
   width: 6px;

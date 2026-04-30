@@ -53,10 +53,7 @@ export default async function OliProviderDetailPage({
   }));
 
   return (
-    <div
-      className="oli-page"
-      style={{ padding: "32px 48px", display: "flex", flexDirection: "column", gap: 24, maxWidth: 1024 }}
-    >
+    <div className="oli-page" style={{ maxWidth: 1024 }}>
       <header>
         <span
           style={{

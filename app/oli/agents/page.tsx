@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export default async function OliAgentsPage() {
   const list = await listAgents();
   return (
-    <div className="oli-page" style={{ padding: "32px 48px", display: "flex", flexDirection: "column", gap: 24, maxWidth: 1280 }}>
+    <div className="oli-page">
       <header>
         <h1 style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: 36, fontWeight: 400, margin: 0 }}>
           Agents
