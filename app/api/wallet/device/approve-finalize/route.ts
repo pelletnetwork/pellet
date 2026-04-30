@@ -6,7 +6,7 @@ import {
   ACCOUNT_KEYCHAIN_ADDRESS,
   tempoChainConfig,
 } from "@/lib/wallet/tempo-config";
-import { createPublicClient, http } from "viem";
+import { createPublicClient, decodeEventLog, http, parseAbiItem } from "viem";
 import { tempoModerato, tempo as tempoMainnet } from "viem/chains";
 import { eq, and } from "drizzle-orm";
 
@@ -108,22 +108,50 @@ export async function POST(req: Request) {
       { status: 400 },
     );
   }
-  if (
-    receipt.to?.toLowerCase() !== ACCOUNT_KEYCHAIN_ADDRESS.toLowerCase()
-  ) {
+
+  // Tempo's type-0x76 TempoTransaction with feePayer:true (sponsored gas) does
+  // NOT put the AccountKeychain in `receipt.to` — that field is the zero
+  // address for typed envelopes. The precompile invocation is visible in
+  // `receipt.logs` instead. We verify two things from the logs:
+  //   1. AccountKeychain emitted a KeyAuthorized event in this tx
+  //   2. The event's `account` (the SCA that authorized the key) matches the
+  //      authenticated user's managed address
+  // Together this proves the tx actually authorized a key on the right
+  // account, regardless of what `to`/`from` look like in the outer envelope.
+  const keyAuthorizedEvent = parseAbiItem(
+    "event KeyAuthorized(address indexed account, address indexed publicKey, uint8 signatureType, uint64 expiry)",
+  );
+  let authorizedAccount: string | null = null;
+  for (const log of receipt.logs) {
+    if (log.address.toLowerCase() !== ACCOUNT_KEYCHAIN_ADDRESS.toLowerCase()) continue;
+    try {
+      const decoded = decodeEventLog({
+        abi: [keyAuthorizedEvent],
+        topics: log.topics,
+        data: log.data,
+      });
+      if (decoded.eventName === "KeyAuthorized") {
+        authorizedAccount = decoded.args.account.toLowerCase();
+        break;
+      }
+    } catch {
+      // Not a KeyAuthorized log; keep scanning.
+    }
+  }
+  if (!authorizedAccount) {
     return NextResponse.json(
       {
-        error: "tx didn't call AccountKeychain precompile",
-        detail: `to=${receipt.to ?? "null"}, expected=${ACCOUNT_KEYCHAIN_ADDRESS}`,
+        error: "no KeyAuthorized event from AccountKeychain in this tx",
+        detail: `tx=${body.tx_hash}, logs=${receipt.logs.length}, precompile=${ACCOUNT_KEYCHAIN_ADDRESS}`,
       },
       { status: 400 },
     );
   }
-  if (receipt.from.toLowerCase() !== expectedSender) {
+  if (authorizedAccount !== expectedSender) {
     return NextResponse.json(
       {
-        error: "tx sender doesn't match the authenticated user",
-        detail: `from=${receipt.from}, expected=${expectedSender}`,
+        error: "authorized account doesn't match the authenticated user",
+        detail: `authorized=${authorizedAccount}, expected=${expectedSender}`,
       },
       { status: 400 },
     );
