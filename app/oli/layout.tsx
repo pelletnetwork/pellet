@@ -10,7 +10,7 @@ import {
   Sparkles,
   BookText,
 } from "lucide-react";
-import { CommandBar } from "@/components/oli/CommandBar";
+import { OliSearchProvider } from "@/components/oli/CommandBarSearchProvider";
 import type { Metadata } from "next";
 import type * as PageTree from "fumadocs-core/page-tree";
 
@@ -115,28 +115,23 @@ const tree: PageTree.Root = {
 
 export default function OliLayout({ children }: { children: React.ReactNode }) {
   return (
-    <DocsLayout
-      tree={tree}
-      // The site Nav (Wallet · OLI · Docs) renders globally above this. We
-      // still enable fumadocs's nav config so its `title` slot lights up at
-      // the top of the sidebar (same place "Pellet Docs" appears on /docs).
-      // The fumadocs top-bar nav itself is suppressed via CSS in globals.css
-      // (.oli-layout-shell > [data-...]) when it conflicts with the site Nav.
-      nav={{
-        title: "Pellet Network",
-        url: "/",
-      }}
-      // Re-enable the search trigger so the sidebar matches /docs visually.
-      // Click handler routes through fumadocs's default search dialog; OLI
-      // also keeps its own ⌘K CommandBar mounted below for power-user
-      // navigation (txs, agents, services by id).
-      searchToggle={{ enabled: true }}
-      sidebar={{
-        defaultOpenLevel: 1,
-      }}
-    >
-      {children}
-      <CommandBar />
-    </DocsLayout>
+    <OliSearchProvider>
+      <DocsLayout
+        tree={tree}
+        nav={{
+          title: "Pellet Network",
+          url: "/",
+        }}
+        // Re-enable the search trigger so the sidebar matches /docs visually.
+        // Both the click and ⌘K route into our CommandBar via the
+        // OliSearchProvider above.
+        searchToggle={{ enabled: true }}
+        sidebar={{
+          defaultOpenLevel: 1,
+        }}
+      >
+        {children}
+      </DocsLayout>
+    </OliSearchProvider>
   );
 }

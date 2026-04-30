@@ -19,9 +19,35 @@ const KIND_LABEL: Record<SearchHit["kind"], string> = {
   address: "ADR",
 };
 
-export function CommandBar() {
+type CommandBarProps = {
+  /**
+   * Controlled open state. When provided, CommandBar mounts no internal ⌘K
+   * listener — the parent (typically fumadocs's SearchProvider) owns the
+   * hotkey + trigger button. When omitted, CommandBar self-manages with its
+   * own ⌘K listener.
+   */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+};
+
+export function CommandBar({ open: openProp, onOpenChange }: CommandBarProps = {}) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const isControlled = openProp !== undefined;
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = isControlled ? openProp : internalOpen;
+
+  const setOpen = useCallback(
+    (next: boolean | ((v: boolean) => boolean)) => {
+      const resolved = typeof next === "function" ? next(open) : next;
+      if (isControlled) {
+        onOpenChange?.(resolved);
+      } else {
+        setInternalOpen(resolved);
+      }
+    },
+    [isControlled, onOpenChange, open],
+  );
+
   const [query, setQuery] = useState("");
   const [hits, setHits] = useState<SearchHit[]>([]);
   const [selectedIdx, setSelectedIdx] = useState(0);
@@ -29,8 +55,11 @@ export function CommandBar() {
   const inputRef = useRef<HTMLInputElement>(null);
   const requestSeq = useRef(0);
 
-  // ⌘K / Ctrl+K toggle.
+  // ⌘K / Ctrl+K toggle — only when uncontrolled. When fumadocs's
+  // SearchProvider owns the hotkey, mounting another listener would
+  // double-fire and pop two dialogs at once.
   useEffect(() => {
+    if (isControlled) return;
     const onKey = (e: KeyboardEvent) => {
       const isCmdK = (e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k";
       if (isCmdK) {
@@ -42,7 +71,7 @@ export function CommandBar() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open]);
+  }, [isControlled, open, setOpen]);
 
   // Reset state when closing; focus input when opening.
   useEffect(() => {
