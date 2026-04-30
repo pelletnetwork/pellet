@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { startAuthentication } from "@simplewebauthn/browser";
 
 type State =
@@ -10,6 +10,19 @@ type State =
 
 export function SignInForm() {
   const [state, setState] = useState<State>({ kind: "idle" });
+  const [pairCmd, setPairCmd] = useState<string>(
+    "npx -y @pelletnetwork/cli@latest auth start",
+  );
+
+  useEffect(() => {
+    // On localhost, the CLI default (https://pellet.network) won't pair this
+    // origin's passkey credential — surface the env override so it's copyable.
+    if (typeof window !== "undefined" && window.location.hostname === "localhost") {
+      setPairCmd(
+        `PELLET_BASE_URL=${window.location.origin} npx -y @pelletnetwork/cli@latest auth start`,
+      );
+    }
+  }, []);
 
   const onSignIn = async () => {
     setState({ kind: "signing" });
@@ -123,7 +136,7 @@ export function SignInForm() {
       )}
 
       <p className="si-foot">
-        First time? Pair via the CLI: <code>npx -y @pelletnetwork/cli auth start</code>.{" "}
+        First time? Pair via the CLI: <code>{pairCmd}</code>.{" "}
         Already paired? <a href="/wallet/dashboard">Go to dashboard →</a>
       </p>
     </div>
