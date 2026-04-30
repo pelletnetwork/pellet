@@ -4,9 +4,12 @@
 // call the wallet from inside the agent loop.
 //
 // Tools exposed:
-//   pellet_status — read the local session: caps, expiry, label
-//   pellet_pay    — sign + submit a transferWithMemo on Tempo using the
-//                   user's on-chain-authorized agent key
+//   pellet_status          — read the local session: caps, expiry, label
+//   pellet_pay             — sign + submit transferWithMemo on Tempo
+//   pellet_balance         — on-chain USDC.e balance + remaining cap
+//   pellet_recent_events   — own past payments; supports memo_prefix so
+//                            agents can ask "did I already settle X?"
+//   pellet_lookup_service  — search OLI for a paid endpoint by name
 //
 // Pairing (auth_start) is intentionally NOT exposed via MCP — it requires
 // a browser passkey ceremony, which the agent can't drive. Users run
@@ -84,6 +87,85 @@ const STATUS_TOOL = {
   },
 };
 
+const BALANCE_TOOL = {
+  name: "pellet_balance",
+  description:
+    "Read the wallet's on-chain USDC.e balance on Tempo plus the session's " +
+    "remaining spend cap, in one call. Use this before paying to confirm " +
+    "funds — the answer to 'can I afford this?' depends on BOTH on-chain " +
+    "balance AND server-side remaining cap, and this surfaces both.",
+  inputSchema: {
+    type: "object",
+    properties: {},
+    additionalProperties: false,
+  },
+};
+
+const RECENT_EVENTS_TOOL = {
+  name: "pellet_recent_events",
+  description:
+    "List the user's recent payments from the wallet's spend log. The " +
+    "killer use case: pass memo_prefix to ask 'did I already settle this " +
+    "x402 challenge?' before re-paying. Note: rows persisted before the " +
+    "challenge_id wiring landed will have no challenge id — older payments " +
+    "won't match memo_prefix even if you did pay them.",
+  inputSchema: {
+    type: "object",
+    properties: {
+      memo_prefix: {
+        type: "string",
+        description:
+          "If supplied, only return rows whose memo starts with this " +
+          "(case-insensitive). Pass an x402 challenge id here to ask 'did " +
+          "I already pay this?'",
+      },
+      since: {
+        type: "string",
+        description:
+          "ISO-8601 timestamp; only return events at-or-after this time. " +
+          "Defaults to 24h ago.",
+      },
+      limit: {
+        type: "integer",
+        description: "Max rows to return (1-100). Default 25.",
+      },
+      status: {
+        type: "string",
+        enum: ["any", "submitted", "pending", "failed"],
+        description:
+          "Filter by status. Default 'submitted' (only successful pays).",
+      },
+    },
+    additionalProperties: false,
+  },
+};
+
+const LOOKUP_SERVICE_TOOL = {
+  name: "pellet_lookup_service",
+  description:
+    "Search Pellet's OLI ledger for a paid x402/MPP endpoint by name, " +
+    "label, or address fragment. Returns watched services with recent " +
+    "activity. Use this before paying an unknown service to verify it's a " +
+    "real, active provider others have paid. Public endpoint — no session " +
+    "required.",
+  inputSchema: {
+    type: "object",
+    properties: {
+      q: {
+        type: "string",
+        description:
+          "Search term — service slug, label, address fragment. Min 2 chars.",
+      },
+      limit: {
+        type: "integer",
+        description: "Max results (1-25). Default 10.",
+      },
+    },
+    required: ["q"],
+    additionalProperties: false,
+  },
+};
+
 type PayInput = {
   to?: string;
   amount_usdc?: number;
@@ -113,7 +195,13 @@ export async function runMcpServer(): Promise<number> {
   );
 
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
-    tools: [STATUS_TOOL, PAY_TOOL],
+    tools: [
+      STATUS_TOOL,
+      PAY_TOOL,
+      BALANCE_TOOL,
+      RECENT_EVENTS_TOOL,
+      LOOKUP_SERVICE_TOOL,
+    ],
   }));
 
   server.setRequestHandler(CallToolRequestSchema, async (req) => {
@@ -244,6 +332,140 @@ export async function runMcpServer(): Promise<number> {
       };
     }
 
+    if (name === "pellet_balance") {
+      const session = await readSession();
+      if (!session) {
+        return {
+          isError: true,
+          content: [
+            {
+              type: "text",
+              text: "no Pellet Wallet session — user must run `pellet auth start` to pair",
+            },
+          ],
+        };
+      }
+      const baseUrl =
+        process.env.PELLET_BASE_URL ?? session.baseUrl ?? defaultBaseUrl();
+      const result = await getWithAuth(
+        `${baseUrl}/api/wallet/balance`,
+        session.bearer,
+      );
+      if (!result.ok) {
+        return {
+          isError: true,
+          content: [
+            {
+              type: "text",
+              text: `balance fetch failed: ${result.error ?? "unknown"}`,
+            },
+          ],
+        };
+      }
+      return {
+        content: [
+          { type: "text", text: JSON.stringify(result.data, null, 2) },
+        ],
+      };
+    }
+
+    if (name === "pellet_recent_events") {
+      const args = (rawArgs ?? {}) as {
+        memo_prefix?: string;
+        since?: string;
+        limit?: number;
+        status?: string;
+      };
+      const session = await readSession();
+      if (!session) {
+        return {
+          isError: true,
+          content: [
+            {
+              type: "text",
+              text: "no Pellet Wallet session — user must run `pellet auth start` to pair",
+            },
+          ],
+        };
+      }
+      const baseUrl =
+        process.env.PELLET_BASE_URL ?? session.baseUrl ?? defaultBaseUrl();
+      const params = new URLSearchParams();
+      if (args.memo_prefix) params.set("memo_prefix", args.memo_prefix);
+      if (args.since) params.set("since", args.since);
+      if (typeof args.limit === "number") params.set("limit", String(args.limit));
+      if (args.status) params.set("status", args.status);
+      const qs = params.toString();
+      const result = await getWithAuth(
+        `${baseUrl}/api/wallet/events${qs ? `?${qs}` : ""}`,
+        session.bearer,
+      );
+      if (!result.ok) {
+        return {
+          isError: true,
+          content: [
+            {
+              type: "text",
+              text: `events fetch failed: ${result.error ?? "unknown"}`,
+            },
+          ],
+        };
+      }
+      return {
+        content: [
+          { type: "text", text: JSON.stringify(result.data, null, 2) },
+        ],
+      };
+    }
+
+    if (name === "pellet_lookup_service") {
+      const args = (rawArgs ?? {}) as { q?: string; limit?: number };
+      if (!args.q || args.q.trim().length < 2) {
+        return {
+          isError: true,
+          content: [
+            { type: "text", text: "q must be a string of length ≥ 2" },
+          ],
+        };
+      }
+      const limit = typeof args.limit === "number" ? args.limit : 10;
+      // OLI search is public — fall back to defaultBaseUrl if no session.
+      const session = await readSession();
+      const baseUrl =
+        process.env.PELLET_BASE_URL ??
+        session?.baseUrl ??
+        defaultBaseUrl();
+      const url = `${baseUrl}/api/oli/search?q=${encodeURIComponent(args.q)}`;
+      const result = await getWithAuth(url, null);
+      if (!result.ok) {
+        return {
+          isError: true,
+          content: [
+            {
+              type: "text",
+              text: `lookup failed: ${result.error ?? "unknown"}`,
+            },
+          ],
+        };
+      }
+      const hits = (result.data as { hits?: unknown[] }).hits ?? [];
+      const services = hits
+        .filter((h) => (h as { kind?: string }).kind === "service")
+        .slice(0, limit);
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(
+              { ok: true, count: services.length, results: services },
+              null,
+              2,
+            ),
+          },
+        ],
+      };
+    }
+
     return {
       isError: true,
       content: [{ type: "text", text: `unknown tool: ${name}` }],
@@ -252,8 +474,13 @@ export async function runMcpServer(): Promise<number> {
 
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  // The transport's connect resolves when the stdio loop ends (parent process
-  // closes pipes). Until then, the process keeps running.
+  // server.connect resolves once stdio is wired up — but it doesn't keep
+  // the process alive. Block on stdin closing so the entrypoint's
+  // process.exit(code) only fires once the parent has hung up.
+  await new Promise<void>((resolve) => {
+    process.stdin.on("end", resolve);
+    process.stdin.on("close", resolve);
+  });
   return 0;
 }
 
@@ -285,6 +512,40 @@ async function postWithAuth(
     }
     const data = (await res.json()) as PayResult;
     return data;
+  }
+  return { ok: false, error: "too many redirects" };
+}
+
+type GetResult =
+  | { ok: true; data: unknown }
+  | { ok: false; error: string };
+
+async function getWithAuth(
+  url: string,
+  bearer: string | null,
+): Promise<GetResult> {
+  let target = url;
+  const headers: Record<string, string> = {
+    accept: "application/json",
+  };
+  if (bearer) headers.authorization = `Bearer ${bearer}`;
+  for (let hop = 0; hop < 5; hop++) {
+    const res = await fetch(target, {
+      method: "GET",
+      headers,
+      redirect: "manual",
+    });
+    if (res.status >= 300 && res.status < 400) {
+      const loc = res.headers.get("location");
+      if (!loc) return { ok: false, error: `redirect ${res.status} with no Location` };
+      target = new URL(loc, target).toString();
+      continue;
+    }
+    const data = (await res.json().catch(() => ({}))) as { error?: string };
+    if (!res.ok) {
+      return { ok: false, error: data.error ?? `${res.status} ${res.statusText}` };
+    }
+    return { ok: true, data };
   }
   return { ok: false, error: "too many redirects" };
 }

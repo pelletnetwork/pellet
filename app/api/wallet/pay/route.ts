@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db/client";
-import { walletSessions, walletSpendLog, walletUsers } from "@/lib/db/schema";
+import { walletSessions, walletSpendLog } from "@/lib/db/schema";
 import { decryptSessionKey } from "@/lib/wallet/session-keys";
 import { tempoChainConfig } from "@/lib/wallet/tempo-config";
+import { requireSession } from "@/lib/wallet/bearer-auth";
 import { eq, sql } from "drizzle-orm";
 import {
   createWalletClient,
   http,
-  encodeFunctionData,
   parseAbi,
   isAddress,
   isHex,
@@ -18,7 +18,6 @@ import {
 import { tempoModerato, tempo as tempoMainnet } from "viem/chains";
 import { Account, withRelay, tempoActions } from "viem/tempo";
 import { privateKeyToAddress } from "viem/accounts";
-import { createHash } from "crypto";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -43,47 +42,11 @@ const TIP20_ABI = parseAbi([
   "function transferWithMemo(address to, uint256 amount, bytes32 memo)",
 ]);
 
-function bearerFromHeader(req: Request): string | null {
-  const h = req.headers.get("authorization") ?? "";
-  const m = /^Bearer (.+)$/i.exec(h);
-  return m ? m[1].trim() : null;
-}
-
-function sha256Hex(s: string): string {
-  return createHash("sha256").update(s).digest("hex");
-}
-
 export async function POST(req: Request) {
-  // 1. Bearer auth.
-  const bearer = bearerFromHeader(req);
-  if (!bearer) {
-    return NextResponse.json(
-      { error: "missing bearer token", detail: "Authorization: Bearer <token>" },
-      { status: 401 },
-    );
-  }
-  const bearerHash = sha256Hex(bearer);
-  const rows = await db
-    .select()
-    .from(walletSessions)
-    .where(eq(walletSessions.bearerTokenHash, bearerHash))
-    .limit(1);
-  const session = rows[0];
-  if (!session) {
-    return NextResponse.json({ error: "invalid bearer" }, { status: 401 });
-  }
-  if (session.revokedAt) {
-    return NextResponse.json({ error: "session revoked" }, { status: 403 });
-  }
-  if (session.expiresAt.getTime() < Date.now()) {
-    return NextResponse.json({ error: "session expired" }, { status: 403 });
-  }
-  if (!session.authorizeTxHash) {
-    return NextResponse.json(
-      { error: "session not yet on-chain authorized" },
-      { status: 403 },
-    );
-  }
+  // 1. Bearer auth + session resolution. requireSession handles 401/403 ladder.
+  const resolved = await requireSession(req, { requireOnChainAuthorize: true });
+  if (resolved instanceof NextResponse) return resolved;
+  const { session, user } = resolved;
   if (!session.sessionKeyCiphertext) {
     return NextResponse.json(
       { error: "session has no agent key (corrupt state)" },
@@ -151,17 +114,8 @@ export async function POST(req: Request) {
     memo = pad("0x00", { size: 32 });
   }
 
-  // 5. Decrypt agent session key + look up user's managed address.
-  const userRows = await db
-    .select({
-      managedAddress: walletUsers.managedAddress,
-      publicKeyUncompressed: walletUsers.publicKeyUncompressed,
-    })
-    .from(walletUsers)
-    .where(eq(walletUsers.id, session.userId))
-    .limit(1);
-  const user = userRows[0];
-  if (!user || !user.publicKeyUncompressed) {
+  // 5. Decrypt agent session key. requireSession already gave us {user}.
+  if (!user.publicKeyUncompressed) {
     return NextResponse.json(
       { error: "wallet user missing on-chain identity" },
       { status: 500 },
@@ -245,11 +199,16 @@ export async function POST(req: Request) {
   // 7. Insert a pending spend-log row BEFORE broadcasting. This way we still
   // have a record if the process dies after the tx hits the chain but before
   // we update bookkeeping, and the user can see in-flight payments.
+  // Persist the original memo input as challenge_id (lower-cased so prefix
+  // filtering in /api/wallet/events works case-insensitively). This is what
+  // pellet_recent_events filters on to answer "did I already settle X?"
+  const challengeId = body.memo ? body.memo.toLowerCase() : null;
   const [pendingLog] = await db
     .insert(walletSpendLog)
     .values({
       sessionId: session.id,
       userId: session.userId,
+      challengeId,
       recipient: body.to,
       amountWei: amountWei.toString(),
       status: "pending",
