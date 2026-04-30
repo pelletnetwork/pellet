@@ -25,7 +25,7 @@
   --color-text-quaternary: rgba(255, 255, 255, 0.42);
 
   /* Brand */
-  --color-accent: #7a96b2;
+  --color-accent: #6080c0;
 
   /* Signal */
   --color-success: #30a46c;
@@ -51,7 +51,7 @@
  * still work because @theme is also still set.
  */
 :root {
-  --color-accent: #7a96b2;
+  --color-accent: #6080c0;
 }
 
 body {
@@ -1078,7 +1078,7 @@ main {
   height: 320px;
   background: radial-gradient(
     ellipse 80% 100% at 50% -20%,
-    rgba(122, 150, 178, 0.10),
+    rgba(96, 128, 192, 0.10),
     transparent 70%
   );
   pointer-events: none;
@@ -1223,7 +1223,7 @@ main {
 @keyframes oli-event-pulse {
   0% {
     box-shadow: inset 2px 0 0 var(--color-accent);
-    background: rgba(122, 150, 178, 0.10);
+    background: rgba(96, 128, 192, 0.10);
   }
   100% {
     box-shadow: inset 2px 0 0 transparent;
@@ -1582,7 +1582,7 @@ main {
 .oli-rail-status-indexed {
   color: var(--color-accent);
   border-color: var(--color-accent);
-  background: rgba(122, 150, 178, 0.10);
+  background: rgba(96, 128, 192, 0.10);
 }
 .oli-rail-status-documented {
   color: var(--color-text-secondary);
@@ -1994,7 +1994,7 @@ main {
   background: rgba(255, 255, 255, 0.78);
 }
 .oli-tokenchart-tape-mark[data-token="usdt0"] {
-  background: rgba(122, 150, 178, 0.78);
+  background: rgba(96, 128, 192, 0.78);
 }
 .oli-tokenchart-tape-mark[data-token="other"] {
   background: rgba(255, 255, 255, 0.22);
