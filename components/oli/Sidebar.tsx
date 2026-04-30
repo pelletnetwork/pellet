@@ -4,38 +4,41 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard,
-  Server,
-  Bot,
-  Route,
-  BookOpen,
-  FileText,
-  type LucideIcon,
-} from "lucide-react";
+  IconLayoutDashboard,
+  IconServer,
+  IconRobot,
+  IconRoute,
+  IconBook,
+  IconFileText,
+  IconLayoutSidebarLeftCollapse,
+  IconLayoutSidebarLeftExpand,
+  type Icon as TablerIconType,
+} from "@tabler/icons-react";
 
-type NavItem = { label: string; href: string; icon: LucideIcon };
+type NavItem = { label: string; href: string; icon: TablerIconType };
 type Section = { label: string; items: NavItem[] };
 
 const sections: Section[] = [
   {
     label: "Explore",
     items: [
-      { label: "Dashboard", href: "/oli", icon: LayoutDashboard },
-      { label: "Services", href: "/oli/services", icon: Server },
-      { label: "Agents", href: "/oli/agents", icon: Bot },
+      { label: "Dashboard", href: "/oli", icon: IconLayoutDashboard },
+      { label: "Services", href: "/oli/services", icon: IconServer },
+      { label: "Agents", href: "/oli/agents", icon: IconRobot },
     ],
   },
   {
     label: "Reference",
     items: [
-      { label: "Rails", href: "/oli/rails", icon: Route },
-      { label: "Skills", href: "/oli/skills", icon: BookOpen },
-      { label: "Methodology", href: "/oli/methodology", icon: FileText },
+      { label: "Rails", href: "/oli/rails", icon: IconRoute },
+      { label: "Skills", href: "/oli/skills", icon: IconBook },
+      { label: "Methodology", href: "/oli/methodology", icon: IconFileText },
     ],
   },
 ];
 
 const STORAGE_KEY = "pellet-oli-sidebar-collapsed";
+const ICON_PROPS = { size: 18, stroke: 1.5 } as const;
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -103,7 +106,11 @@ export function Sidebar() {
           aria-expanded={!collapsed}
           className="oli-sidebar-toggle"
         >
-          <ToggleGlyph collapsed={collapsed} />
+          {collapsed ? (
+            <IconLayoutSidebarLeftExpand {...ICON_PROPS} />
+          ) : (
+            <IconLayoutSidebarLeftCollapse {...ICON_PROPS} />
+          )}
         </button>
       </div>
 
@@ -137,7 +144,7 @@ export function Sidebar() {
                 aria-label={collapsed ? item.label : undefined}
               >
                 <span className="oli-nav-link-icon" aria-hidden>
-                  <Icon size={16} strokeWidth={1.75} />
+                  <Icon {...ICON_PROPS} />
                 </span>
                 {!collapsed && <span className="oli-nav-link-label">{item.label}</span>}
               </Link>
@@ -146,38 +153,5 @@ export function Sidebar() {
         </nav>
       ))}
     </aside>
-  );
-}
-
-// Hand-tuned panel-toggle glyph. Lucide's PanelLeftClose/Open at small sizes
-// renders with round line caps/joins that read as brightness blobs at line
-// endpoints — on a strokeWidth-1.5 icon at 16px the divider line ends up
-// looking thicker on top/bottom than mid-line. This SVG uses square caps +
-// miter joins and explicit endpoint geometry, so the divider is uniform.
-function ToggleGlyph({ collapsed }: { collapsed: boolean }) {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 16 16"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.25"
-      strokeLinecap="square"
-      strokeLinejoin="miter"
-      shapeRendering="crispEdges"
-      aria-hidden
-    >
-      {/* outer panel */}
-      <rect x="2.5" y="3.5" width="11" height="9" />
-      {/* divider — sits one cell in from the left edge */}
-      <line x1="6.5" y1="3.5" x2="6.5" y2="12.5" />
-      {/* directional chevron inside the right panel */}
-      {collapsed ? (
-        <polyline points="9.5,6 11.5,8 9.5,10" />
-      ) : (
-        <polyline points="11.5,6 9.5,8 11.5,10" />
-      )}
-    </svg>
   );
 }
