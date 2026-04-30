@@ -10,8 +10,6 @@ import {
   Route,
   BookOpen,
   FileText,
-  PanelLeftClose,
-  PanelLeftOpen,
   type LucideIcon,
 } from "lucide-react";
 
@@ -105,7 +103,7 @@ export function Sidebar() {
           aria-expanded={!collapsed}
           className="oli-sidebar-toggle"
         >
-          {collapsed ? <PanelLeftOpen size={16} strokeWidth={1.75} /> : <PanelLeftClose size={16} strokeWidth={1.75} />}
+          <ToggleGlyph collapsed={collapsed} />
         </button>
       </div>
 
@@ -148,5 +146,38 @@ export function Sidebar() {
         </nav>
       ))}
     </aside>
+  );
+}
+
+// Hand-tuned panel-toggle glyph. Lucide's PanelLeftClose/Open at small sizes
+// renders with round line caps/joins that read as brightness blobs at line
+// endpoints — on a strokeWidth-1.5 icon at 16px the divider line ends up
+// looking thicker on top/bottom than mid-line. This SVG uses square caps +
+// miter joins and explicit endpoint geometry, so the divider is uniform.
+function ToggleGlyph({ collapsed }: { collapsed: boolean }) {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.25"
+      strokeLinecap="square"
+      strokeLinejoin="miter"
+      shapeRendering="crispEdges"
+      aria-hidden
+    >
+      {/* outer panel */}
+      <rect x="2.5" y="3.5" width="11" height="9" />
+      {/* divider — sits one cell in from the left edge */}
+      <line x1="6.5" y1="3.5" x2="6.5" y2="12.5" />
+      {/* directional chevron inside the right panel */}
+      {collapsed ? (
+        <polyline points="9.5,6 11.5,8 9.5,10" />
+      ) : (
+        <polyline points="11.5,6 9.5,8 11.5,10" />
+      )}
+    </svg>
   );
 }
