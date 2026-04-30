@@ -16,7 +16,7 @@ const resourceLinks = [
 const socialLinks = [
   { label: "GitHub", href: "https://github.com/pelletnetwork/pellet" },
   { label: "X", href: "https://x.com/pelletnetwork" },
-  { label: "CLI", href: "https://github.com/pelletnetwork/pellet/tree/main/cli" },
+  { label: "CLI", href: "https://www.npmjs.com/package/@pelletnetwork/cli" },
 ];
 
 export function Footer() {

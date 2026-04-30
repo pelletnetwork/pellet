@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "Open agent wallet on Tempo. Pair, approve, pay — every settlement recorded on the public OLI ledger.",
   "bin": {
-    "pellet": "./dist/index.js"
+    "pellet": "dist/index.js"
   },
   "type": "module",
   "scripts": {
