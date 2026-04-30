@@ -53,25 +53,6 @@ export const metadata: Metadata = {
 const tree: PageTree.Root = {
   name: "OLI",
   children: [
-    { type: "separator", name: "Wallet" },
-    {
-      type: "page",
-      name: "Pellet Wallet",
-      url: "/wallet",
-      icon: <Wallet />,
-    },
-    {
-      type: "page",
-      name: "CLI",
-      url: "/docs/wallet-cli",
-      icon: <Terminal />,
-    },
-    {
-      type: "page",
-      name: "MCP",
-      url: "/docs/wallet-mcp",
-      icon: <Bot />,
-    },
     { type: "separator", name: "Explore" },
     {
       type: "page",
@@ -90,6 +71,25 @@ const tree: PageTree.Root = {
       name: "Agents",
       url: "/oli/agents",
       icon: <Users />,
+    },
+    { type: "separator", name: "Wallet" },
+    {
+      type: "page",
+      name: "Pellet Wallet",
+      url: "/wallet",
+      icon: <Wallet />,
+    },
+    {
+      type: "page",
+      name: "CLI",
+      url: "/docs/wallet-cli",
+      icon: <Terminal />,
+    },
+    {
+      type: "page",
+      name: "MCP",
+      url: "/docs/wallet-mcp",
+      icon: <Bot />,
     },
     { type: "separator", name: "Reference" },
     {
