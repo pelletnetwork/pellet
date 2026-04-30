@@ -48,12 +48,19 @@ export function Dashboard({
   chart,
   sessions,
   payments,
+  basePath = "/wallet",
 }: {
   user: User;
   balances: Balance[];
   chart: ChartPoint[];
   sessions: Session[];
   payments: Payment[];
+  /**
+   * URL prefix for internal navigation. "/wallet" for the canonical surface,
+   * "/oli/wallet" when the wallet is embedded inside the OLI shell so the
+   * user stays in OLI while clicking around.
+   */
+  basePath?: string;
 }) {
   const [copied, setCopied] = useState(false);
   const [revoking, setRevoking] = useState<string | null>(null);
@@ -304,7 +311,7 @@ export function Dashboard({
       <header style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 16 }}>
           <span className="dash-kicker">Pellet Wallet</span>
-          <Link href="/wallet/dashboard/settings" className="dash-kicker" style={{ textDecoration: "none" }}>
+          <Link href={`${basePath}/dashboard/settings`} className="dash-kicker" style={{ textDecoration: "none" }}>
             settings →
           </Link>
         </div>
@@ -396,7 +403,7 @@ export function Dashboard({
               return (
                 <div key={s.id} className="dash-row">
                   <Link
-                    href={`/wallet/dashboard/sessions/${s.id}`}
+                    href={`${basePath}/dashboard/sessions/${s.id}`}
                     style={{ textDecoration: "none", color: "inherit" }}
                   >
                     <div className="dash-mono" style={{ fontSize: 13, color: "var(--color-text-primary)" }}>
@@ -483,7 +490,7 @@ export function Dashboard({
                     {p.recipient.slice(0, 10)}…{p.recipient.slice(-6)}
                   </div>
                   <Link
-                    href={`/wallet/dashboard/sessions/${p.sessionId}`}
+                    href={`${basePath}/dashboard/sessions/${p.sessionId}`}
                     className="dash-mono"
                     style={{ fontSize: 10, color: "var(--color-text-quaternary)", textDecoration: "none" }}
                   >
@@ -519,7 +526,7 @@ export function Dashboard({
 
       <p style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--color-text-quaternary)", textAlign: "center", marginTop: 12 }}>
         Testnet · all funds are play money. Mainnet pending sponsor + recovery.{" "}
-        <Link href="/wallet" style={{ color: "var(--color-accent)" }}>roadmap →</Link>
+        <Link href={basePath} style={{ color: "var(--color-accent)" }}>roadmap →</Link>
       </p>
     </div>
   );

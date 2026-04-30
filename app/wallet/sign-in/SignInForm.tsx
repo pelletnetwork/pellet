@@ -9,7 +9,7 @@ type State =
   | { kind: "busy"; what: Mode }
   | { kind: "error"; message: string };
 
-export function SignInForm() {
+export function SignInForm({ basePath = "/wallet" }: { basePath?: string } = {}) {
   const [mode, setMode] = useState<Mode>("signin");
   const [state, setState] = useState<State>({ kind: "idle" });
   const [pairCmd, setPairCmd] = useState<string>(
@@ -47,7 +47,7 @@ export function SignInForm() {
         setState({ kind: "error", message: verify.error ?? "sign-in failed" });
         return;
       }
-      window.location.href = "/wallet/dashboard";
+      window.location.href = `${basePath}/dashboard`;
     } catch (e) {
       setState({
         kind: "error",
@@ -80,7 +80,7 @@ export function SignInForm() {
         });
         return;
       }
-      window.location.href = "/wallet/dashboard";
+      window.location.href = `${basePath}/dashboard`;
     } catch (e) {
       setState({
         kind: "error",

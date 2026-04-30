@@ -27,7 +27,16 @@ type Payment = {
 const EXPLORER = "https://explore.testnet.tempo.xyz";
 const COMPLETED = new Set(["signed", "submitted", "confirmed"]);
 
-export function SessionDetail({ session, payments }: { session: Session; payments: Payment[] }) {
+export function SessionDetail({
+  session,
+  payments,
+  basePath = "/wallet",
+}: {
+  session: Session;
+  payments: Payment[];
+  /** "/wallet" canonical, "/oli/wallet" when embedded in OLI shell. */
+  basePath?: string;
+}) {
   const [revoking, setRevoking] = useState(false);
 
   const capUsdc = Number(session.spendCapWei) / 1_000_000;
@@ -67,7 +76,7 @@ export function SessionDetail({ session, payments }: { session: Session; payment
     <div className="sd-page">
       <style>{styles}</style>
 
-      <Link href="/wallet/dashboard" className="sd-back">← all sessions</Link>
+      <Link href={`${basePath}/dashboard`} className="sd-back">← all sessions</Link>
 
       <header className="sd-head">
         <span className="sd-kicker">session · {session.id.slice(0, 8)}…</span>

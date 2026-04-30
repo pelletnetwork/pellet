@@ -16,7 +16,16 @@ type User = {
 
 type Busy = "none" | "signOut" | "revokeAll" | "delete";
 
-export function Settings({ user, activeSessionCount }: { user: User; activeSessionCount: number }) {
+export function Settings({
+  user,
+  activeSessionCount,
+  basePath = "/wallet",
+}: {
+  user: User;
+  activeSessionCount: number;
+  /** "/wallet" canonical, "/oli/wallet" when embedded in OLI shell. */
+  basePath?: string;
+}) {
   const [busy, setBusy] = useState<Busy>("none");
   const [baseUrl, setBaseUrl] = useState<string>("");
 
@@ -28,7 +37,7 @@ export function Settings({ user, activeSessionCount }: { user: User; activeSessi
     setBusy("signOut");
     try {
       await fetch("/api/wallet/me/sign-out", { method: "POST" });
-      window.location.href = "/wallet/sign-in";
+      window.location.href = `${basePath}/sign-in`;
     } finally {
       setBusy("none");
     }
@@ -45,7 +54,7 @@ export function Settings({ user, activeSessionCount }: { user: User; activeSessi
         alert(`revoke-all failed: ${d.error ?? res.statusText}`);
         return;
       }
-      window.location.href = "/wallet/dashboard";
+      window.location.href = `${basePath}/dashboard`;
     } finally {
       setBusy("none");
     }
@@ -74,7 +83,7 @@ export function Settings({ user, activeSessionCount }: { user: User; activeSessi
     <div className="set-page">
       <style>{styles}</style>
 
-      <Link href="/wallet/dashboard" className="set-back">← dashboard</Link>
+      <Link href={`${basePath}/dashboard`} className="set-back">← dashboard</Link>
 
       <header className="set-head">
         <span className="set-kicker">Pellet Wallet · Settings</span>

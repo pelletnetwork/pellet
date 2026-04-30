@@ -11,5 +11,5 @@ export const metadata: Metadata = {
 // browsing OLI can read the wallet pitch without losing the OLI sidebar
 // context. The component is shared with /wallet — single source of truth.
 export default function OliEmbeddedWalletPage() {
-  return <WalletPage />;
+  return <WalletPage basePath="/oli/wallet" />;
 }

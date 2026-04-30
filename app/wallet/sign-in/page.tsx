@@ -9,6 +9,10 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default function WalletSignInPage() {
+  return renderSignIn("/wallet");
+}
+
+export function renderSignIn(basePath: string) {
   return (
     <div
       style={{
@@ -19,7 +23,7 @@ export default function WalletSignInPage() {
         padding: 24,
       }}
     >
-      <SignInForm />
+      <SignInForm basePath={basePath} />
     </div>
   );
 }

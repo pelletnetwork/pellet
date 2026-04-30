@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default function WalletPage() {
+export default function WalletPage({ basePath = "/wallet" }: { basePath?: string } = {}) {
   return (
     <div className="wallet-page">
       <style>{`
@@ -368,7 +368,7 @@ export default function WalletPage() {
           balance, sessions, and payment history live at{" "}
           <code>/wallet/dashboard</code>.
         </p>
-        <Link href="/wallet/sign-in" className="wallet-cta-link">
+        <Link href={`${basePath}/sign-in`} className="wallet-cta-link">
           Open wallet →
         </Link>
         <Link href="/oli" className="wallet-cta-secondary">

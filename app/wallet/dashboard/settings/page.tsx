@@ -15,8 +15,12 @@ export const metadata: Metadata = {
 };
 
 export default async function SettingsPage() {
+  return renderSettings("/wallet");
+}
+
+export async function renderSettings(basePath: string) {
   const userId = await readUserSession();
-  if (!userId) redirect("/wallet/sign-in");
+  if (!userId) redirect(`${basePath}/sign-in`);
 
   const rows = await db
     .select()
@@ -24,7 +28,7 @@ export default async function SettingsPage() {
     .where(eq(walletUsers.id, userId))
     .limit(1);
   const user = rows[0];
-  if (!user) redirect("/wallet/sign-in");
+  if (!user) redirect(`${basePath}/sign-in`);
 
   const activeRows = await db
     .select({ count: sql<number>`count(*)::int` })
@@ -55,6 +59,7 @@ export default async function SettingsPage() {
         lastSeenAt: user.lastSeenAt.toISOString(),
       }}
       activeSessionCount={activeSessionCount}
+      basePath={basePath}
     />
   );
 }

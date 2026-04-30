@@ -16,9 +16,18 @@ export const metadata: Metadata = {
 };
 
 export default async function WalletDashboardPage() {
+  return renderDashboard("/wallet");
+}
+
+/**
+ * Shared renderer used by /wallet/dashboard and /oli/wallet/dashboard. The
+ * OLI mirror passes basePath="/oli/wallet" so internal links + the
+ * unauthenticated redirect target both keep the user inside the OLI shell.
+ */
+export async function renderDashboard(basePath: string) {
   const userId = await readUserSession();
   if (!userId) {
-    redirect("/wallet/sign-in");
+    redirect(`${basePath}/sign-in`);
   }
 
   const userRows = await db
@@ -124,6 +133,7 @@ export default async function WalletDashboardPage() {
         status: p.status,
         createdAt: p.createdAt.toISOString(),
       }))}
+      basePath={basePath}
     />
   );
 }

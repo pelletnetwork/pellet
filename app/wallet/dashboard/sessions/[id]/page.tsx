@@ -19,8 +19,15 @@ export default async function SessionDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  return renderSession(params, "/wallet");
+}
+
+export async function renderSession(
+  params: Promise<{ id: string }>,
+  basePath: string,
+) {
   const userId = await readUserSession();
-  if (!userId) redirect("/wallet/sign-in");
+  if (!userId) redirect(`${basePath}/sign-in`);
 
   const { id } = await params;
 
@@ -66,6 +73,7 @@ export default async function SessionDetailPage({
         status: p.status,
         createdAt: p.createdAt.toISOString(),
       }))}
+      basePath={basePath}
     />
   );
 }
