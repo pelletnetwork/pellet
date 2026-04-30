@@ -588,7 +588,6 @@ function SpendChart({ chart }: { chart: ChartPoint[] }) {
                 width={barW}
                 height={h}
                 fill={p.spentUsdc > 0 ? "var(--color-accent)" : "rgba(255,255,255,0.05)"}
-                rx={1}
               />
               <text
                 x={x + barW / 2}

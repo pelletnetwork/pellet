@@ -3,7 +3,7 @@ import { db } from "@/lib/db/client";
 import { walletSessions, walletSpendLog, walletUsers } from "@/lib/db/schema";
 import { decryptSessionKey } from "@/lib/wallet/session-keys";
 import { tempoChainConfig } from "@/lib/wallet/tempo-config";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import {
   createWalletClient,
   http,
@@ -281,15 +281,22 @@ export async function POST(req: Request) {
 
   // 9. Persist usage + finalize the spend log row in a single transaction so
   // session.spend_used_wei never drifts from the sum of submitted log rows.
-  await db.transaction(async (tx) => {
+  // Use an atomic SQL increment (spend_used_wei + amount) instead of read-then-
+  // write of (lifetimeUsed + amountWei) — concurrent pays would otherwise
+  // overwrite each other and the server-side cap could lag behind the chain's.
+  const newSpendUsedWei = await db.transaction(async (tx) => {
     await tx
       .update(walletSpendLog)
       .set({ status: "submitted", txHash, updatedAt: new Date() })
       .where(eq(walletSpendLog.id, pendingLog.id));
-    await tx
+    const updated = await tx
       .update(walletSessions)
-      .set({ spendUsedWei: (lifetimeUsed + amountWei).toString() })
-      .where(eq(walletSessions.id, session.id));
+      .set({
+        spendUsedWei: sql`(${walletSessions.spendUsedWei}::numeric + ${amountWei.toString()}::numeric)::text`,
+      })
+      .where(eq(walletSessions.id, session.id))
+      .returning({ spendUsedWei: walletSessions.spendUsedWei });
+    return updated[0]?.spendUsedWei ?? (lifetimeUsed + amountWei).toString();
   });
 
   return NextResponse.json({
@@ -301,7 +308,7 @@ export async function POST(req: Request) {
     amount_wei: amountWei.toString(),
     memo,
     token,
-    spend_used_wei_after: (lifetimeUsed + amountWei).toString(),
+    spend_used_wei_after: newSpendUsedWei,
     spend_cap_wei: session.spendCapWei,
   });
 }
