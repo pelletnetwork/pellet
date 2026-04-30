@@ -117,13 +117,20 @@ export default function OliLayout({ children }: { children: React.ReactNode }) {
   return (
     <DocsLayout
       tree={tree}
-      // Site Nav (Wallet · OLI · Docs) renders globally above this — disable
-      // the fumadocs nav so we don't get two stacked top bars. The sidebar
-      // does its own heading via the title we set on its first separator.
-      nav={{ enabled: false }}
-      // OLI has its own CommandBar (⌘K) for action search; turn off the
-      // fumadocs search trigger to avoid duplicate UI.
-      searchToggle={{ enabled: false }}
+      // The site Nav (Wallet · OLI · Docs) renders globally above this. We
+      // still enable fumadocs's nav config so its `title` slot lights up at
+      // the top of the sidebar (same place "Pellet Docs" appears on /docs).
+      // The fumadocs top-bar nav itself is suppressed via CSS in globals.css
+      // (.oli-layout-shell > [data-...]) when it conflicts with the site Nav.
+      nav={{
+        title: "Pellet Network",
+        url: "/",
+      }}
+      // Re-enable the search trigger so the sidebar matches /docs visually.
+      // Click handler routes through fumadocs's default search dialog; OLI
+      // also keeps its own ⌘K CommandBar mounted below for power-user
+      // navigation (txs, agents, services by id).
+      searchToggle={{ enabled: true }}
       sidebar={{
         defaultOpenLevel: 1,
       }}
