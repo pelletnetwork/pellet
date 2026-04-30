@@ -1,15 +1,15 @@
 import { DocsLayout } from "fumadocs-ui/layouts/docs";
 import {
-  IconWallet,
-  IconTerminal2,
-  IconPlugConnected,
-  IconLayoutDashboard,
-  IconServer,
-  IconRobot,
-  IconRoute,
-  IconBook,
-  IconFileText,
-} from "@tabler/icons-react";
+  Wallet,
+  Terminal,
+  Bot,
+  Telescope,
+  ServerCog,
+  Users,
+  Route,
+  Sparkles,
+  BookText,
+} from "lucide-react";
 import { CommandBar } from "@/components/oli/CommandBar";
 import type { Metadata } from "next";
 import type * as PageTree from "fumadocs-core/page-tree";
@@ -40,12 +40,15 @@ export const metadata: Metadata = {
   },
 };
 
-// Hand-built page tree for the fumadocs DocsLayout sidebar. Mirrors the
-// previous custom Sidebar but renders inside fumadocs's polished shell —
-// same aesthetic as /docs. Pellet Wallet sits at the top of the tree as a
-// cross-product link (Jake's call: easy access for visitors landing on OLI
-// who want to peek at the wallet, even though it's also in the site Nav).
-const ICON_PROPS = { size: 16, stroke: 1.75 } as const;
+// Hand-built page tree for the fumadocs DocsLayout sidebar. Renders inside
+// the same shell as /docs. Icons are lucide-react and explicitly match the
+// docs frontmatter (Wallet, Terminal, Bot, Telescope, Sparkles, BookText)
+// so an item in this sidebar that also exists in the docs sidebar carries
+// the exact same glyph there.
+//
+// Pellet Wallet sits at the top of the tree as a cross-product link —
+// surfaces the wallet to anyone landing on OLI without forcing them up to
+// the site Nav.
 
 const tree: PageTree.Root = {
   name: "OLI",
@@ -55,57 +58,57 @@ const tree: PageTree.Root = {
       type: "page",
       name: "Pellet Wallet",
       url: "/wallet",
-      icon: <IconWallet {...ICON_PROPS} />,
+      icon: <Wallet />,
     },
     {
       type: "page",
       name: "CLI",
       url: "/docs/wallet-cli",
-      icon: <IconTerminal2 {...ICON_PROPS} />,
+      icon: <Terminal />,
     },
     {
       type: "page",
       name: "MCP",
       url: "/docs/wallet-mcp",
-      icon: <IconPlugConnected {...ICON_PROPS} />,
+      icon: <Bot />,
     },
     { type: "separator", name: "Explore" },
     {
       type: "page",
       name: "Dashboard",
       url: "/oli",
-      icon: <IconLayoutDashboard {...ICON_PROPS} />,
+      icon: <Telescope />,
     },
     {
       type: "page",
       name: "Services",
       url: "/oli/services",
-      icon: <IconServer {...ICON_PROPS} />,
+      icon: <ServerCog />,
     },
     {
       type: "page",
       name: "Agents",
       url: "/oli/agents",
-      icon: <IconRobot {...ICON_PROPS} />,
+      icon: <Users />,
     },
     { type: "separator", name: "Reference" },
     {
       type: "page",
       name: "Rails",
       url: "/oli/rails",
-      icon: <IconRoute {...ICON_PROPS} />,
+      icon: <Route />,
     },
     {
       type: "page",
       name: "Skills",
       url: "/oli/skills",
-      icon: <IconBook {...ICON_PROPS} />,
+      icon: <Sparkles />,
     },
     {
       type: "page",
       name: "Methodology",
       url: "/oli/methodology",
-      icon: <IconFileText {...ICON_PROPS} />,
+      icon: <BookText />,
     },
   ],
 };
