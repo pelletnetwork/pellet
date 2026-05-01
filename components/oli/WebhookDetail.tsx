@@ -348,19 +348,16 @@ export function WebhookDetail({
 }
 
 function DeliveriesTable({ deliveries }: { deliveries: Delivery[] }) {
-  const cols = "120px 100px 70px 130px 80px 1fr";
   if (deliveries.length === 0) {
     return (
       <div
         style={{
-          border: "1px solid var(--color-border-subtle)",
-          background: "var(--color-bg-subtle)",
+          border: "1px solid var(--line)",
           padding: "32px 24px",
-          fontFamily: "var(--font-mono)",
           fontSize: 11,
           textTransform: "uppercase",
           letterSpacing: "0.08em",
-          color: "var(--color-text-quaternary)",
+          opacity: 0.55,
           textAlign: "center",
         }}
       >
@@ -369,78 +366,192 @@ function DeliveriesTable({ deliveries }: { deliveries: Delivery[] }) {
     );
   }
   return (
-    <div className="oli-leaderboard">
-      <div className="oli-leaderboard-table">
-        <div
-          className="oli-leaderboard-row oli-leaderboard-header"
-          style={{ gridTemplateColumns: cols }}
+    <div>
+      <div className="spec-activity-head" style={{ paddingLeft: 24 }}>
+        <span style={{ width: 80, flexShrink: 0 }}>WHEN</span>
+        <span style={{ width: 96, flexShrink: 0 }}>EVENT</span>
+        <span style={{ width: 70, flexShrink: 0 }} className="spec-cell-r">ATTEMPTS</span>
+        <span style={{ width: 96, flexShrink: 0, marginLeft: 8 }}>STATUS</span>
+        <span style={{ width: 60, flexShrink: 0 }} className="spec-cell-r">CODE</span>
+        <span style={{ flex: 1, minWidth: 0 }}>ERROR</span>
+      </div>
+      {deliveries.map((d) => (
+        <DeliveryRow key={d.id} d={d} />
+      ))}
+    </div>
+  );
+}
+
+function DeliveryRow({ d }: { d: Delivery }) {
+  const [open, setOpen] = useState(false);
+  const handleKey = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      setOpen((o) => !o);
+    }
+  };
+  const tsForDisplay = d.last_attempt_at ?? d.created_at;
+  return (
+    <div
+      className={`spec-activity-row${open ? " spec-activity-row-open" : ""}`}
+      style={{ flexDirection: "column", alignItems: "stretch" }}
+    >
+      <button
+        type="button"
+        className="spec-activity-row-btn"
+        onClick={() => setOpen((o) => !o)}
+        onKeyDown={handleKey}
+        aria-expanded={open}
+      >
+        <span className="spec-activity-row-chevron" aria-hidden="true">
+          ›
+        </span>
+        <span style={{ width: 80, flexShrink: 0, opacity: 0.7 }}>
+          {relativeTime(tsForDisplay)}
+        </span>
+        <span
+          style={{
+            width: 96,
+            flexShrink: 0,
+            fontVariantNumeric: "tabular-nums",
+          }}
         >
-          <span>time</span>
-          <span>event</span>
-          <span style={{ textAlign: "right" }}>attempts</span>
-          <span>status</span>
-          <span style={{ textAlign: "right" }}>code</span>
-          <span>error</span>
-        </div>
-        {deliveries.map((d) => (
-          <div
-            key={d.id}
-            className="oli-leaderboard-row"
-            style={{ gridTemplateColumns: cols }}
-          >
-            <span
-              style={{
-                fontFamily: "var(--font-mono)",
-                fontSize: 11,
-                color: "var(--color-text-tertiary)",
-              }}
-            >
-              {relativeTime(d.last_attempt_at ?? d.created_at)}
+          #{d.event_id}
+        </span>
+        <span
+          style={{ width: 70, flexShrink: 0 }}
+          className="spec-cell-r"
+        >
+          {d.attempt_count}
+        </span>
+        <span style={{ width: 96, flexShrink: 0, marginLeft: 8 }}>
+          <WebhookStatusPill status={d.status} />
+        </span>
+        <span
+          style={{
+            width: 60,
+            flexShrink: 0,
+            opacity: d.response_code && d.response_code >= 400 ? 1 : 0.7,
+          }}
+          className="spec-cell-r"
+        >
+          {d.response_code ?? "—"}
+        </span>
+        <span
+          style={{
+            flex: 1,
+            minWidth: 0,
+            opacity: 0.55,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+          title={d.last_error ?? ""}
+        >
+          {d.last_error ? truncateMiddle(d.last_error, 40, 12) : "—"}
+        </span>
+      </button>
+
+      {open && (
+        <div className="spec-activity-detail">
+          <div className="spec-activity-detail-grid">
+            <span className="spec-activity-detail-label">Delivery ID</span>
+            <span className="spec-activity-detail-value">
+              <span style={{ fontVariantNumeric: "tabular-nums" }}>
+                {d.delivery_id}
+              </span>
             </span>
-            <span style={{ fontFamily: "var(--font-mono)", fontSize: 11 }}>
-              #{d.event_id}
+
+            <span className="spec-activity-detail-label">Event</span>
+            <span className="spec-activity-detail-value">
+              <Link
+                href={`/oli/event/${d.event_id}`}
+                className="spec-activity-detail-action"
+              >
+                #{d.event_id}
+              </Link>
             </span>
-            <span
-              style={{
-                textAlign: "right",
-                fontFamily: "var(--font-mono)",
-                fontSize: 11,
-              }}
-            >
+
+            <span className="spec-activity-detail-label">Status</span>
+            <span className="spec-activity-detail-value">
+              <WebhookStatusPill status={d.status} />
+              <span style={{ opacity: 0.6 }}>· {d.status}</span>
+            </span>
+
+            <span className="spec-activity-detail-label">Attempts</span>
+            <span className="spec-activity-detail-value">
               {d.attempt_count}
             </span>
-            <span>
-              <WebhookStatusPill status={d.status} />
+
+            <span className="spec-activity-detail-label">Response code</span>
+            <span className="spec-activity-detail-value">
+              {d.response_code ?? <span style={{ opacity: 0.55 }}>—</span>}
             </span>
-            <span
-              style={{
-                textAlign: "right",
-                fontFamily: "var(--font-mono)",
-                fontSize: 11,
-                color:
-                  d.response_code && d.response_code >= 400
-                    ? "var(--color-error)"
-                    : "var(--color-text-tertiary)",
-              }}
-            >
-              {d.response_code ?? "—"}
+
+            {d.last_error && (
+              <>
+                <span className="spec-activity-detail-label">Last error</span>
+                <span
+                  className="spec-activity-detail-value"
+                  style={{ wordBreak: "break-word" }}
+                >
+                  {d.last_error}
+                </span>
+              </>
+            )}
+
+            <span className="spec-activity-detail-label">Created</span>
+            <span className="spec-activity-detail-value">
+              <span style={{ fontVariantNumeric: "tabular-nums" }}>
+                {d.created_at}
+              </span>
+              <span style={{ opacity: 0.6 }}>· {relativeTime(d.created_at)}</span>
             </span>
-            <span
-              style={{
-                fontFamily: "var(--font-mono)",
-                fontSize: 11,
-                color: "var(--color-text-quaternary)",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-              title={d.last_error ?? ""}
-            >
-              {d.last_error ? truncateMiddle(d.last_error, 40, 12) : "—"}
-            </span>
+
+            {d.last_attempt_at && (
+              <>
+                <span className="spec-activity-detail-label">Last attempt</span>
+                <span className="spec-activity-detail-value">
+                  <span style={{ fontVariantNumeric: "tabular-nums" }}>
+                    {d.last_attempt_at}
+                  </span>
+                  <span style={{ opacity: 0.6 }}>
+                    · {relativeTime(d.last_attempt_at)}
+                  </span>
+                </span>
+              </>
+            )}
+
+            {d.delivered_at && (
+              <>
+                <span className="spec-activity-detail-label">Delivered</span>
+                <span className="spec-activity-detail-value">
+                  <span style={{ fontVariantNumeric: "tabular-nums" }}>
+                    {d.delivered_at}
+                  </span>
+                  <span style={{ opacity: 0.6 }}>
+                    · {relativeTime(d.delivered_at)}
+                  </span>
+                </span>
+              </>
+            )}
+
+            {d.next_retry_at && d.status !== "delivered" && (
+              <>
+                <span className="spec-activity-detail-label">Next retry</span>
+                <span className="spec-activity-detail-value">
+                  <span style={{ fontVariantNumeric: "tabular-nums" }}>
+                    {d.next_retry_at}
+                  </span>
+                  <span style={{ opacity: 0.6 }}>
+                    · in {relativeTime(d.next_retry_at)}
+                  </span>
+                </span>
+              </>
+            )}
           </div>
-        ))}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -7,7 +7,6 @@ import {
   filterSummary,
   relativeTime,
 } from "@/lib/oli/webhooks";
-import { WebhookStatusPill } from "@/components/oli/WebhookStatusPill";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -20,202 +19,179 @@ export const metadata: Metadata = {
 
 export default async function OliWebhooksPage() {
   const userId = await readUserSession();
-  if (!userId) return <PairCliEmpty />;
-
-  const subs = await listWebhooks();
 
   return (
-    <div className="oli-page">
-      <header className="oli-page-header">
-        <div>
-          <h1 className="oli-page-h1">
-            Webhooks
-            <span className="oli-page-h1-em">(OLI)</span>
+    <>
+      <section className="spec-page-header">
+        <div className="spec-page-header-row">
+          <h1 className="spec-page-title">
+            <span>07</span>
+            <span>Webhooks</span>
           </h1>
-          <p style={{ color: "var(--color-text-tertiary)", marginTop: 6, fontSize: 13 }}>
-            Receive signed POSTs when events match your filter. One subscription per
-            callback URL is recommended.
-          </p>
+          <Link href="/oli/webhooks/new" className="spec-switch">
+            <span className="spec-switch-seg">+ NEW WEBHOOK</span>
+          </Link>
         </div>
-        <Link
-          href="/oli/webhooks/new"
-          style={{
-            fontFamily: "var(--font-mono)",
-            fontSize: 11,
-            textTransform: "uppercase",
-            letterSpacing: "0.08em",
-            border: "1px solid var(--color-border-default)",
-            padding: "8px 14px",
-            color: "var(--color-text-primary)",
-            textDecoration: "none",
-            background: "transparent",
-            transition: "background var(--duration-fast) ease",
-          }}
-        >
-          New webhook
-        </Link>
-      </header>
+        <div className="spec-page-subhead">
+          <span>
+            Receive signed POSTs when events match your filter. One subscription per callback URL is recommended.
+          </span>
+        </div>
+      </section>
 
-      {subs.length === 0 ? (
-        <EmptyState />
-      ) : (
-        <WebhooksTable subs={subs} />
-      )}
-    </div>
+      {!userId ? <PairCliEmpty /> : <WebhooksTableWrapper />}
+    </>
   );
 }
 
-function WebhooksTable({ subs }: { subs: Awaited<ReturnType<typeof listWebhooks>> }) {
-  const cols = "1.6fr 1.4fr 140px 140px";
+async function WebhooksTableWrapper() {
+  const subs = await listWebhooks();
+  if (subs.length === 0) return <EmptyState />;
+
   return (
-    <div className="oli-leaderboard">
-      <div className="oli-leaderboard-title">
-        <span>{subs.length} subscription{subs.length === 1 ? "" : "s"}</span>
-        <span style={{ color: "var(--color-text-quaternary)", fontSize: 11 }}>
-          {subs.length} rows
-        </span>
-      </div>
-      <div className="oli-leaderboard-table">
-        <div
-          className="oli-leaderboard-row oli-leaderboard-header"
-          style={{ gridTemplateColumns: cols }}
-        >
-          <span>callback</span>
-          <span>filter</span>
-          <span>status</span>
-          <span style={{ textAlign: "right" }}>last delivery</span>
+    <section className="spec-tables">
+      <div className="spec-table" data-table="webhooks-list">
+        <div className="spec-table-header">
+          <span className="spec-table-title">SUBSCRIPTIONS</span>
+          <span className="spec-table-meta">
+            <span className="spec-table-meta-faint">ROWS</span>
+            <span>{subs.length}</span>
+          </span>
         </div>
-        {subs.map((s) => (
-          <Link
-            key={s.id}
-            href={`/oli/webhooks/${s.id}`}
-            className="oli-leaderboard-link"
-          >
-            <div className="oli-leaderboard-row" style={{ gridTemplateColumns: cols }}>
-              <span style={{ fontFamily: "var(--font-mono)", fontSize: 12 }}>
-                {truncateMiddle(s.callback_url, 28, 18)}
-                {s.label && (
-                  <span
-                    style={{
-                      display: "block",
-                      fontFamily: "var(--font-sans)",
-                      fontSize: 11,
-                      color: "var(--color-text-quaternary)",
-                      marginTop: 2,
-                    }}
-                  >
-                    {s.label}
-                  </span>
-                )}
-              </span>
+        <div className="spec-row-head">
+          <span style={{ width: 24, flexShrink: 0 }}>#</span>
+          <span style={{ flex: 1, minWidth: 0 }}>CALLBACK</span>
+          <span style={{ width: 160, flexShrink: 0, marginLeft: 24 }}>FILTER</span>
+          <span style={{ width: 90, flexShrink: 0, marginLeft: 24 }} className="spec-cell-r">
+            STATUS
+          </span>
+          <span style={{ width: 80, flexShrink: 0, marginLeft: 24 }} className="spec-cell-r">
+            LAST
+          </span>
+        </div>
+        {subs.map((s, i) => (
+          <Link key={s.id} href={`/oli/webhooks/${s.id}`} className="spec-row">
+            <span style={{ width: 24, flexShrink: 0 }}>{String(i + 1).padStart(2, "0")}</span>
+            <span
+              style={{
+                flex: 1,
+                minWidth: 0,
+                overflow: "hidden",
+                whiteSpace: "nowrap",
+                display: "inline-flex",
+                flexDirection: "column",
+                gap: 2,
+              }}
+            >
               <span
                 style={{
-                  fontFamily: "var(--font-mono)",
-                  fontSize: 11,
-                  color: "var(--color-text-tertiary)",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                }}
-                title={filterSummary(s.filters)}
-              >
-                {filterSummary(s.filters)}
-              </span>
-              <span>
-                <WebhookStatusPill status={s.status} />
-              </span>
-              <span
-                style={{
-                  textAlign: "right",
-                  fontFamily: "var(--font-mono)",
-                  fontSize: 11,
-                  color: "var(--color-text-tertiary)",
+                  fontVariantNumeric: "tabular-nums",
                 }}
               >
-                {relativeTime(s.last_delivered_at)}
+                {truncateMiddle(s.callback_url, 28, 18)}
               </span>
-            </div>
+              {s.label && (
+                <span
+                  style={{
+                    fontSize: 10,
+                    opacity: 0.55,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                >
+                  {s.label}
+                </span>
+              )}
+            </span>
+            <span
+              style={{
+                width: 160,
+                flexShrink: 0,
+                marginLeft: 24,
+                opacity: 0.7,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+              title={filterSummary(s.filters)}
+            >
+              {filterSummary(s.filters)}
+            </span>
+            <span
+              style={{ width: 90, flexShrink: 0, marginLeft: 24 }}
+              className="spec-cell-r"
+            >
+              <StatusPill status={s.status} />
+            </span>
+            <span
+              style={{ width: 80, flexShrink: 0, marginLeft: 24, opacity: 0.7 }}
+              className="spec-cell-r"
+            >
+              {relativeTime(s.last_delivered_at)}
+            </span>
           </Link>
         ))}
       </div>
-    </div>
+    </section>
   );
+}
+
+function StatusPill({ status }: { status: string }) {
+  return <span className="spec-pill">{status.replace(/_/g, " ").toUpperCase()}</span>;
 }
 
 function EmptyState() {
   return (
-    <div
-      style={{
-        border: "1px solid var(--color-border-subtle)",
-        background: "var(--color-bg-subtle)",
-        padding: "48px 24px",
-        textAlign: "center",
-        fontFamily: "var(--font-mono)",
-        fontSize: 11,
-        textTransform: "uppercase",
-        letterSpacing: "0.08em",
-        color: "var(--color-text-quaternary)",
-      }}
-    >
-      No webhooks yet.
-    </div>
+    <section className="spec-tables">
+      <div
+        className="spec-table"
+        style={{
+          padding: "48px 24px",
+          alignItems: "center",
+          justifyContent: "center",
+          textAlign: "center",
+        }}
+      >
+        <span style={{ opacity: 0.55, letterSpacing: "0.08em", fontSize: 11 }}>
+          NO WEBHOOKS YET
+        </span>
+        <span style={{ fontSize: 13, opacity: 0.85, marginTop: 6 }}>
+          Click <strong>+ NEW WEBHOOK</strong> in the header to subscribe to filtered events.
+        </span>
+      </div>
+    </section>
   );
 }
 
 function PairCliEmpty() {
   return (
-    <div className="oli-page">
-      <header className="oli-page-header">
-        <div>
-          <h1 className="oli-page-h1">
-            Webhooks
-            <span className="oli-page-h1-em">(OLI)</span>
-          </h1>
-        </div>
-      </header>
+    <section className="spec-tables">
       <div
+        className="spec-table"
         style={{
-          border: "1px solid var(--color-border-subtle)",
-          background: "var(--color-bg-subtle)",
           padding: "48px 24px",
-          display: "flex",
-          flexDirection: "column",
           alignItems: "center",
-          gap: 16,
+          justifyContent: "center",
           textAlign: "center",
+          gap: 14,
         }}
       >
-        <span
-          style={{
-            fontFamily: "var(--font-mono)",
-            fontSize: 11,
-            textTransform: "uppercase",
-            letterSpacing: "0.08em",
-            color: "var(--color-text-quaternary)",
-          }}
-        >
-          Pair the CLI first
+        <span style={{ opacity: 0.55, letterSpacing: "0.08em", fontSize: 11 }}>
+          PAIR THE CLI FIRST
         </span>
-        <p style={{ color: "var(--color-text-tertiary)", fontSize: 13, margin: 0, maxWidth: 420 }}>
-          Webhooks are scoped to your wallet session. Sign in with your passkey
-          on the Pellet Wallet to manage subscriptions.
+        <p style={{ fontSize: 13, opacity: 0.85, margin: 0, maxWidth: 420 }}>
+          Webhooks are scoped to your wallet session. Sign in with your passkey on the Pellet Wallet to manage subscriptions.
         </p>
         <Link
-          href="/oli/wallet"
-          style={{
-            fontFamily: "var(--font-mono)",
-            fontSize: 11,
-            textTransform: "uppercase",
-            letterSpacing: "0.08em",
-            border: "1px solid var(--color-border-default)",
-            padding: "8px 14px",
-            color: "var(--color-text-primary)",
-            textDecoration: "none",
-          }}
+          href="/oli/wallet/sign-in"
+          className="spec-switch"
+          style={{ alignSelf: "center", marginTop: 4 }}
         >
-          Open wallet
+          <span className="spec-switch-seg">OPEN WALLET</span>
         </Link>
       </div>
-    </div>
+    </section>
   );
 }

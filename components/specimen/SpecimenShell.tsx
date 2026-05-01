@@ -1,0 +1,242 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+const STORAGE_KEY = "specimen-theme";
+
+const NAV: Array<{ num: string; label: string; href?: string }> = [
+  { num: "01", label: "Dashboard", href: "/oli" },
+  { num: "02", label: "Wallet", href: "/oli/wallet/dashboard" },
+  { num: "03", label: "Services", href: "/oli/services" },
+  { num: "04", label: "Agents", href: "/oli/agents" },
+  { num: "05", label: "Leaderboard" },
+  { num: "06", label: "Methodology", href: "/oli/methodology" },
+  { num: "07", label: "Webhooks", href: "/oli/webhooks" },
+  { num: "08", label: "Status" },
+];
+
+export type KeymapItem = {
+  keys: string[];
+  label: string;
+  toggle?: boolean;
+};
+
+export const DEFAULT_KEYMAP: KeymapItem[] = [
+  { keys: ["↑", "↓", "←", "→"], label: "Navigate" },
+  { keys: ["1", "2", "3"], label: "To section" },
+  { keys: ["W", "A", "S", "D"], label: "Scroll" },
+  { keys: ["+", "−"], label: "Zoom" },
+  { keys: ["R"], label: "Reset" },
+  { keys: ["F"], label: "Filter" },
+  { keys: ["M"], label: "Light/dark", toggle: true },
+  { keys: ["H"], label: "Hide keys" },
+];
+
+export const WALLET_KEYMAP: KeymapItem[] = [
+  { keys: ["↑", "↓"], label: "Navigate" },
+  { keys: ["P"], label: "Pair device" },
+  { keys: ["S"], label: "Sign" },
+  { keys: ["N"], label: "New session" },
+  { keys: ["A"], label: "Approve pending" },
+  { keys: ["E"], label: "Export" },
+  { keys: ["F"], label: "Filter" },
+  { keys: ["M"], label: "Light/dark", toggle: true },
+  { keys: ["H"], label: "Hide keys" },
+];
+
+function Keycap({
+  children,
+  onClick,
+  ariaLabel,
+}: {
+  children: React.ReactNode;
+  onClick?: () => void;
+  ariaLabel?: string;
+}) {
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        className="spec-keycap"
+        onClick={onClick}
+        aria-label={ariaLabel}
+        title={ariaLabel}
+      >
+        {children}
+      </button>
+    );
+  }
+  return <span className="spec-keycap">{children}</span>;
+}
+
+function TopBar({ pathname }: { pathname: string }) {
+  return (
+    <header className="spec-topbar">
+      <div className="spec-brand">
+        <svg
+          className="spec-brand-mark"
+          viewBox="0 0 1024 1024"
+          aria-hidden="true"
+        >
+          <g transform="translate(112 112) scale(1.6)">
+            <path
+              fill="var(--fg)"
+              fillRule="evenodd"
+              d="M397.75,106.78h-56.39c-11.07,0-20.04-8.97-20.04-20.04V33.24c0-11.07-8.97-20.04-20.04-20.04H196.68c-11.07,0-20.04,8.97-20.04,20.04v53.51c0,11.07-8.97,20.04-20.04,20.04H103.1c-11.07,0-20.04,8.97-20.04,20.04v105.33c0,11.07,8.97,20.04,20.04,20.04h57.35c11.07,0,20.04,8.97,20.04,20.04v47.75c0,11.07-8.97,20.04-20.04,20.04H103.1c-11.07,0-20.04,8.97-20.04,20.04v106.08c0,11.07,8.97,20.04,20.04,20.04h65.02c11.07,0,20.04-8.97,20.04-20.04v-98.4c0-11.07,8.97-20.04,20.04-20.04h96.94c11.07,0,20.04-8.97,20.04-20.04v-55.43c0-11.07,8.97-20.04,20.04-20.04h52.55c11.07,0,20.04-8.97,20.04-20.04V126.81C417.79,115.75,408.82,106.78,397.75,106.78z M292.66,242.58H208.2c-11.07,0-20.04-8.97-20.04-20.04v-84.22c0-11.07,8.97-20.04,20.04-20.04h84.46c11.07,0,20.04,8.97,20.04,20.04v84.22C312.69,233.61,303.72,242.58,292.66,242.58z"
+            />
+          </g>
+        </svg>
+        <span className="spec-brand-name">Pellet Network</span>
+      </div>
+      <nav className="spec-nav" aria-label="Specimen sections">
+        {NAV.map((item) => {
+          const active = item.href ? pathname === item.href : false;
+          const inner = (
+            <>
+              <span className="spec-nav-num">{item.num}</span>
+              <span>{item.label}</span>
+            </>
+          );
+          if (item.href) {
+            return (
+              <Link
+                key={item.num}
+                href={item.href}
+                className={`spec-nav-item${active ? " spec-nav-item-active" : ""}`}
+              >
+                {inner}
+              </Link>
+            );
+          }
+          return (
+            <span key={item.num} className="spec-nav-item">
+              {inner}
+            </span>
+          );
+        })}
+      </nav>
+      <Status pathname={pathname} />
+    </header>
+  );
+}
+
+function Status({ pathname: _pathname }: { pathname: string }) {
+  return (
+    <span className="spec-status">
+      <span className="spec-status-dot" aria-hidden="true" />
+      <span>OLI</span>
+    </span>
+  );
+}
+
+function KeymapLegend({
+  items,
+  onToggleTheme,
+}: {
+  items: KeymapItem[];
+  onToggleTheme: () => void;
+}) {
+  return (
+    <footer className="spec-keymap" role="contentinfo" aria-label="Keymap legend">
+      {items.map((item) => (
+        <span key={item.label} className="spec-keymap-item">
+          <span className="spec-keymap-keys">
+            {item.keys.map((k, i) => {
+              if (item.toggle && k === "M") {
+                return (
+                  <Keycap
+                    key={`${item.label}-${i}-${k}`}
+                    onClick={onToggleTheme}
+                    ariaLabel="Toggle light/dark (M)"
+                  >
+                    {k}
+                  </Keycap>
+                );
+              }
+              return <Keycap key={`${item.label}-${i}-${k}`}>{k}</Keycap>;
+            })}
+          </span>
+          <span className="spec-keymap-label">{item.label}</span>
+        </span>
+      ))}
+    </footer>
+  );
+}
+
+/**
+ * Specimen shell — top nav, content slot, keymap legend. Light is default;
+ * pressing `M` (or clicking the M keycap) flips a `dark` class on the root
+ * div and persists to localStorage. We intentionally do NOT honor
+ * prefers-color-scheme — first-load is always paper.
+ */
+export function SpecimenShell({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const pathname = usePathname() ?? "/oli";
+  const isWallet = pathname.startsWith("/oli/wallet") || pathname.startsWith("/specimen/wallet");
+  const keymap = isWallet ? WALLET_KEYMAP : DEFAULT_KEYMAP;
+  const [dark, setDark] = useState(false);
+
+  // Hydrate from storage; URL `?theme=dark|light` overrides for screenshots.
+  useEffect(() => {
+    let initial = false;
+    try {
+      initial = window.localStorage.getItem(STORAGE_KEY) === "dark";
+      const url = new URL(window.location.href);
+      const q = url.searchParams.get("theme");
+      if (q === "dark") initial = true;
+      if (q === "light") initial = false;
+    } catch {
+      /* noop */
+    }
+    setDark(initial);
+  }, []);
+
+  // M key — toggle theme. Skip when focus is in form controls.
+  useEffect(() => {
+    function onKey(ev: KeyboardEvent) {
+      if (ev.metaKey || ev.ctrlKey || ev.altKey) return;
+      const tag = (ev.target as HTMLElement | null)?.tagName?.toLowerCase();
+      if (tag === "input" || tag === "textarea" || tag === "select") return;
+      if ((ev.target as HTMLElement | null)?.isContentEditable) return;
+      if (ev.key === "m" || ev.key === "M") {
+        ev.preventDefault();
+        setDark((prev) => {
+          const next = !prev;
+          try {
+            window.localStorage.setItem(STORAGE_KEY, next ? "dark" : "light");
+          } catch {
+            /* noop */
+          }
+          return next;
+        });
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  function toggleTheme() {
+    setDark((prev) => {
+      const next = !prev;
+      try {
+        window.localStorage.setItem(STORAGE_KEY, next ? "dark" : "light");
+      } catch {
+        /* noop */
+      }
+      return next;
+    });
+  }
+
+  return (
+    <div className={`specimen-shell${dark ? " dark" : ""}`}>
+      <TopBar pathname={pathname} />
+      <div className="spec-main">{children}</div>
+      <KeymapLegend items={keymap} onToggleTheme={toggleTheme} />
+    </div>
+  );
+}

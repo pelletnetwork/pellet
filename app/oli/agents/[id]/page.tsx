@@ -1,12 +1,50 @@
-import { agentDetail } from "@/lib/oli/queries";
-import { buildLabelMap } from "@/lib/oli/labelMap";
-import { TrendChart } from "@/components/oli/TrendChart";
-import { EventStream } from "@/components/oli/EventStream";
-import { shortAddress } from "@/lib/oli/format";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { agentDetail } from "@/lib/oli/queries";
+import {
+  fmtUsdCompact,
+  fmtUsdExact,
+  Sparkline,
+} from "@/components/specimen/dashboard-charts";
 
 export const dynamic = "force-dynamic";
+
+const USDCE_ADDR = "0x20c000000000000000000000b9537d11c60e8b50";
+const USDT0_ADDR = "0x20c00000000000000000000014f22ca97301eb73";
+const EXPLORER = "https://explore.testnet.tempo.xyz";
+
+function shortAddr(a: string): string {
+  return `${a.slice(0, 6)}…${a.slice(-4)}`;
+}
+function shortHash(h: string): string {
+  return `${h.slice(0, 6)}…${h.slice(-4)}`;
+}
+function tokenSymbol(addr: string | null): string {
+  if (!addr) return "—";
+  const a = addr.toLowerCase();
+  if (a === USDCE_ADDR) return "USDC.e";
+  if (a === USDT0_ADDR) return "USDT0";
+  return "TOKEN";
+}
+function timeAgoShort(d: Date): string {
+  const ago = Date.now() - d.getTime();
+  const s = Math.floor(ago / 1000);
+  if (s < 60) return `${s}s`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h`;
+  return `${Math.floor(h / 24)}d`;
+}
+function fmtAmount(wei: string | null, addr: string | null): string {
+  if (!wei) return "—";
+  const sym = tokenSymbol(addr);
+  const usd = Number(wei) / 1_000_000;
+  if (!Number.isFinite(usd)) return sym;
+  if (Math.abs(usd) >= 1) return `$${usd.toFixed(2)} ${sym}`;
+  return `$${usd.toFixed(4)} ${sym}`;
+}
 
 export async function generateMetadata({
   params,
@@ -17,13 +55,9 @@ export async function generateMetadata({
   const detail = await agentDetail(id);
   if (!detail.head) return { title: "Agent not found" };
   const title = `${detail.head.label} — agent`;
-  const description =
-    detail.head.bio ?? `Watched agent tracked by Pellet OLI. Recent activity and trend on Tempo.`;
   return {
     title,
-    description,
-    openGraph: { title, description, url: `https://pellet.network/oli/agents/${id}`, type: "website" },
-    twitter: { card: "summary_large_image", title, description },
+    description: detail.head.bio ?? "Watched agent tracked by Pellet OLI.",
   };
 }
 
@@ -33,48 +67,182 @@ export default async function OliAgentDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [detail, labelMap] = await Promise.all([
-    agentDetail(id),
-    buildLabelMap(),
-  ]);
-
+  const detail = await agentDetail(id);
   if (!detail.head) notFound();
 
-  const trendPoints = detail.trend.map((t) => ({
-    ts: new Date(t.bucket),
-    value: Number(t.amountWei) / 1_000_000,
-  }));
+  const trend24h = detail.trend.slice(-24);
+  const trend7d = detail.trend.slice(-168);
+  const total30d = detail.trend.reduce(
+    (acc, t) => acc + Number(t.amountWei) / 1_000_000,
+    0,
+  );
+  const tx30d = detail.trend.reduce((acc, t) => acc + t.txCount, 0);
+  const peakBucket = detail.trend.reduce(
+    (acc, t) => Math.max(acc, Number(t.amountWei) / 1_000_000),
+    0,
+  );
+  const tx24h = trend24h.reduce((acc, t) => acc + t.txCount, 0);
+  const total24h = trend24h.reduce(
+    (acc, t) => acc + Number(t.amountWei) / 1_000_000,
+    0,
+  );
+  const sparkValues = trend7d.length > 1
+    ? trend7d.map((t) => Number(t.amountWei) / 1_000_000)
+    : [0, 0];
+  const walletAddr = detail.head.wallets?.[0] ?? "";
 
   return (
-    <div className="oli-page" style={{ padding: "32px 48px", display: "flex", flexDirection: "column", gap: 24, maxWidth: 1024 }}>
-      <header>
-        <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--color-text-quaternary)" }}>
-          Agent
-        </span>
-        <h1 style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: 40, fontWeight: 400, margin: "4px 0 8px" }}>
-          {detail.head.label}
-        </h1>
-        <p style={{ color: "var(--color-text-tertiary)", fontSize: 13, margin: 0 }}>
-          {detail.head.bio ?? ""}
-        </p>
-        <div style={{ marginTop: 12, fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--color-text-tertiary)" }}>
-          wallet <code>{detail.head.wallets?.[0] ? shortAddress(detail.head.wallets[0]) : "—"}</code>
+    <>
+      <section className="spec-page-header">
+        <div className="spec-page-header-row">
+          <h1 className="spec-page-title">
+            <span>04</span>
+            <span>{detail.head.label}</span>
+            <span className="spec-page-title-em">— agent</span>
+          </h1>
+          <Link href="/oli/agents" className="spec-switch">
+            <span className="spec-switch-seg">← ALL AGENTS</span>
+          </Link>
         </div>
-      </header>
-
-      <section>
-        <h2 style={{ fontFamily: "var(--font-mono)", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--color-text-tertiary)", margin: "0 0 8px" }}>
-          Activity trend · 30 days
-        </h2>
-        <TrendChart points={trendPoints} formatY={(v) => `$${v.toFixed(2)}`} />
+        <div className="spec-page-subhead">
+          {detail.head.bio && (
+            <>
+              <span>{detail.head.bio}</span>
+              <span className="spec-page-subhead-dot">·</span>
+            </>
+          )}
+          <span className="spec-page-subhead-label">WALLET</span>
+          {walletAddr ? (
+            <a
+              href={`${EXPLORER}/address/${walletAddr}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                fontVariantNumeric: "tabular-nums",
+                textDecoration: "underline",
+                textUnderlineOffset: 2,
+              }}
+            >
+              {shortAddr(walletAddr)}
+            </a>
+          ) : (
+            <span style={{ opacity: 0.5 }}>—</span>
+          )}
+        </div>
       </section>
 
-      <section>
-        <h2 style={{ fontFamily: "var(--font-mono)", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--color-text-tertiary)", margin: "0 0 8px" }}>
-          Recent activity
-        </h2>
-        <EventStream events={detail.recent as never} labelMap={labelMap} />
+      <section className="spec-strip">
+        <div className="spec-strip-cell">
+          <span className="spec-strip-label">SPEND · 24H</span>
+          <span className="spec-strip-value">{fmtUsdCompact(total24h)}</span>
+          <span className="spec-strip-sub">
+            <span>{tx24h.toLocaleString()} txs</span>
+          </span>
+        </div>
+        <div className="spec-strip-cell">
+          <span className="spec-strip-label">SPEND · 30D</span>
+          <span className="spec-strip-value">{fmtUsdCompact(total30d)}</span>
+          <span className="spec-strip-sub">
+            <span>{tx30d.toLocaleString()} txs</span>
+            <span className="spec-strip-sub-faint">peak {fmtUsdExact(peakBucket)}/h</span>
+          </span>
+        </div>
+        <div className="spec-strip-cell">
+          <span className="spec-strip-label">7D TREND</span>
+          <span className="spec-strip-value spec-strip-value-md" style={{ paddingTop: 6 }}>
+            <span style={{ display: "inline-block", width: 140 }}>
+              <Sparkline values={sparkValues} />
+            </span>
+          </span>
+          <span className="spec-strip-sub">
+            <span>{trend7d.length} hourly buckets</span>
+          </span>
+        </div>
+        <div className="spec-strip-cell">
+          <span className="spec-strip-label">EVENTS</span>
+          <span className="spec-strip-value">{detail.recent.length}</span>
+          <span className="spec-strip-sub">
+            <span>{detail.recent.length === 0 ? "no recent activity" : "most recent first"}</span>
+          </span>
+        </div>
       </section>
-    </div>
+
+      <section className="spec-tables">
+        <div className="spec-table" data-table="settlements" style={{ flex: 1 }}>
+          <div className="spec-table-header">
+            <span className="spec-table-title">RECENT ACTIVITY</span>
+            <span className="spec-table-meta">
+              <span className="spec-table-meta-faint">ROWS</span>
+              <span>{detail.recent.length}</span>
+            </span>
+          </div>
+          <div className="spec-row-head">
+            <span style={{ width: 40, flexShrink: 0 }}>T-</span>
+            <span style={{ width: 92, flexShrink: 0 }}>TX</span>
+            <span style={{ flex: 1, minWidth: 0 }}>MEMO</span>
+            <span style={{ width: 110, flexShrink: 0 }} className="spec-cell-r">
+              AMOUNT
+            </span>
+            <span style={{ width: 86, flexShrink: 0 }} className="spec-cell-r">
+              COUNTERPARTY
+            </span>
+            <span style={{ width: 50, flexShrink: 0 }} className="spec-cell-r">
+              STATUS
+            </span>
+          </div>
+          {detail.recent.map((ev) => {
+            const memo = `${ev.kind}${ev.routedToLabel ? ` · ${ev.routedToLabel}` : ""}`;
+            const cp = ev.counterpartyLabel ?? "—";
+            return (
+              <div key={ev.id} className="spec-row">
+                <span style={{ width: 40, flexShrink: 0 }}>{timeAgoShort(ev.ts)}</span>
+                <span style={{ width: 92, flexShrink: 0 }}>
+                  <a
+                    href={`${EXPLORER}/tx/${ev.txHash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ textDecoration: "underline", textUnderlineOffset: 2 }}
+                  >
+                    {shortHash(ev.txHash)}
+                  </a>
+                </span>
+                <span
+                  style={{
+                    flex: 1,
+                    minWidth: 0,
+                    opacity: 0.7,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {memo}
+                </span>
+                <span style={{ width: 110, flexShrink: 0 }} className="spec-cell-r">
+                  {fmtAmount(ev.amountWei, ev.tokenAddress)}
+                </span>
+                <span style={{ width: 86, flexShrink: 0 }} className="spec-cell-r">
+                  {cp}
+                </span>
+                <span
+                  style={{
+                    width: 50,
+                    flexShrink: 0,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "flex-end",
+                    gap: 6,
+                  }}
+                  className="spec-cell-r"
+                >
+                  <span className="spec-status-dot-sm" aria-hidden="true" />
+                  <span>OK</span>
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+    </>
   );
 }

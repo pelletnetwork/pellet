@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { readUserSession } from "@/lib/wallet/challenge-cookie";
 import { getWebhook, listDeliveries } from "@/lib/oli/webhooks";
@@ -19,7 +20,7 @@ export default async function WebhookDetailPage({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const userId = await readUserSession();
-  if (!userId) redirect("/oli/wallet");
+  if (!userId) redirect("/oli/wallet/sign-in");
 
   const { id } = await params;
   const sp = await searchParams;
@@ -33,10 +34,27 @@ export default async function WebhookDetailPage({
   if (!sub) notFound();
 
   return (
-    <WebhookDetail
-      sub={sub}
-      deliveries={deliveries.slice(0, 25)}
-      oneShotSecret={oneShotSecret}
-    />
+    <>
+      <section className="spec-page-header">
+        <div className="spec-page-header-row">
+          <h1 className="spec-page-title">
+            <span>07</span>
+            <span>Webhook</span>
+            <span className="spec-page-title-em">— {sub.label ?? sub.id.slice(0, 8)}</span>
+          </h1>
+          <Link href="/oli/webhooks" className="spec-switch">
+            <span className="spec-switch-seg">← ALL WEBHOOKS</span>
+          </Link>
+        </div>
+      </section>
+
+      <div style={{ margin: "0 32px", paddingBottom: 32 }}>
+        <WebhookDetail
+          sub={sub}
+          deliveries={deliveries.slice(0, 25)}
+          oneShotSecret={oneShotSecret}
+        />
+      </div>
+    </>
   );
 }

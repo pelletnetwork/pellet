@@ -53,3 +53,7 @@ node_modules/
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+
+# local-only (Claude Code config + scratch screenshots)
+/.claude/
+/tmp/

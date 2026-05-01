@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import WalletPage from "@/app/wallet/page";
 import { readUserSession } from "@/lib/wallet/challenge-cookie";
+import { SectionTitle } from "@/components/oli/SectionTitle";
 
 export const metadata: Metadata = {
   title: "Pellet Wallet",
@@ -21,5 +22,14 @@ export const runtime = "nodejs";
 export default async function OliEmbeddedWalletPage() {
   const userId = await readUserSession();
   if (userId) redirect("/oli/wallet/dashboard");
-  return <WalletPage basePath="/oli/wallet" />;
+  return (
+    <div className="oli-page">
+      <SectionTitle
+        number={7}
+        title="Pellet Wallet"
+        description="An open agent wallet on Tempo. Public ledger. Self-custody. Every payment recorded for anyone to read."
+      />
+      <WalletPage basePath="/oli/wallet" />
+    </div>
+  );
 }

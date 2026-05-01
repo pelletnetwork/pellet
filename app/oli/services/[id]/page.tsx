@@ -1,12 +1,50 @@
-import { serviceDetail } from "@/lib/oli/queries";
-import { buildLabelMap } from "@/lib/oli/labelMap";
-import { TrendChart } from "@/components/oli/TrendChart";
-import { EventStream } from "@/components/oli/EventStream";
-import { shortAddress, formatUsdcAmount, formatTimeAgo } from "@/lib/oli/format";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { serviceDetail } from "@/lib/oli/queries";
+import {
+  fmtUsdCompact,
+  fmtUsdExact,
+  Sparkline,
+} from "@/components/specimen/dashboard-charts";
 
 export const dynamic = "force-dynamic";
+
+const USDCE_ADDR = "0x20c000000000000000000000b9537d11c60e8b50";
+const USDT0_ADDR = "0x20c00000000000000000000014f22ca97301eb73";
+const EXPLORER = "https://explore.testnet.tempo.xyz";
+
+function shortAddr(a: string): string {
+  return `${a.slice(0, 6)}…${a.slice(-4)}`;
+}
+function shortHash(h: string): string {
+  return `${h.slice(0, 6)}…${h.slice(-4)}`;
+}
+function tokenSymbol(addr: string | null): string {
+  if (!addr) return "—";
+  const a = addr.toLowerCase();
+  if (a === USDCE_ADDR) return "USDC.e";
+  if (a === USDT0_ADDR) return "USDT0";
+  return "TOKEN";
+}
+function timeAgoShort(d: Date): string {
+  const ago = Date.now() - d.getTime();
+  const s = Math.floor(ago / 1000);
+  if (s < 60) return `${s}s`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h`;
+  return `${Math.floor(h / 24)}d`;
+}
+function fmtAmount(wei: string | null, addr: string | null): string {
+  if (!wei) return "—";
+  const sym = tokenSymbol(addr);
+  const usd = Number(wei) / 1_000_000;
+  if (!Number.isFinite(usd)) return sym;
+  if (Math.abs(usd) >= 1) return `$${usd.toFixed(2)} ${sym}`;
+  return `$${usd.toFixed(4)} ${sym}`;
+}
 
 export async function generateMetadata({
   params,
@@ -17,14 +55,9 @@ export async function generateMetadata({
   const detail = await serviceDetail(id);
   if (!detail.head) return { title: "Service not found" };
   const title = `${detail.head.label} — MPP service`;
-  const description =
-    detail.head.bio ??
-    `MPP service tracked by Pellet OLI. Settlement, revenue, and recent activity on Tempo.`;
   return {
     title,
-    description,
-    openGraph: { title, description, url: `https://pellet.network/oli/services/${id}`, type: "website" },
-    twitter: { card: "summary_large_image", title, description },
+    description: detail.head.bio ?? `MPP service tracked by Pellet OLI.`,
   };
 }
 
@@ -34,97 +67,267 @@ export default async function OliServiceDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [detail, labelMap] = await Promise.all([
-    serviceDetail(id),
-    buildLabelMap(),
-  ]);
-
+  const detail = await serviceDetail(id);
   if (!detail.head) notFound();
 
-  const trendPoints = detail.trend.map((t) => ({
-    ts: new Date(t.bucket),
-    value: Number(t.amountWei) / 1_000_000, // USDC.e (6 decimals)
-  }));
+  const trend24h = detail.trend.slice(-24);
+  const trend7d = detail.trend.slice(-168);
+  const total30d = detail.trend.reduce(
+    (acc, t) => acc + Number(t.amountWei) / 1_000_000,
+    0,
+  );
+  const tx30d = detail.trend.reduce((acc, t) => acc + t.txCount, 0);
+  const peakBucket = detail.trend.reduce(
+    (acc, t) => Math.max(acc, Number(t.amountWei) / 1_000_000),
+    0,
+  );
+  const sparkValues = trend7d.length > 1
+    ? trend7d.map((t) => Number(t.amountWei) / 1_000_000)
+    : [0, 0];
+  const tx24h = trend24h.reduce((acc, t) => acc + t.txCount, 0);
+  const total24h = trend24h.reduce(
+    (acc, t) => acc + Number(t.amountWei) / 1_000_000,
+    0,
+  );
+  const settlementAddr = detail.head.wallets?.[0] ?? "";
+  const providersTotal = detail.providers.reduce(
+    (acc, p) => acc + Number(p.amountSumWei),
+    0,
+  );
 
   return (
-    <div className="oli-page" style={{ padding: "32px 48px", display: "flex", flexDirection: "column", gap: 24, maxWidth: 1024 }}>
-      <header>
-        <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--color-text-quaternary)" }}>
-          MPP Service
-        </span>
-        <h1 style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: 40, fontWeight: 400, margin: "4px 0 8px" }}>
-          {detail.head.label}
-        </h1>
-        <p style={{ color: "var(--color-text-tertiary)", fontSize: 13, margin: 0 }}>
-          {detail.head.bio ?? ""}
-        </p>
-        <div style={{ marginTop: 12, fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--color-text-tertiary)" }}>
-          settlement <code>{shortAddress(detail.head.wallets?.[0] ?? "")}</code>
+    <>
+      <section className="spec-page-header">
+        <div className="spec-page-header-row">
+          <h1 className="spec-page-title">
+            <span>03</span>
+            <span>{detail.head.label}</span>
+            <span className="spec-page-title-em">— service</span>
+          </h1>
+          <Link href="/oli/services" className="spec-switch">
+            <span className="spec-switch-seg">← ALL SERVICES</span>
+          </Link>
         </div>
-      </header>
+        <div className="spec-page-subhead">
+          {detail.head.bio && (
+            <>
+              <span>{detail.head.bio}</span>
+              <span className="spec-page-subhead-dot">·</span>
+            </>
+          )}
+          <span className="spec-page-subhead-label">SETTLEMENT</span>
+          {settlementAddr ? (
+            <a
+              href={`${EXPLORER}/address/${settlementAddr}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                fontVariantNumeric: "tabular-nums",
+                textDecoration: "underline",
+                textUnderlineOffset: 2,
+              }}
+            >
+              {shortAddr(settlementAddr)}
+            </a>
+          ) : (
+            <span style={{ opacity: 0.5 }}>—</span>
+          )}
+        </div>
+      </section>
 
-      <section>
-        <h2 style={{ fontFamily: "var(--font-mono)", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--color-text-tertiary)", margin: "0 0 8px" }}>
-          Revenue trend · 30 days
-        </h2>
-        <TrendChart
-          points={trendPoints}
-          formatY={(v) => `$${v.toFixed(2)}`}
-        />
+      <section className="spec-strip">
+        <div className="spec-strip-cell">
+          <span className="spec-strip-label">REVENUE · 24H</span>
+          <span className="spec-strip-value">{fmtUsdCompact(total24h)}</span>
+          <span className="spec-strip-sub">
+            <span>{tx24h.toLocaleString()} txs</span>
+          </span>
+        </div>
+        <div className="spec-strip-cell">
+          <span className="spec-strip-label">REVENUE · 30D</span>
+          <span className="spec-strip-value">{fmtUsdCompact(total30d)}</span>
+          <span className="spec-strip-sub">
+            <span>{tx30d.toLocaleString()} txs</span>
+            <span className="spec-strip-sub-faint">peak {fmtUsdExact(peakBucket)}/h</span>
+          </span>
+        </div>
+        <div className="spec-strip-cell">
+          <span className="spec-strip-label">7D TREND</span>
+          <span className="spec-strip-value spec-strip-value-md" style={{ paddingTop: 6 }}>
+            <span style={{ display: "inline-block", width: 140 }}>
+              <Sparkline values={sparkValues} />
+            </span>
+          </span>
+          <span className="spec-strip-sub">
+            <span>{trend7d.length} hourly buckets</span>
+          </span>
+        </div>
+        <div className="spec-strip-cell">
+          <span className="spec-strip-label">PROVIDERS</span>
+          <span className="spec-strip-value">{detail.providers.length}</span>
+          <span className="spec-strip-sub">
+            <span>{detail.providers.length === 0 ? "no underlying providers" : "attributed on-chain"}</span>
+          </span>
+        </div>
       </section>
 
       {detail.providers.length > 0 && (
-        <section>
-          <h2 style={{ fontFamily: "var(--font-mono)", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--color-text-tertiary)", margin: "0 0 8px" }}>
-            Underlying providers · attributed on-chain
-          </h2>
-          <div className="oli-providers-table">
-            <div className="oli-providers-row oli-providers-row-head">
-              <span className="oli-providers-rank">#</span>
-              <span className="oli-providers-addr">provider</span>
-              <span className="oli-providers-num" data-cell="rev">revenue</span>
-              <span className="oli-providers-num" data-cell="txs">txs</span>
-              <span className="oli-providers-time">last</span>
+        <section className="spec-tables">
+          <div className="spec-table" data-table="providers" style={{ flex: 1 }}>
+            <div className="spec-table-header">
+              <span className="spec-table-title">UNDERLYING PROVIDERS</span>
+              <span className="spec-table-meta">
+                <span className="spec-table-meta-faint">ROWS</span>
+                <span>{detail.providers.length}</span>
+              </span>
             </div>
-            {detail.providers.map((p, i) => (
-              <a
-                key={p.key}
-                href={`/oli/providers/${p.key}`}
-                className="oli-providers-row oli-providers-row-link"
-              >
-                <span className="oli-providers-rank">{String(i + 1).padStart(2, "0")}</span>
-                <span className="oli-providers-addr">
-                  {(() => {
-                    const display = p.label
-                      ? p.label
-                      : p.kind === "address" && p.address
-                      ? shortAddress(p.address)
-                      : `fp:${p.fingerprint?.slice(0, 6)}…${p.fingerprint?.slice(-4)}`;
-                    return p.label ? (
-                      <span className="oli-providers-addr-label">{display}</span>
-                    ) : (
-                      <code className="oli-providers-addr-hex">{display}</code>
-                    );
-                  })()}
-                </span>
-                <span className="oli-providers-num" data-cell="rev">{formatUsdcAmount(p.amountSumWei, 6)}</span>
-                <span className="oli-providers-num" data-cell="txs">{p.txCount.toLocaleString()}</span>
-                <span className="oli-providers-time">{formatTimeAgo(p.lastTs)}</span>
-              </a>
-            ))}
+            <div className="spec-row-head">
+              <span style={{ width: 24, flexShrink: 0 }}>#</span>
+              <span style={{ flex: 1, minWidth: 0 }}>PROVIDER</span>
+              <span style={{ width: 88, flexShrink: 0, marginLeft: 24 }} className="spec-cell-r">
+                REVENUE
+              </span>
+              <span style={{ width: 56, flexShrink: 0, marginLeft: 24 }} className="spec-cell-r">
+                TXS
+              </span>
+              <span style={{ width: 56, flexShrink: 0, marginLeft: 24 }} className="spec-cell-r">
+                SHARE
+              </span>
+              <span style={{ width: 56, flexShrink: 0, marginLeft: 24 }} className="spec-cell-r">
+                LAST
+              </span>
+            </div>
+            {detail.providers.map((p, i) => {
+              const rev = Number(p.amountSumWei) / 1_000_000;
+              const share = providersTotal > 0
+                ? (Number(p.amountSumWei) / providersTotal) * 100
+                : 0;
+              const display = p.label
+                ? p.label
+                : p.kind === "address" && p.address
+                ? shortAddr(p.address)
+                : `fp:${p.fingerprint?.slice(0, 6)}…${p.fingerprint?.slice(-4)}`;
+              return (
+                <Link key={p.key} href={`/oli/providers/${p.key}`} className="spec-row">
+                  <span style={{ width: 24, flexShrink: 0 }}>{String(i + 1).padStart(2, "0")}</span>
+                  <span
+                    style={{
+                      flex: 1,
+                      minWidth: 0,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {display}
+                  </span>
+                  <span
+                    style={{ width: 88, flexShrink: 0, marginLeft: 24 }}
+                    className="spec-cell-r"
+                  >
+                    {fmtUsdCompact(rev)}
+                  </span>
+                  <span
+                    style={{ width: 56, flexShrink: 0, marginLeft: 24 }}
+                    className="spec-cell-r"
+                  >
+                    {p.txCount.toLocaleString()}
+                  </span>
+                  <span
+                    style={{ width: 56, flexShrink: 0, marginLeft: 24 }}
+                    className="spec-cell-r"
+                  >
+                    {share.toFixed(1)}%
+                  </span>
+                  <span
+                    style={{ width: 56, flexShrink: 0, marginLeft: 24, opacity: 0.7 }}
+                    className="spec-cell-r"
+                  >
+                    {timeAgoShort(p.lastTs)}
+                  </span>
+                </Link>
+              );
+            })}
           </div>
-          <p style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--color-text-quaternary)", marginTop: 8, letterSpacing: "0.04em" }}>
-            recovered from settlement event topic[2] · escrow 0x33b9…4f25 · <a href="/oli/methodology" style={{ color: "var(--color-accent)", textDecoration: "none", borderBottom: "1px solid var(--color-accent)" }}>methodology</a>
-          </p>
         </section>
       )}
 
-      <section>
-        <h2 style={{ fontFamily: "var(--font-mono)", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--color-text-tertiary)", margin: "0 0 8px" }}>
-          Recent activity
-        </h2>
-        <EventStream events={detail.recent as never} labelMap={labelMap} />
+      <section className="spec-tables">
+        <div className="spec-table" data-table="settlements" style={{ flex: 1 }}>
+          <div className="spec-table-header">
+            <span className="spec-table-title">RECENT ACTIVITY</span>
+            <span className="spec-table-meta">
+              <span className="spec-table-meta-faint">ROWS</span>
+              <span>{detail.recent.length}</span>
+            </span>
+          </div>
+          <div className="spec-row-head">
+            <span style={{ width: 40, flexShrink: 0 }}>T-</span>
+            <span style={{ width: 92, flexShrink: 0 }}>TX</span>
+            <span style={{ flex: 1, minWidth: 0 }}>MEMO</span>
+            <span style={{ width: 110, flexShrink: 0 }} className="spec-cell-r">
+              AMOUNT
+            </span>
+            <span style={{ width: 86, flexShrink: 0 }} className="spec-cell-r">
+              ROUTED
+            </span>
+            <span style={{ width: 50, flexShrink: 0 }} className="spec-cell-r">
+              STATUS
+            </span>
+          </div>
+          {detail.recent.map((ev) => {
+            const memo = `${ev.kind}${ev.counterpartyLabel ? ` · ${ev.counterpartyLabel}` : ""}`;
+            const routed = ev.routedToLabel ?? "—";
+            return (
+              <div key={ev.id} className="spec-row">
+                <span style={{ width: 40, flexShrink: 0 }}>{timeAgoShort(ev.ts)}</span>
+                <span style={{ width: 92, flexShrink: 0 }}>
+                  <a
+                    href={`${EXPLORER}/tx/${ev.txHash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ textDecoration: "underline", textUnderlineOffset: 2 }}
+                  >
+                    {shortHash(ev.txHash)}
+                  </a>
+                </span>
+                <span
+                  style={{
+                    flex: 1,
+                    minWidth: 0,
+                    opacity: 0.7,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {memo}
+                </span>
+                <span style={{ width: 110, flexShrink: 0 }} className="spec-cell-r">
+                  {fmtAmount(ev.amountWei, ev.tokenAddress)}
+                </span>
+                <span style={{ width: 86, flexShrink: 0 }} className="spec-cell-r">
+                  {routed}
+                </span>
+                <span
+                  style={{
+                    width: 50,
+                    flexShrink: 0,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "flex-end",
+                    gap: 6,
+                  }}
+                  className="spec-cell-r"
+                >
+                  <span className="spec-status-dot-sm" aria-hidden="true" />
+                  <span>OK</span>
+                </span>
+              </div>
+            );
+          })}
+        </div>
       </section>
-    </div>
+    </>
   );
 }

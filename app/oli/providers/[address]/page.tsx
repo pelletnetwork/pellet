@@ -1,12 +1,51 @@
-import { providerDetail } from "@/lib/oli/queries";
-import { buildLabelMap } from "@/lib/oli/labelMap";
-import { TrendChart } from "@/components/oli/TrendChart";
-import { EventStream } from "@/components/oli/EventStream";
-import { shortAddress, formatUsdcAmount, formatTimeAgo } from "@/lib/oli/format";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { providerDetail } from "@/lib/oli/queries";
+import {
+  fmtUsdCompact,
+  fmtUsdExact,
+  Sparkline,
+} from "@/components/specimen/dashboard-charts";
 
 export const dynamic = "force-dynamic";
+
+const USDCE_ADDR = "0x20c000000000000000000000b9537d11c60e8b50";
+const USDT0_ADDR = "0x20c00000000000000000000014f22ca97301eb73";
+const EXPLORER = "https://explore.testnet.tempo.xyz";
+
+function shortAddr(a: string): string {
+  return `${a.slice(0, 6)}…${a.slice(-4)}`;
+}
+function shortHash(h: string): string {
+  return `${h.slice(0, 6)}…${h.slice(-4)}`;
+}
+function tokenSymbol(addr: string | null): string {
+  if (!addr) return "—";
+  const a = addr.toLowerCase();
+  if (a === USDCE_ADDR) return "USDC.e";
+  if (a === USDT0_ADDR) return "USDT0";
+  return "TOKEN";
+}
+function timeAgoShort(d: Date | null): string {
+  if (!d) return "—";
+  const ago = Date.now() - d.getTime();
+  const s = Math.floor(ago / 1000);
+  if (s < 60) return `${s}s`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h`;
+  return `${Math.floor(h / 24)}d`;
+}
+function fmtAmount(wei: string | null, addr: string | null): string {
+  if (!wei) return "—";
+  const sym = tokenSymbol(addr);
+  const usd = Number(wei) / 1_000_000;
+  if (!Number.isFinite(usd)) return sym;
+  if (Math.abs(usd) >= 1) return `$${usd.toFixed(2)} ${sym}`;
+  return `$${usd.toFixed(4)} ${sym}`;
+}
 
 export async function generateMetadata({
   params,
@@ -20,19 +59,13 @@ export async function generateMetadata({
   const display = detail.label
     ? detail.label
     : detail.kind === "address" && detail.address
-    ? shortAddress(detail.address)
+    ? shortAddr(detail.address)
     : `fp:${detail.fingerprint?.slice(0, 6)}…${detail.fingerprint?.slice(-4)}`;
-  const title = `${display} — routed provider`;
-  const description = detail.label
-    ? `Underlying provider ${display} routed via the Tempo MPP Gateway. ${detail.txCount} txs lifetime.`
-    : detail.kind === "address"
-    ? `Underlying provider attributed via the Tempo MPP Gateway's Settlement event. ${detail.txCount} txs lifetime.`
-    : `Provider grouping (Pattern B fingerprint) attributed via the Tempo MPP Gateway calldata. ${detail.txCount} txs lifetime.`;
   return {
-    title,
-    description,
-    openGraph: { title, description, url: `https://pellet.network/oli/providers/${key}`, type: "website" },
-    twitter: { card: "summary_large_image", title, description },
+    title: `${display} — routed provider`,
+    description: detail.label
+      ? `Underlying provider ${display} routed via the Tempo MPP Gateway.`
+      : "Underlying provider attributed via the Tempo MPP Gateway.",
   };
 }
 
@@ -42,141 +75,204 @@ export default async function OliProviderDetailPage({
   params: Promise<{ address: string }>;
 }) {
   const { address } = await params;
-  const addr = decodeURIComponent(address).toLowerCase();
-  const [detail, labelMap] = await Promise.all([providerDetail(addr), buildLabelMap()]);
-
+  const key = decodeURIComponent(address).toLowerCase();
+  const detail = await providerDetail(key);
   if (!detail) notFound();
 
-  const trendPoints = detail.trend.map((t) => ({
-    ts: t.bucket,
-    value: Number(t.amountWei) / 1_000_000,
-  }));
+  const display = detail.label
+    ? detail.label
+    : detail.kind === "address" && detail.address
+    ? shortAddr(detail.address)
+    : `fp:${detail.fingerprint?.slice(0, 6)}…${detail.fingerprint?.slice(-4)}`;
+
+  const trend7d = detail.trend.slice(-168);
+  const sparkValues = trend7d.length > 1
+    ? trend7d.map((t) => Number(t.amountWei) / 1_000_000)
+    : [0, 0];
+  const peakBucket = detail.trend.reduce(
+    (acc, t) => Math.max(acc, Number(t.amountWei) / 1_000_000),
+    0,
+  );
+  const lifetimeUsd = Number(detail.amountSumWei) / 1_000_000;
+  const usd24h = Number(detail.amountSumWei24h) / 1_000_000;
 
   return (
-    <div className="oli-page" style={{ maxWidth: 1024 }}>
-      <header>
-        <span
-          style={{
-            fontFamily: "var(--font-mono)",
-            fontSize: 10,
-            textTransform: "uppercase",
-            letterSpacing: "0.08em",
-            color: "var(--color-text-quaternary)",
-          }}
-        >
-          Routed provider · attributed via gateway
-        </span>
-        <h1
-          style={{
-            fontFamily: "'Instrument Serif', Georgia, serif",
-            fontSize: 40,
-            fontWeight: 400,
-            margin: "4px 0 8px",
-          }}
-        >
-          {detail.label ?? (
-            <code style={{ fontFamily: "var(--font-mono)", fontSize: 28, color: "var(--color-accent)" }}>
-              {detail.kind === "address" && detail.address
-                ? shortAddress(detail.address)
-                : `fp:${detail.fingerprint?.slice(0, 6)}…${detail.fingerprint?.slice(-4)}`}
-            </code>
-          )}
-        </h1>
-        <p
-          style={{
-            color: "var(--color-text-tertiary)",
-            fontSize: 12,
-            margin: 0,
-            fontFamily: "var(--font-mono)",
-          }}
-        >
+    <>
+      <section className="spec-page-header">
+        <div className="spec-page-header-row">
+          <h1 className="spec-page-title">
+            <span>03</span>
+            <span>{display}</span>
+            <span className="spec-page-title-em">— routed provider</span>
+          </h1>
+          <Link href="/oli/services" className="spec-switch">
+            <span className="spec-switch-seg">← SERVICES</span>
+          </Link>
+        </div>
+        <div className="spec-page-subhead">
           {detail.kind === "address" && detail.address ? (
             <>
-              <code>{detail.address}</code>
-              {detail.category && ` · ${detail.category}`}
+              <span className="spec-page-subhead-label">ADDRESS</span>
+              <a
+                href={`${EXPLORER}/address/${detail.address}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  fontVariantNumeric: "tabular-nums",
+                  textDecoration: "underline",
+                  textUnderlineOffset: 2,
+                }}
+              >
+                {detail.address}
+              </a>
+              {detail.category && (
+                <>
+                  <span className="spec-page-subhead-dot">·</span>
+                  <span>{detail.category}</span>
+                </>
+              )}
             </>
           ) : (
             <>
-              <code>fingerprint 0x{detail.fingerprint}</code>
-              {" · pattern-b grouping (provider not yet identified)"}
+              <span className="spec-page-subhead-label">FINGERPRINT</span>
+              <span style={{ fontVariantNumeric: "tabular-nums" }}>
+                0x{detail.fingerprint}
+              </span>
+              <span className="spec-page-subhead-dot">·</span>
+              <span>pattern-b grouping (provider not yet identified)</span>
             </>
           )}
-        </p>
-        <div
-          style={{
-            marginTop: 16,
-            display: "grid",
-            gridTemplateColumns: "repeat(4, auto)",
-            gap: 32,
-            fontFamily: "var(--font-mono)",
-            fontSize: 11,
-            color: "var(--color-text-tertiary)",
-            fontVariantNumeric: "tabular-nums",
-          }}
-        >
-          <Stat label="Lifetime revenue" value={formatUsdcAmount(detail.amountSumWei, 6)} />
-          <Stat label="Lifetime txs" value={detail.txCount.toLocaleString()} />
-          <Stat label="Revenue · 24h" value={formatUsdcAmount(detail.amountSumWei24h, 6)} />
-          <Stat label="Last seen" value={detail.lastSeen ? formatTimeAgo(detail.lastSeen) : "—"} />
         </div>
-      </header>
-
-      <section>
-        <h2
-          style={{
-            fontFamily: "var(--font-mono)",
-            fontSize: 11,
-            textTransform: "uppercase",
-            letterSpacing: "0.08em",
-            color: "var(--color-text-tertiary)",
-            margin: "0 0 8px",
-          }}
-        >
-          Revenue trend · 30 days
-        </h2>
-        <TrendChart points={trendPoints} formatY={(v) => `$${v.toFixed(2)}`} />
       </section>
 
-      <section>
-        <h2
-          style={{
-            fontFamily: "var(--font-mono)",
-            fontSize: 11,
-            textTransform: "uppercase",
-            letterSpacing: "0.08em",
-            color: "var(--color-text-tertiary)",
-            margin: "0 0 8px",
-          }}
-        >
-          Routed activity · last 50
-        </h2>
-        <EventStream events={detail.recent as never} labelMap={labelMap} />
+      <section className="spec-strip">
+        <div className="spec-strip-cell">
+          <span className="spec-strip-label">REVENUE · LIFETIME</span>
+          <span className="spec-strip-value">{fmtUsdCompact(lifetimeUsd)}</span>
+          <span className="spec-strip-sub">
+            <span>{detail.txCount.toLocaleString()} txs total</span>
+          </span>
+        </div>
+        <div className="spec-strip-cell">
+          <span className="spec-strip-label">REVENUE · 24H</span>
+          <span className="spec-strip-value">{fmtUsdCompact(usd24h)}</span>
+          <span className="spec-strip-sub">
+            <span>{detail.txCount24h.toLocaleString()} txs · 24h</span>
+            <span className="spec-strip-sub-faint">peak {fmtUsdExact(peakBucket)}/h</span>
+          </span>
+        </div>
+        <div className="spec-strip-cell">
+          <span className="spec-strip-label">7D TREND</span>
+          <span className="spec-strip-value spec-strip-value-md" style={{ paddingTop: 6 }}>
+            <span style={{ display: "inline-block", width: 140 }}>
+              <Sparkline values={sparkValues} />
+            </span>
+          </span>
+          <span className="spec-strip-sub">
+            <span>{trend7d.length} hourly buckets</span>
+          </span>
+        </div>
+        <div className="spec-strip-cell">
+          <span className="spec-strip-label">LAST SEEN</span>
+          <span className="spec-strip-value">{timeAgoShort(detail.lastSeen)}</span>
+          <span className="spec-strip-sub">
+            <span className="spec-strip-sub-faint">
+              first seen {timeAgoShort(detail.firstSeen)}
+            </span>
+          </span>
+        </div>
+      </section>
+
+      <section className="spec-tables">
+        <div className="spec-table" data-table="settlements" style={{ flex: 1 }}>
+          <div className="spec-table-header">
+            <span className="spec-table-title">ROUTED ACTIVITY · LAST 50</span>
+            <span className="spec-table-meta">
+              <span className="spec-table-meta-faint">ROWS</span>
+              <span>{detail.recent.length}</span>
+            </span>
+          </div>
+          <div className="spec-row-head">
+            <span style={{ width: 40, flexShrink: 0 }}>T-</span>
+            <span style={{ width: 92, flexShrink: 0 }}>TX</span>
+            <span style={{ flex: 1, minWidth: 0 }}>MEMO</span>
+            <span style={{ width: 110, flexShrink: 0 }} className="spec-cell-r">
+              AMOUNT
+            </span>
+            <span style={{ width: 86, flexShrink: 0 }} className="spec-cell-r">
+              FROM
+            </span>
+            <span style={{ width: 50, flexShrink: 0 }} className="spec-cell-r">
+              STATUS
+            </span>
+          </div>
+          {detail.recent.map((ev) => {
+            const memo = `${ev.kind}${ev.routedToLabel ? ` · ${ev.routedToLabel}` : ""}`;
+            const from = ev.agentLabel ?? "—";
+            return (
+              <div key={ev.id} className="spec-row">
+                <span style={{ width: 40, flexShrink: 0 }}>{timeAgoShort(ev.ts)}</span>
+                <span style={{ width: 92, flexShrink: 0 }}>
+                  <a
+                    href={`${EXPLORER}/tx/${ev.txHash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ textDecoration: "underline", textUnderlineOffset: 2 }}
+                  >
+                    {shortHash(ev.txHash)}
+                  </a>
+                </span>
+                <span
+                  style={{
+                    flex: 1,
+                    minWidth: 0,
+                    opacity: 0.7,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {memo}
+                </span>
+                <span style={{ width: 110, flexShrink: 0 }} className="spec-cell-r">
+                  {fmtAmount(ev.amountWei, ev.tokenAddress)}
+                </span>
+                <span style={{ width: 86, flexShrink: 0 }} className="spec-cell-r">
+                  {from}
+                </span>
+                <span
+                  style={{
+                    width: 50,
+                    flexShrink: 0,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "flex-end",
+                    gap: 6,
+                  }}
+                  className="spec-cell-r"
+                >
+                  <span className="spec-status-dot-sm" aria-hidden="true" />
+                  <span>OK</span>
+                </span>
+              </div>
+            );
+          })}
+        </div>
       </section>
 
       <p
         style={{
-          fontFamily: "var(--font-mono)",
-          fontSize: 10,
-          color: "var(--color-text-quaternary)",
+          margin: "0 32px 32px",
+          fontSize: 11,
+          opacity: 0.6,
           letterSpacing: "0.04em",
         }}
       >
         attribution recovered from settlement event topic[2] · escrow 0x33b9…4f25 ·{" "}
-        <a href="/oli/methodology" style={{ color: "var(--color-accent)", textDecoration: "none", borderBottom: "1px solid var(--color-accent)" }}>
+        <Link href="/oli/methodology" className="spec-prose-link">
           methodology
-        </a>
+        </Link>
       </p>
-    </div>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-      <span style={{ color: "var(--color-text-quaternary)", textTransform: "uppercase", letterSpacing: "0.06em", fontSize: 9 }}>
-        {label}
-      </span>
-      <span style={{ color: "var(--color-text-primary)", fontSize: 13 }}>{value}</span>
-    </div>
+    </>
   );
 }

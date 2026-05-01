@@ -1,0 +1,1605 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+ * /specimen — proportional-sans dashboard specimen
+ * ───────────────────────────────────────────────────────────────────────────
+ * Scoped to .specimen-shell. Two-token mirrored palette (paper + ink),
+ * proportional system sans, 1px square outlines, no chromatic accent.
+ *
+ * Light (default): bg = paper, fg = ink
+ * Dark (.dark on shell): bg = ink, fg = paper
+ *
+ * Aesthetic carried by layout discipline + tabular alignment, not by font.
+ * NO Commit Mono on this surface.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Tokens ───────────────────────────────────────────────────────────────── */
+
+.specimen-shell {
+  --paper: #bcbcbc;
+  --ink:   #0a0a0a;
+
+  --bg: var(--paper);
+  --fg: var(--ink);
+  --line: var(--ink);
+  --line-thin: color-mix(in oklch, var(--ink) 40%, var(--paper));
+
+  background: var(--bg);
+  color: var(--fg);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, system-ui, sans-serif;
+  font-feature-settings: "ss01", "tnum";
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  line-height: 1.45;
+  min-height: 100vh;
+  width: 100%;
+}
+
+.specimen-shell.dark {
+  --bg: var(--ink);
+  --fg: var(--paper);
+  --line: var(--paper);
+  --line-thin: color-mix(in oklch, var(--paper) 40%, var(--ink));
+}
+
+/* Page backdrop matches shell bg so edges don't peek. */
+body:has(.specimen-shell:not(.dark)) {
+  background: #bcbcbc;
+}
+body:has(.specimen-shell.dark) {
+  background: #0a0a0a;
+}
+
+/* ── Square everything inside the shell ──────────────────────────────────── */
+
+.specimen-shell,
+.specimen-shell *,
+.specimen-shell *::before,
+.specimen-shell *::after {
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-sizing: border-box;
+}
+
+.specimen-shell ::selection {
+  background: var(--fg);
+  color: var(--bg);
+}
+
+.specimen-shell :focus-visible {
+  outline: 1px solid var(--fg) !important;
+  outline-offset: 0 !important;
+}
+
+/* Strip the global site nav blur for these routes. */
+body:has(.specimen-shell) .nav-header {
+  display: none !important;
+}
+body:has(.specimen-shell) main {
+  animation: none !important;
+}
+
+/* Suppress fumadocs RootProvider effects that might leak. */
+.specimen-shell a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ── Top bar ─────────────────────────────────────────────────────────────── */
+
+.spec-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 32px;
+  border-bottom: 1px solid var(--line);
+  gap: 24px;
+  position: relative;
+}
+
+.spec-brand {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+
+.spec-brand-mark {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  display: block;
+}
+
+.spec-brand-name {
+  font-weight: 600;
+  letter-spacing: 0;
+}
+.spec-brand-slash {
+  opacity: 0.55;
+  margin: 0 -1px;
+}
+.spec-brand-section {
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
+.spec-nav {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  font-size: 12px;
+}
+.spec-nav-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px 8px;
+  border: 1px solid transparent;
+  color: var(--fg);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.spec-nav-item-active {
+  border-color: var(--fg);
+}
+.spec-nav-num {
+  opacity: 1;
+}
+
+.spec-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  font-weight: 500;
+}
+.spec-status-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--fg);
+  flex-shrink: 0;
+}
+
+/* ── Keymap legend (bottom) ──────────────────────────────────────────────── */
+
+.spec-keymap {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 28px;
+  padding: 16px 32px;
+  border-top: 1px solid var(--line);
+  font-size: 11px;
+  margin-top: auto;
+}
+.spec-keymap-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.spec-keymap-keys {
+  display: inline-flex;
+  align-items: center;
+}
+.spec-keymap-label {
+  letter-spacing: 0.02em;
+}
+
+/* Keycap — 18px square, 1px ink border, contiguous (shared edges in combos). */
+.spec-keycap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--fg);
+  background: transparent;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--fg);
+  line-height: 1;
+}
+.spec-keycap + .spec-keycap {
+  border-left: none;
+}
+/* M-key gets a button styling (it's interactive) */
+button.spec-keycap {
+  cursor: pointer;
+  font-family: inherit;
+  padding: 0;
+}
+
+/* ── Shell layout: column flex so keymap pins to bottom of viewport-ish ──── */
+
+.specimen-shell {
+  display: flex;
+  flex-direction: column;
+}
+.spec-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Page header block ───────────────────────────────────────────────────── */
+
+.spec-page-header {
+  padding: 36px 32px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.spec-page-header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 32px;
+}
+.spec-page-title {
+  font-size: 32px;
+  line-height: 36px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.spec-page-title-em {
+  font-family: inherit;
+  font-style: normal;
+  font-size: 30px;
+  line-height: 32px;
+  opacity: 0.55;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+.spec-page-subhead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+.spec-page-subhead-dot {
+  opacity: 0.55;
+}
+.spec-page-subhead-link {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+}
+.spec-page-subhead-label {
+  opacity: 0.7;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 11px;
+}
+.spec-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  margin-left: -2px;
+  background: transparent;
+  border: 0;
+  color: var(--fg);
+  opacity: 0.55;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: opacity 0.12s ease, background-color 0.12s ease;
+}
+.spec-copy-btn:hover {
+  opacity: 1;
+  background: color-mix(in oklch, var(--fg) 10%, transparent);
+}
+.spec-copy-btn:active {
+  background: color-mix(in oklch, var(--fg) 22%, transparent);
+}
+.spec-copy-btn:focus-visible {
+  outline: 1px solid var(--fg);
+  outline-offset: 1px;
+}
+
+/* ── Window switch (segmented control, e.g. 24H 7D 30D ALL) ──────────────── */
+
+.spec-switch {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid var(--line);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+.spec-switch-seg {
+  padding: 6px 14px;
+  border-right: 1px solid var(--line);
+  cursor: pointer;
+  background: transparent;
+  color: var(--fg);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+.spec-switch-seg:last-child {
+  border-right: none;
+}
+.spec-switch-seg-active {
+  background: var(--fg);
+  color: var(--bg);
+}
+
+/* ── KPI / stat strip ────────────────────────────────────────────────────── */
+
+.spec-strip {
+  display: flex;
+  align-items: stretch;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  margin: 0 32px;
+}
+.spec-strip-cell {
+  flex: 1 1 0;
+  border-right: 1px solid var(--line);
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+.spec-strip-cell:last-child {
+  border-right: none;
+}
+.spec-strip-label {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+.spec-strip-value {
+  font-size: 38px;
+  line-height: 38px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+.spec-strip-value-lg {
+  font-size: 52px;
+  line-height: 52px;
+}
+.spec-strip-value-md {
+  font-size: 32px;
+  line-height: 32px;
+}
+.spec-strip-sub {
+  font-size: 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.spec-strip-sub-faint {
+  opacity: 0.55;
+}
+
+/* ── Charts row ──────────────────────────────────────────────────────────── */
+
+.spec-charts {
+  display: flex;
+  align-items: stretch;
+  border-bottom: 1px solid var(--line);
+  margin: 0 32px;
+}
+.spec-chart {
+  flex: 1 1 0;
+  border-right: 1px solid var(--line);
+  padding: 18px 22px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+.spec-chart:last-child {
+  border-right: none;
+}
+
+.spec-ticker {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+.spec-ticker-left {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: nowrap;
+  min-width: 0;
+}
+.spec-ticker-right {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-shrink: 0;
+}
+.spec-ticker-label {
+  opacity: 0.7;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.spec-ticker-pair {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  white-space: nowrap;
+}
+.spec-ticker-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.spec-legend-square {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+}
+.spec-legend-square-filled {
+  background: var(--fg);
+}
+.spec-legend-square-outline {
+  border: 1px solid var(--fg);
+}
+.spec-legend-square-stripe {
+  background-image: repeating-linear-gradient(45deg, var(--fg) 0 2px, transparent 2px 4px);
+  border: 1px solid var(--fg);
+}
+
+/* Bar chart */
+.spec-chart-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.spec-chart-area-row {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+}
+.spec-chart-y {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  font-size: 10px;
+  opacity: 0.7;
+  width: 30px;
+  text-align: right;
+  flex-shrink: 0;
+  padding: 2px 0;
+}
+.spec-chart-area {
+  flex: 1;
+  height: 96px;
+  border-left: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  padding: 0 0 0 4px;
+  min-width: 0;
+  overflow: hidden;
+}
+.spec-bar {
+  flex: 1 1 0;
+  min-width: 0;
+  background: var(--fg);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+/* Stacked-bar segments — 3 monochrome opacity tiers with a 1px bg-color
+   hairline between segments so the stack reads as discrete tokens even on
+   short bars. No gradients/patterns/shadows — opacity + hairlines only. */
+.spec-bar-seg {
+  width: 100%;
+  background: var(--fg);
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--bg);
+}
+.spec-bar-seg:last-child {
+  border-bottom: none;
+}
+.spec-bar-seg-usdce { opacity: 1; }
+.spec-bar-seg-usdt0 { opacity: 0.5; }
+.spec-bar-seg-other { opacity: 0.22; }
+.spec-legend-square-tier1 { background: var(--fg); opacity: 1; }
+.spec-legend-square-tier2 { background: var(--fg); opacity: 0.5; }
+.spec-legend-square-tier3 { background: var(--fg); opacity: 0.22; }
+.spec-chart-x {
+  display: flex;
+  justify-content: space-between;
+  padding-left: 38px;
+  font-size: 10px;
+  opacity: 0.7;
+}
+
+/* ── Tables row ──────────────────────────────────────────────────────────── */
+
+.spec-tables {
+  display: flex;
+  align-items: stretch;
+  border-bottom: 1px solid var(--line);
+  margin: 0 32px;
+}
+.spec-table {
+  flex: 1 1 0;
+  border-right: 1px solid var(--line);
+  padding: 18px 22px 22px;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.spec-table:last-child {
+  border-right: none;
+}
+.spec-table-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 12px;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+.spec-table-title {
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+.spec-table-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+}
+.spec-table-meta-faint {
+  opacity: 0.55;
+}
+
+.spec-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  line-height: 1;
+  height: 40px;
+  padding: 0;
+  border-top: 1px solid var(--line-thin);
+}
+.spec-row:first-of-type {
+  border-top: 1px solid var(--line);
+}
+.spec-table .spec-row:nth-last-of-type(1) {
+  border-bottom: 1px solid var(--line);
+}
+.spec-row-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.7;
+  padding: 12px 0 8px;
+  white-space: nowrap;
+}
+.spec-cell-r {
+  text-align: right;
+}
+
+.spec-verify {
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+.spec-spark {
+  display: block;
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+.spec-delta {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.spec-status-dot-sm {
+  width: 6px;
+  height: 6px;
+  background: var(--fg);
+  flex-shrink: 0;
+}
+.spec-view-all {
+  display: inline-block;
+  margin-top: 16px;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  width: max-content;
+}
+
+/* ── Wallet — main columns ───────────────────────────────────────────────── */
+
+.spec-cols {
+  display: flex;
+  align-items: stretch;
+  border-bottom: 1px solid var(--line);
+  margin: 0 32px;
+}
+.spec-col-activity {
+  flex: 2.2 1 0;
+  border-right: 1px solid var(--line);
+  padding: 18px 22px 22px;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.spec-col-rail {
+  flex: 1 1 0;
+  padding: 18px 22px 22px;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.spec-col-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+.spec-col-head-left {
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+.spec-col-head-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 18px;
+  font-size: 11px;
+}
+
+/* Session card / pending card */
+.spec-session-card {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.spec-session-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+}
+.spec-pill {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--fg);
+  padding: 2px 6px;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+.spec-meta-grid {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  row-gap: 4px;
+  column-gap: 8px;
+  font-size: 11px;
+}
+.spec-meta-grid-wide {
+  grid-template-columns: 76px 1fr;
+}
+.spec-meta-label {
+  opacity: 0.55;
+}
+
+.spec-issue-new {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
+.spec-pending-card {
+  margin-top: 14px;
+  border: 1px solid var(--fg);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.spec-pending-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.spec-pending-actions {
+  display: flex;
+  border: 1px solid var(--fg);
+}
+.spec-pending-btn {
+  flex: 1 1 0;
+  padding: 6px 12px;
+  text-align: center;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  border-right: 1px solid var(--fg);
+  background: transparent;
+  color: var(--fg);
+  font-family: inherit;
+  cursor: pointer;
+}
+.spec-pending-btn:last-child {
+  border-right: none;
+}
+.spec-pending-btn-primary {
+  background: var(--fg);
+  color: var(--bg);
+}
+
+/* ── Activity rows (wallet) ──────────────────────────────────────────────── */
+
+.spec-activity-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  line-height: 1;
+  min-height: 40px;
+  padding: 0;
+  border-top: 1px solid var(--line-thin);
+}
+.spec-activity-row:first-of-type {
+  border-top: 1px solid var(--line);
+}
+.spec-activity-row:last-child {
+  border-bottom: 1px solid var(--line);
+}
+
+/* Click-to-expand header for activity rows. Mirrors .spec-activity-row
+   so rows align with .spec-activity-head columns; the chevron sits in
+   the gutter on the left. */
+.spec-activity-row-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: 40px;
+  background: transparent;
+  color: var(--fg);
+  font: inherit;
+  padding: 0;
+  border: 0;
+  cursor: pointer;
+  text-align: left;
+}
+.spec-activity-row-btn:hover {
+  background: color-mix(in oklch, var(--fg) 6%, var(--bg));
+}
+.spec-activity-row-chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  flex-shrink: 0;
+  font-size: 12px;
+  opacity: 0.55;
+  transition: transform 0.18s ease;
+}
+.spec-activity-row-open .spec-activity-row-chevron {
+  transform: rotate(90deg);
+  opacity: 0.9;
+}
+.spec-activity-row-open {
+  background: color-mix(in oklch, var(--fg) 4%, var(--bg));
+}
+
+/* Indent the data row to keep gutter visually aligned with chevron. */
+.spec-activity-head {
+  padding-left: 24px;
+}
+
+.spec-activity-detail {
+  border-top: 1px dashed var(--line-thin);
+  padding: 12px 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 12px;
+  overflow: hidden;
+}
+.spec-activity-detail-grid {
+  display: grid;
+  grid-template-columns: 88px 1fr;
+  row-gap: 6px;
+  column-gap: 12px;
+}
+.spec-activity-detail-label {
+  opacity: 0.55;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 10px;
+  align-self: center;
+}
+.spec-activity-detail-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  word-break: break-all;
+}
+.spec-activity-detail-action {
+  background: transparent;
+  color: var(--fg);
+  border: 0;
+  padding: 0;
+  font: inherit;
+  font-size: 11px;
+  opacity: 0.7;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.spec-activity-detail-action:hover {
+  opacity: 1;
+}
+.spec-activity-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.7;
+  padding: 12px 0 8px;
+  white-space: nowrap;
+}
+.spec-faint {
+  opacity: 0.7;
+}
+
+/* ── Prose surface (methodology, docs) ──────────────────────────────────── */
+
+.spec-prose {
+  margin: 0 32px;
+  padding: 24px 0 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  max-width: 760px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.spec-prose-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.spec-prose-section-head {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+.spec-prose-section-n {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  opacity: 0.55;
+  flex-shrink: 0;
+}
+.spec-prose-section-h2 {
+  font-size: 18px;
+  line-height: 22px;
+  font-weight: 500;
+  margin: 0;
+  flex: 1;
+  letter-spacing: -0.005em;
+}
+.spec-prose-section-version {
+  font-size: 11px;
+  opacity: 0.55;
+  letter-spacing: 0.04em;
+}
+.spec-prose-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.spec-prose-body p {
+  margin: 0;
+}
+.spec-prose-faint {
+  opacity: 0.6;
+  font-size: 12px;
+}
+.spec-prose-sub {
+  margin-top: 6px;
+  padding-left: 16px;
+  border-left: 1px solid var(--line-thin);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.spec-prose-sub-h3 {
+  font-size: 14px;
+  font-weight: 500;
+  margin: 0;
+  letter-spacing: -0.005em;
+}
+.spec-prose-pre {
+  margin: 0;
+  padding: 10px 12px;
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", "Fira Code", monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  background: transparent;
+  border: 1px solid var(--line);
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-x: auto;
+}
+.spec-prose-mono {
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", "Fira Code", monospace;
+  font-size: 0.92em;
+  padding: 0 4px;
+  background: transparent;
+  border: 1px solid var(--line-thin);
+}
+.spec-prose-list {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.spec-prose-list li::marker {
+  opacity: 0.55;
+}
+.spec-prose-foot {
+  font-size: 12px;
+  opacity: 0.7;
+  margin: 12px 0 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--line-thin);
+}
+.spec-prose-link {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+@media (max-width: 900px) {
+  .spec-prose {
+    margin: 0 16px;
+    padding: 18px 0 32px;
+    gap: 22px;
+    font-size: 13px;
+  }
+  .spec-prose-section-h2 {
+    font-size: 16px;
+    line-height: 20px;
+  }
+}
+
+/* ── Wallet settings ─────────────────────────────────────────────────────── */
+
+.spec-settings-block {
+  margin: 0 32px;
+  padding: 18px 22px 22px;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.spec-settings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 32px;
+  row-gap: 0;
+}
+.spec-settings-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line-thin);
+}
+.spec-settings-field:nth-last-child(-n + 2) {
+  border-bottom: none;
+}
+.spec-settings-label {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.55;
+}
+.spec-settings-value {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  min-width: 0;
+}
+.spec-settings-copy {
+  flex-shrink: 0;
+  background: transparent;
+  color: var(--fg);
+  border: 1px solid var(--line);
+  padding: 3px 8px;
+  font-family: inherit;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+.spec-settings-copy:hover {
+  border-color: var(--fg);
+}
+.spec-settings-danger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line-thin);
+}
+.spec-settings-danger:last-child {
+  border-bottom: none;
+}
+.spec-settings-action {
+  flex-shrink: 0;
+  background: transparent;
+  color: var(--fg);
+  border: 1px solid var(--fg);
+  padding: 8px 14px;
+  font-family: inherit;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  font-weight: 500;
+  cursor: pointer;
+}
+.spec-settings-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+@media (max-width: 900px) {
+  .spec-settings-block {
+    margin: 0 16px;
+    padding: 14px 14px 18px;
+  }
+  .spec-settings-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .spec-settings-field {
+    border-bottom: 1px solid var(--line-thin);
+  }
+  .spec-settings-field:last-child {
+    border-bottom: none;
+  }
+  .spec-settings-danger {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .spec-settings-action {
+    align-self: flex-start;
+  }
+}
+
+/* ── Sign-in surface ────────────────────────────────────────────────────── */
+
+.spec-signin-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 480px);
+  gap: 56px;
+  align-items: start;
+  padding: 56px 48px;
+  max-width: 1080px;
+  margin: 0 auto;
+  width: 100%;
+}
+.spec-signin-explain {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  border-right: 1px solid var(--line);
+  padding-right: 48px;
+}
+.spec-signin-lede {
+  font-size: 14px;
+  line-height: 1.55;
+  margin: 0;
+  max-width: 44ch;
+}
+.spec-signin-bullets {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border-top: 1px solid var(--line);
+}
+.spec-signin-bullets li {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line-thin);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.spec-signin-bullet-num {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  opacity: 0.55;
+  flex-shrink: 0;
+  padding-top: 1px;
+}
+
+.spec-signin-card {
+  border: 1px solid var(--line);
+  padding: 28px 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-self: start;
+}
+.spec-signin-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+.spec-signin-card-label {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  opacity: 0.6;
+}
+.spec-signin-tabs {
+  display: inline-flex;
+  border: 1px solid var(--line);
+}
+.spec-signin-tab {
+  padding: 5px 12px;
+  background: transparent;
+  border: none;
+  border-right: 1px solid var(--line);
+  color: var(--fg);
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+.spec-signin-tab:last-child {
+  border-right: none;
+}
+.spec-signin-tab:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.spec-signin-tab-active {
+  background: var(--fg);
+  color: var(--bg);
+}
+.spec-signin-h2 {
+  font-family: inherit;
+  font-size: 24px;
+  line-height: 28px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  margin: 4px 0 0;
+}
+.spec-signin-sub {
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0 0 6px;
+  opacity: 0.85;
+}
+.spec-signin-cta {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 16px;
+  border: 1px solid var(--fg);
+  background: transparent;
+  color: var(--fg);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  align-self: stretch;
+}
+.spec-signin-cta:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+.spec-signin-error {
+  border: 1px solid var(--fg);
+  padding: 10px 12px;
+  font-size: 12px;
+  word-break: break-word;
+}
+.spec-signin-foot {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line-thin);
+  font-size: 11px;
+}
+.spec-signin-cmd {
+  font-variant-numeric: tabular-nums;
+  white-space: pre-wrap;
+  word-break: break-word;
+  opacity: 0.85;
+}
+
+@media (max-width: 900px) {
+  .spec-signin-shell {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+    padding: 28px 16px;
+  }
+  .spec-signin-explain {
+    border-right: none;
+    padding-right: 0;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 24px;
+  }
+  .spec-signin-card {
+    padding: 22px 18px 18px;
+  }
+  .spec-signin-h2 {
+    font-size: 26px;
+    line-height: 28px;
+  }
+}
+
+/* ── Mobile ──────────────────────────────────────────────────────────────── */
+
+@media (max-width: 900px) {
+  .specimen-shell {
+    font-size: 12px;
+  }
+
+  /* topbar: brand + status row, nav scrolls horizontally beneath */
+  .spec-topbar {
+    padding: 12px 16px;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .spec-status {
+    font-size: 10px;
+    letter-spacing: 0.04em;
+  }
+  .spec-nav {
+    order: 3;
+    width: 100%;
+    overflow-x: auto;
+    gap: 12px;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+  }
+  .spec-nav::-webkit-scrollbar {
+    display: none;
+  }
+  .spec-nav-item {
+    padding: 2px 6px;
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+
+  /* page header */
+  .spec-page-header {
+    padding: 24px 16px 18px;
+    gap: 12px;
+  }
+  .spec-page-header-row {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .spec-page-title {
+    font-size: 26px;
+    line-height: 30px;
+  }
+  .spec-page-title-em {
+    font-size: 22px;
+    line-height: 24px;
+  }
+  .spec-switch {
+    flex-shrink: 0;
+    font-size: 9px;
+    letter-spacing: 0.04em;
+  }
+  .spec-switch-seg {
+    padding: 4px 8px;
+    font-size: 9px;
+    letter-spacing: 0.04em;
+  }
+  .spec-page-subhead {
+    font-size: 12px;
+    gap: 8px;
+  }
+
+  /* KPI strip → 2 × 2 */
+  .spec-strip {
+    margin: 0 16px;
+    flex-wrap: wrap;
+  }
+  .spec-strip-cell {
+    flex: 0 0 50%;
+    width: 50%;
+    max-width: 50%;
+    min-width: 0;
+    padding: 14px 12px;
+    gap: 8px;
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+  .spec-strip-cell:nth-child(2n) {
+    border-right: none;
+  }
+  .spec-strip-cell:nth-last-child(-n + 2) {
+    border-bottom: none;
+  }
+  .spec-strip-value {
+    font-size: 26px;
+    line-height: 28px;
+  }
+  .spec-strip-value-lg {
+    font-size: 30px;
+    line-height: 32px;
+  }
+  .spec-strip-value-md {
+    font-size: 22px;
+    line-height: 24px;
+  }
+  .spec-strip-label {
+    font-size: 10px;
+  }
+  .spec-strip-sub {
+    font-size: 10px;
+  }
+
+  /* charts stack */
+  .spec-charts {
+    margin: 0 16px;
+    flex-direction: column;
+  }
+  .spec-chart {
+    border-right: none;
+    border-bottom: 1px solid var(--line);
+    padding: 14px 14px 18px;
+  }
+  .spec-chart:last-child {
+    border-bottom: none;
+  }
+  .spec-ticker {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start;
+    column-gap: 14px;
+    row-gap: 6px;
+    padding-bottom: 10px;
+  }
+  .spec-ticker-left,
+  .spec-ticker-right {
+    display: contents;
+  }
+  .spec-ticker-left > .spec-ticker-label {
+    flex-basis: 100%;
+    width: 100%;
+  }
+  .spec-ticker-legend {
+    font-size: 10px;
+  }
+
+  /* tables stack; rows reflow to fit the viewport */
+  .spec-tables {
+    margin: 0 16px;
+    flex-direction: column;
+  }
+  .spec-table {
+    flex: 0 0 auto;
+    border-right: none;
+    border-bottom: 1px solid var(--line);
+    padding: 14px 14px 18px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .spec-table:last-child {
+    border-bottom: none;
+  }
+  .spec-row,
+  .spec-row-head {
+    gap: 8px;
+  }
+  .spec-row > span,
+  .spec-row-head > span {
+    margin-left: 0 !important;
+  }
+
+  /* TOP SERVICES — keep #, name, rev, sparkline, delta. Hide category, txs, agents. */
+  .spec-table[data-table="services"] .spec-row > span:nth-child(3),
+  .spec-table[data-table="services"] .spec-row-head > span:nth-child(3),
+  .spec-table[data-table="services"] .spec-row > span:nth-child(5),
+  .spec-table[data-table="services"] .spec-row-head > span:nth-child(5),
+  .spec-table[data-table="services"] .spec-row > span:nth-child(6),
+  .spec-table[data-table="services"] .spec-row-head > span:nth-child(6) {
+    display: none !important;
+  }
+  .spec-table[data-table="services"] .spec-row > span:nth-child(4),
+  .spec-table[data-table="services"] .spec-row-head > span:nth-child(4) {
+    width: auto !important;
+    min-width: 64px;
+  }
+  .spec-table[data-table="services"] .spec-row > span:nth-child(7),
+  .spec-table[data-table="services"] .spec-row-head > span:nth-child(7) {
+    width: 56px !important;
+    min-width: 56px;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+  .spec-table[data-table="services"] .spec-row > span:nth-child(7) .spec-spark {
+    width: 100%;
+    height: auto;
+  }
+
+  /* RECENT SETTLEMENTS — keep T-, TX, memo, amount, status. Hide service. */
+  .spec-table[data-table="settlements"] .spec-row > span:nth-child(5),
+  .spec-table[data-table="settlements"] .spec-row-head > span:nth-child(5) {
+    display: none !important;
+  }
+
+  /* SERVICES LIST — keep #, name, rev24h, txs24h. Hide category, rev7d, agents7d, address. */
+  .spec-table[data-table="services-list"] .spec-row > span:nth-child(3),
+  .spec-table[data-table="services-list"] .spec-row-head > span:nth-child(3),
+  .spec-table[data-table="services-list"] .spec-row > span:nth-child(5),
+  .spec-table[data-table="services-list"] .spec-row-head > span:nth-child(5),
+  .spec-table[data-table="services-list"] .spec-row > span:nth-child(7),
+  .spec-table[data-table="services-list"] .spec-row-head > span:nth-child(7),
+  .spec-table[data-table="services-list"] .spec-row > span:nth-child(8),
+  .spec-table[data-table="services-list"] .spec-row-head > span:nth-child(8) {
+    display: none !important;
+  }
+  .spec-table[data-table="services-list"] .spec-row > span:nth-child(4),
+  .spec-table[data-table="services-list"] .spec-row-head > span:nth-child(4),
+  .spec-table[data-table="services-list"] .spec-row > span:nth-child(6),
+  .spec-table[data-table="services-list"] .spec-row-head > span:nth-child(6) {
+    width: auto !important;
+    min-width: 64px;
+  }
+
+  /* AGENTS LIST — keep #, name, txs24h, spend24h. Hide source, top service, last, wallet. */
+  .spec-table[data-table="agents-list"] .spec-row > span:nth-child(3),
+  .spec-table[data-table="agents-list"] .spec-row-head > span:nth-child(3),
+  .spec-table[data-table="agents-list"] .spec-row > span:nth-child(6),
+  .spec-table[data-table="agents-list"] .spec-row-head > span:nth-child(6),
+  .spec-table[data-table="agents-list"] .spec-row > span:nth-child(7),
+  .spec-table[data-table="agents-list"] .spec-row-head > span:nth-child(7),
+  .spec-table[data-table="agents-list"] .spec-row > span:nth-child(8),
+  .spec-table[data-table="agents-list"] .spec-row-head > span:nth-child(8) {
+    display: none !important;
+  }
+  .spec-table[data-table="agents-list"] .spec-row > span:nth-child(4),
+  .spec-table[data-table="agents-list"] .spec-row-head > span:nth-child(4),
+  .spec-table[data-table="agents-list"] .spec-row > span:nth-child(5),
+  .spec-table[data-table="agents-list"] .spec-row-head > span:nth-child(5) {
+    width: auto !important;
+    min-width: 64px;
+  }
+
+  /* PROVIDERS list — same treatment as services list */
+  .spec-table[data-table="providers"] .spec-row > span:nth-child(5),
+  .spec-table[data-table="providers"] .spec-row-head > span:nth-child(5),
+  .spec-table[data-table="providers"] .spec-row > span:nth-child(6),
+  .spec-table[data-table="providers"] .spec-row-head > span:nth-child(6) {
+    display: none !important;
+  }
+  .spec-table[data-table="providers"] .spec-row > span:nth-child(3),
+  .spec-table[data-table="providers"] .spec-row-head > span:nth-child(3),
+  .spec-table[data-table="providers"] .spec-row > span:nth-child(4),
+  .spec-table[data-table="providers"] .spec-row-head > span:nth-child(4) {
+    width: auto !important;
+    min-width: 60px;
+  }
+  .spec-table[data-table="settlements"] .spec-row > span:nth-child(2),
+  .spec-table[data-table="settlements"] .spec-row-head > span:nth-child(2) {
+    width: auto !important;
+    min-width: 72px;
+  }
+  .spec-table[data-table="settlements"] .spec-row > span:nth-child(4),
+  .spec-table[data-table="settlements"] .spec-row-head > span:nth-child(4) {
+    width: auto !important;
+    min-width: 70px;
+  }
+
+  /* wallet cols stack */
+  .spec-cols {
+    margin: 0 16px;
+    flex-direction: column;
+  }
+  .spec-col-activity,
+  .spec-col-rail {
+    border-right: none;
+    border-bottom: 1px solid var(--line);
+    padding: 14px 14px 18px;
+  }
+  .spec-col-rail:last-child {
+    border-bottom: none;
+  }
+  .spec-activity-row,
+  .spec-activity-head {
+    min-width: 560px;
+  }
+
+  /* keymap: hidden on mobile */
+  .spec-keymap {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .spec-page-title {
+    font-size: 22px;
+    line-height: 26px;
+  }
+  .spec-strip-value {
+    font-size: 22px;
+    line-height: 24px;
+  }
+  .spec-strip-value-lg {
+    font-size: 26px;
+    line-height: 28px;
+  }
+}

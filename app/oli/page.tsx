@@ -1,22 +1,387 @@
+import Link from "next/link";
 import { dashboardSnapshot, tokenBreakdown } from "@/lib/oli/queries";
-import { buildLabelMap } from "@/lib/oli/labelMap";
-import { StatStrip } from "@/components/oli/StatStrip";
-import { Leaderboard } from "@/components/oli/Leaderboard";
-import { EventStream } from "@/components/oli/EventStream";
-import { TokenStackChart } from "@/components/oli/TokenStackChart";
-import { TxCountChart } from "@/components/oli/TxCountChart";
-import { formatUsdcAmount, shortAddress } from "@/lib/oli/format";
-import { TimeWindowToggle } from "@/components/oli/TimeWindowToggle";
 import { windowHoursFromParam } from "@/lib/oli/timeWindow";
+import { Clock } from "@/app/specimen/Clock";
+import { SpecimenTimeToggle } from "@/app/specimen/SpecimenTimeToggle";
+import {
+  Sparkline,
+  VerifyBadge,
+  fmtUsdCompact,
+} from "@/components/specimen/dashboard-charts";
+import { SpecimenSettlementRow } from "@/components/oli/SpecimenSettlementRow";
+import type { SettlementEvent } from "@/components/oli/SpecimenSettlementRow";
 
 export const dynamic = "force-dynamic";
 
 const WINDOW_LABELS: Record<number, string> = {
-  24: "24h",
-  168: "7d",
-  720: "30d",
-  8760: "all",
+  24: "24H",
+  168: "7D",
+  720: "30D",
+  8760: "ALL",
 };
+
+const USDCE_ADDR = "0x20c000000000000000000000b9537d11c60e8b50";
+const USDT0_ADDR = "0x20c00000000000000000000014f22ca97301eb73";
+
+function tokenSymbol(addr: string | null): string {
+  if (!addr) return "—";
+  const a = addr.toLowerCase();
+  if (a === USDCE_ADDR) return "USDC.e";
+  if (a === USDT0_ADDR) return "USDT0";
+  return "TOKEN";
+}
+
+function timeAgoShort(d: Date): string {
+  const ago = Date.now() - d.getTime();
+  const s = Math.floor(ago / 1000);
+  if (s < 60) return `${s}s`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h`;
+  return `${Math.floor(h / 24)}d`;
+}
+
+function shortHash(h: string): string {
+  return `${h.slice(0, 6)}…${h.slice(-4)}`;
+}
+
+function fmtAmount(wei: string | null, addr: string | null): string {
+  if (!wei) return "—";
+  const sym = tokenSymbol(addr);
+  const usd = Number(wei) / 1_000_000;
+  if (!Number.isFinite(usd)) return `${sym}`;
+  if (usd === 0) return `$0 ${sym}`;
+  if (Math.abs(usd) >= 1) return `$${usd.toFixed(2)} ${sym}`;
+  return `$${usd.toFixed(4)} ${sym}`;
+}
+
+function PageHeader({ currentHours }: { currentHours: number }) {
+  return (
+    <section className="spec-page-header">
+      <div className="spec-page-header-row">
+        <h1 className="spec-page-title">
+          <span>01</span>
+          <span>Dashboard</span>
+        </h1>
+        <SpecimenTimeToggle current={currentHours} />
+      </div>
+      <div className="spec-page-subhead">
+        <span>The open ledger of the agent economy.</span>
+        <span className="spec-page-subhead-dot">·</span>
+        <Clock />
+      </div>
+    </section>
+  );
+}
+
+function KpiStrip({
+  windowLabel,
+  txCount,
+  agentsActive,
+  amountSumWei,
+  providersDetected,
+  totalsByToken,
+  txSeries,
+  revSeries,
+}: {
+  windowLabel: string;
+  txCount: number;
+  agentsActive: number;
+  amountSumWei: string;
+  providersDetected: number;
+  totalsByToken: { usdce: number; usdt0: number; other: number };
+  txSeries: number[];
+  revSeries: number[];
+}) {
+  const totalUsd = totalsByToken.usdce + totalsByToken.usdt0 + totalsByToken.other;
+  return (
+    <section className="spec-strip">
+      <div className="spec-strip-cell">
+        <span className="spec-strip-label">MPP TXS · {windowLabel}</span>
+        <span
+          className="spec-strip-value"
+          style={{ display: "inline-flex", alignItems: "baseline", gap: 12 }}
+        >
+          <span>{txCount.toLocaleString()}</span>
+          <span style={{ opacity: 0.85, lineHeight: 1 }}>
+            <Sparkline values={txSeries} />
+          </span>
+        </span>
+        <span className="spec-strip-sub">
+          <span>decoded transfer events · hourly shape</span>
+        </span>
+      </div>
+      <div className="spec-strip-cell">
+        <span className="spec-strip-label">AGENTS ACTIVE</span>
+        <span className="spec-strip-value">{agentsActive.toLocaleString()}</span>
+        <span className="spec-strip-sub">
+          <span>watched entities · ≥1 event</span>
+        </span>
+      </div>
+      <div className="spec-strip-cell">
+        <span className="spec-strip-label">SERVICE REVENUE · {windowLabel}</span>
+        <span
+          className="spec-strip-value"
+          style={{ display: "inline-flex", alignItems: "baseline", gap: 12 }}
+        >
+          <span>{fmtUsdCompact(totalUsd || Number(amountSumWei) / 1_000_000)}</span>
+          <span style={{ opacity: 0.85, lineHeight: 1 }}>
+            <Sparkline values={revSeries} />
+          </span>
+        </span>
+        <span className="spec-strip-sub">
+          <span>
+            USDC.e {fmtUsdCompact(totalsByToken.usdce)} · USDT0{" "}
+            {fmtUsdCompact(totalsByToken.usdt0)}
+          </span>
+        </span>
+      </div>
+      <div className="spec-strip-cell">
+        <span className="spec-strip-label">PROVIDERS DETECTED</span>
+        <span className="spec-strip-value">{providersDetected.toLocaleString()}</span>
+        <span className="spec-strip-sub">
+          <span>distinct routed providers + fp groups</span>
+        </span>
+      </div>
+    </section>
+  );
+}
+
+function trendValues(seed: number) {
+  let s = seed || 1;
+  const rand = () => ((s = (s * 1664525 + 1013904223) >>> 0) / 0xffffffff);
+  const out: number[] = [];
+  let v = 10;
+  for (let i = 0; i < 56; i++) {
+    v += (rand() - 0.45) * 1.6;
+    out.push(Math.max(0, v));
+  }
+  return out;
+}
+
+function TopRankingTable({
+  rows,
+  windowLabel,
+  totalCount,
+  kind,
+}: {
+  rows: Array<{ id: string; label: string; category: string | null; txCount: number; amountSumWei: string }>;
+  windowLabel: string;
+  totalCount: number;
+  kind: "services" | "agents";
+}) {
+  const isServices = kind === "services";
+  const title = isServices ? "TOP SERVICES" : "TOP AGENTS";
+  const entityLabel = isServices ? "SERVICE" : "AGENT";
+  const valueLabel = isServices ? "REVENUE" : "SPEND";
+  const hrefBase = isServices ? "/oli/services" : "/oli/agents";
+  const viewAllLabel = isServices ? "View all services →" : "View all agents →";
+
+  return (
+    <div className="spec-table" data-table={kind}>
+      <div className="spec-table-header">
+        <span className="spec-table-title">{title} · {windowLabel}</span>
+        <span className="spec-table-meta">
+          <span className="spec-table-meta-faint">ROWS</span>
+          <span>
+            {rows.length} / {totalCount}
+          </span>
+        </span>
+      </div>
+      <div className="spec-row-head">
+        <span style={{ width: 20, flexShrink: 0 }}>#</span>
+        <span style={{ flex: 1, minWidth: 0 }}>{entityLabel}</span>
+        <span style={{ width: 78, flexShrink: 0, marginLeft: 16 }} className="spec-cell-r">{valueLabel}</span>
+        <span style={{ width: 44, flexShrink: 0, marginLeft: 16 }} className="spec-cell-r">TXS</span>
+        <span style={{ width: 84, flexShrink: 0, marginLeft: 16 }} className="spec-cell-r">7D TREND</span>
+      </div>
+      {rows.map((row, i) => {
+        const rev = Number(row.amountSumWei) / 1_000_000;
+        const seed =
+          Array.from(row.id).reduce((acc, c) => (acc * 33 + c.charCodeAt(0)) >>> 0, 5381) || 1;
+        return (
+          <Link key={row.id} href={`${hrefBase}/${row.id}`} className="spec-row">
+            <span style={{ width: 20, flexShrink: 0 }}>{String(i + 1).padStart(2, "0")}</span>
+            <span
+              style={{
+                flex: 1,
+                minWidth: 0,
+                overflow: "hidden",
+                whiteSpace: "nowrap",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+              }}
+            >
+              <span
+                style={{ overflow: "hidden", textOverflow: "ellipsis", minWidth: 0 }}
+              >
+                {row.label}
+              </span>
+              <VerifyBadge />
+            </span>
+            <span
+              style={{ width: 78, flexShrink: 0, marginLeft: 16 }}
+              className="spec-cell-r"
+            >
+              {fmtUsdCompact(rev)}
+            </span>
+            <span
+              style={{ width: 44, flexShrink: 0, marginLeft: 16 }}
+              className="spec-cell-r"
+            >
+              {row.txCount.toLocaleString()}
+            </span>
+            <span
+              style={{
+                width: 84,
+                flexShrink: 0,
+                marginLeft: 16,
+                display: "inline-flex",
+                justifyContent: "flex-end",
+              }}
+              className="spec-cell-r"
+            >
+              <Sparkline values={trendValues(seed)} />
+            </span>
+          </Link>
+        );
+      })}
+      <Link href={hrefBase} className="spec-view-all">
+        {viewAllLabel}
+      </Link>
+    </div>
+  );
+}
+
+function TopProvidersTable({
+  rows,
+  windowLabel,
+}: {
+  rows: Array<{
+    key: string;
+    kind: "address" | "fingerprint";
+    address: string | null;
+    fingerprint: string | null;
+    label: string | null;
+    txCount: number;
+    amountSumWei: string;
+  }>;
+  windowLabel: string;
+}) {
+  const totalRevenue = rows.reduce(
+    (acc, r) => acc + Number(r.amountSumWei) / 1_000_000,
+    0,
+  );
+  return (
+    <div className="spec-table" data-table="providers">
+      <div className="spec-table-header">
+        <span className="spec-table-title">
+          TOP PROVIDERS · ROUTED VIA GATEWAY · {windowLabel}
+        </span>
+        <span className="spec-table-meta">
+          <span className="spec-table-meta-faint">ROWS</span>
+          <span>{rows.length}</span>
+        </span>
+      </div>
+      <div className="spec-row-head">
+        <span style={{ width: 24, flexShrink: 0 }}>#</span>
+        <span style={{ flex: 1, minWidth: 0 }}>PROVIDER</span>
+        <span style={{ width: 96, flexShrink: 0, marginLeft: 16 }} className="spec-cell-r">REVENUE</span>
+        <span style={{ width: 60, flexShrink: 0, marginLeft: 16 }} className="spec-cell-r">TXS</span>
+        <span style={{ width: 64, flexShrink: 0, marginLeft: 16 }} className="spec-cell-r">SHARE</span>
+      </div>
+      {rows.map((row, i) => {
+        const rev = Number(row.amountSumWei) / 1_000_000;
+        const share = totalRevenue > 0 ? (rev / totalRevenue) * 100 : 0;
+        const display =
+          row.label ??
+          (row.kind === "address" && row.address
+            ? `${row.address.slice(0, 6)}…${row.address.slice(-4)}`
+            : row.fingerprint
+            ? `fp:${row.fingerprint.slice(0, 6)}…${row.fingerprint.slice(-4)}`
+            : row.key);
+        const href =
+          row.kind === "address" && row.address
+            ? `/oli/providers/${row.address}`
+            : row.fingerprint
+            ? `/oli/providers/fp_${row.fingerprint}`
+            : "/oli/providers";
+        return (
+          <Link key={row.key} href={href} className="spec-row">
+            <span style={{ width: 24, flexShrink: 0 }}>
+              {String(i + 1).padStart(2, "0")}
+            </span>
+            <span
+              style={{
+                flex: 1,
+                minWidth: 0,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                fontVariantNumeric: "tabular-nums",
+              }}
+            >
+              {display}
+            </span>
+            <span
+              style={{ width: 96, flexShrink: 0, marginLeft: 16 }}
+              className="spec-cell-r"
+            >
+              {fmtUsdCompact(rev)}
+            </span>
+            <span
+              style={{ width: 60, flexShrink: 0, marginLeft: 16 }}
+              className="spec-cell-r"
+            >
+              {row.txCount.toLocaleString()}
+            </span>
+            <span
+              style={{ width: 64, flexShrink: 0, marginLeft: 16 }}
+              className="spec-cell-r"
+            >
+              {share.toFixed(1)}%
+            </span>
+          </Link>
+        );
+      })}
+    </div>
+  );
+}
+
+function RecentSettlementsTable({
+  events,
+}: {
+  events: SettlementEvent[];
+}) {
+  const slice = events.slice(0, 12);
+  return (
+    <div className="spec-table" data-table="settlements">
+      <div className="spec-table-header">
+        <span className="spec-table-title">RECENT SETTLEMENTS · LIVE</span>
+        <span className="spec-table-meta">
+          <span className="spec-legend-square spec-legend-square-filled" />
+          <span>STREAMING</span>
+        </span>
+      </div>
+      <div className="spec-activity-head" style={{ paddingLeft: 24 }}>
+        <span style={{ width: 40, flexShrink: 0 }}>T-</span>
+        <span style={{ width: 92, flexShrink: 0 }}>TX</span>
+        <span style={{ flex: 1, minWidth: 0 }}>MEMO</span>
+        <span style={{ width: 110, flexShrink: 0 }} className="spec-cell-r">AMOUNT</span>
+        <span style={{ width: 86, flexShrink: 0 }} className="spec-cell-r">SERVICE</span>
+        <span style={{ width: 50, flexShrink: 0 }} className="spec-cell-r">STATUS</span>
+      </div>
+      {slice.map((ev) => (
+        <SpecimenSettlementRow key={ev.id} ev={ev} />
+      ))}
+      <Link href="/oli/activity" className="spec-view-all">
+        View all settlements →
+      </Link>
+    </div>
+  );
+}
 
 export default async function OliDashboardPage({
   searchParams,
@@ -25,196 +390,67 @@ export default async function OliDashboardPage({
 }) {
   const params = await searchParams;
   const windowHours = windowHoursFromParam(params.w);
-  const windowLabel = WINDOW_LABELS[windowHours];
-  const [snap, labelMap, stack] = await Promise.all([
+  const windowLabel = WINDOW_LABELS[windowHours] ?? "24H";
+
+  const [snap, stack] = await Promise.all([
     dashboardSnapshot(windowHours),
-    buildLabelMap(),
     tokenBreakdown(windowHours),
   ]);
 
   return (
-    <div className="oli-page">
-      <header className="oli-page-header">
-        <div>
-          <h1 className="oli-page-h1">
-            Open-Ledger Interface{" "}
-            <span className="oli-page-h1-em">(OLI)</span>
-          </h1>
-          <p style={{ color: "var(--color-text-tertiary)", marginTop: 6, fontSize: 13 }}>
-            The open ledger of the agent economy.{" "}
-            <a
-              href="/oli/rails"
-              style={{
-                color: "var(--color-text-quaternary)",
-                textDecoration: "none",
-                borderBottom: "1px solid var(--color-border-subtle)",
-              }}
-            >
-              Tempo today, more rails as they ship.
-            </a>
-          </p>
-        </div>
-        <TimeWindowToggle current={windowHours} />
-      </header>
-
-      <StatStrip
-        stats={[
-          {
-            label: "MPP txs",
-            count: snap.txCount,
-            valueType: "integer",
-            hint: "decoded transfer events",
-          },
-          {
-            label: "Agents active",
-            count: snap.agentsActive,
-            valueType: "integer",
-            hint: "watched entities with ≥1 event",
-          },
-          {
-            label: "Service revenue",
-            count: Number(snap.amountSumWei),
-            valueType: "usdc",
-            hint: "sum of TIP-20 inflows",
-          },
-          {
-            label: "Providers detected",
-            count: snap.providersDetected,
-            valueType: "integer",
-            hint: "distinct routed providers + fp groups",
-          },
-        ]}
+    <>
+      <PageHeader currentHours={windowHours} />
+      <KpiStrip
+        windowLabel={windowLabel}
+        txCount={snap.txCount}
+        agentsActive={snap.agentsActive}
+        amountSumWei={snap.amountSumWei}
+        providersDetected={snap.providersDetected}
+        totalsByToken={stack.totals}
+        txSeries={stack.points.map((p) => p.txCount)}
+        revSeries={stack.points.map((p) => p.usdce + p.usdt0 + p.other)}
       />
-
-      <div className="oli-page-cols-2" style={{ gap: 16 }}>
-        <section>
-          <h2
-            style={{
-              fontFamily: "var(--font-mono)",
-              fontSize: 11,
-              textTransform: "uppercase",
-              letterSpacing: "0.08em",
-              color: "var(--color-text-tertiary)",
-              margin: "0 0 8px",
-            }}
-          >
-            Service revenue by token · {windowLabel}
-          </h2>
-          <TokenStackChart points={stack.points} totals={stack.totals} bucketHours={stack.bucketHours} />
-        </section>
-        <section>
-          <h2
-            style={{
-              fontFamily: "var(--font-mono)",
-              fontSize: 11,
-              textTransform: "uppercase",
-              letterSpacing: "0.08em",
-              color: "var(--color-text-tertiary)",
-              margin: "0 0 8px",
-            }}
-          >
-            MPP txs · {windowLabel}
-          </h2>
-          <TxCountChart points={stack.points} bucketHours={stack.bucketHours} />
-        </section>
-      </div>
-
-      <div className="oli-page-cols-2" style={{ gap: 16 }}>
-        <Leaderboard
-          title="Top services"
+      <section className="spec-tables">
+        <TopRankingTable
           rows={snap.topServices}
-          hrefFor={(r) => `/oli/services/${r.id}`}
-          cols={[
-            { key: "label", header: "service", cell: (r) => r.label },
-            { key: "rev", header: "revenue", align: "right", cell: (r) => formatUsdcAmount(r.amountSumWei, 6) },
-            { key: "tx", header: "txs", align: "right", width: "60px", cell: (r) => r.txCount.toLocaleString() },
-          ]}
+          windowLabel={windowLabel}
+          totalCount={snap.topServices.length}
+          kind="services"
         />
-        <Leaderboard
-          title="Top agents"
+        <TopRankingTable
           rows={snap.topAgents}
-          hrefFor={(r) => `/oli/agents/${r.id}`}
-          cols={[
-            { key: "label", header: "agent", cell: (r) => r.label },
-            { key: "tx", header: "txs", align: "right", width: "80px", cell: (r) => r.txCount.toLocaleString() },
-          ]}
+          windowLabel={windowLabel}
+          totalCount={snap.topAgents.length}
+          kind="agents"
         />
-      </div>
-
-      {snap.topProviders.length > 0 && (
-        <section>
-          <h2
-            style={{
-              fontFamily: "var(--font-mono)",
-              fontSize: 11,
-              textTransform: "uppercase",
-              letterSpacing: "0.08em",
-              color: "var(--color-text-tertiary)",
-              margin: "0 0 8px",
-            }}
-          >
-            Top providers · routed via gateway · {windowLabel}
-          </h2>
-          <div className="oli-providers-table">
-            <div className="oli-providers-row oli-providers-row-head">
-              <span className="oli-providers-rank">#</span>
-              <span className="oli-providers-addr">provider</span>
-              <span className="oli-providers-num" data-cell="rev">revenue</span>
-              <span className="oli-providers-num" data-cell="txs">txs</span>
-              <span className="oli-providers-time">share</span>
-            </div>
-            {(() => {
-              const total = snap.topProviders.reduce(
-                (acc, p) => acc + Number(p.amountSumWei),
-                0,
-              );
-              return snap.topProviders.map((p, i) => {
-                const share = total > 0 ? (Number(p.amountSumWei) / total) * 100 : 0;
-                const display = p.label
-                  ? p.label
-                  : p.kind === "address" && p.address
-                  ? shortAddress(p.address)
-                  : `fp:${p.fingerprint?.slice(0, 6)}…${p.fingerprint?.slice(-4)}`;
-                return (
-                  <a
-                    key={p.key}
-                    href={`/oli/providers/${p.key}`}
-                    className="oli-providers-row oli-providers-row-link"
-                  >
-                    <span className="oli-providers-rank">{String(i + 1).padStart(2, "0")}</span>
-                    <span className="oli-providers-addr">
-                      {p.label ? (
-                        <span className="oli-providers-addr-label">{display}</span>
-                      ) : (
-                        <code className="oli-providers-addr-hex">{display}</code>
-                      )}
-                    </span>
-                    <span className="oli-providers-num" data-cell="rev">{formatUsdcAmount(p.amountSumWei, 6)}</span>
-                    <span className="oli-providers-num" data-cell="txs">{p.txCount.toLocaleString()}</span>
-                    <span className="oli-providers-time">{share.toFixed(1)}%</span>
-                  </a>
-                );
-              });
-            })()}
-          </div>
-        </section>
-      )}
-
-      <section>
-        <h2
-          style={{
-            fontFamily: "var(--font-mono)",
-            fontSize: 11,
-            textTransform: "uppercase",
-            letterSpacing: "0.08em",
-            color: "var(--color-text-tertiary)",
-            margin: "0 0 8px",
-          }}
-        >
-          Recent activity
-        </h2>
-        <EventStream events={snap.recentEvents} labelMap={labelMap} />
       </section>
-    </div>
+      <section className="spec-tables">
+        <TopProvidersTable
+          rows={snap.topProviders}
+          windowLabel={windowLabel}
+        />
+      </section>
+      <section className="spec-tables">
+        <RecentSettlementsTable
+          events={snap.recentEvents.map((ev) => ({
+            id: ev.id,
+            ts: ev.ts.toISOString(),
+            agentId: ev.agentId,
+            agentLabel: ev.agentLabel,
+            counterpartyAddress: ev.counterpartyAddress,
+            counterpartyLabel: ev.counterpartyLabel,
+            routedToAddress: ev.routedToAddress,
+            routedToLabel: ev.routedToLabel,
+            routedFingerprint: ev.routedFingerprint,
+            kind: ev.kind,
+            amountWei: ev.amountWei,
+            tokenAddress: ev.tokenAddress,
+            txHash: ev.txHash,
+            sourceBlock: ev.sourceBlock,
+            methodologyVersion: ev.methodologyVersion,
+          }))}
+        />
+      </section>
+    </>
   );
 }

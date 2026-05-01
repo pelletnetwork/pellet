@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { renderSignIn } from "@/app/wallet/sign-in/page";
+import { SpecimenSignInForm } from "./SpecimenSignInForm";
 
 export const metadata: Metadata = {
   title: "Sign in or create wallet — Pellet",
@@ -9,5 +9,5 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default function OliWalletSignInPage() {
-  return renderSignIn("/oli/wallet");
+  return <SpecimenSignInForm basePath="/oli/wallet" />;
 }
