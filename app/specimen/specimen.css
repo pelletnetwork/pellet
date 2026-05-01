@@ -197,6 +197,33 @@ body:has(.specimen-shell) main {
   fill: currentColor;
 }
 
+/* ── MDX prose / shiki code-block monochrome ──────────────────────────────
+ * Fumadocs MDX renders code blocks via shiki, which bakes per-token color
+ * vars (`--shiki-light` / `--shiki-dark`) on inline span styles for syntax
+ * highlighting (purple keywords, blue identifiers, etc.). The specimen
+ * surface is monochrome — chromatic tokens clash. Force every token to
+ * the foreground color while keeping the dark code-block background that
+ * gives the snippet its terminal feel.
+ *
+ * The code-block bg comes from globals.css's prose styling; we override
+ * that to a near-ink panel that reads as terminal output on both themes.
+ */
+.specimen-shell pre code,
+.specimen-shell pre code span {
+  color: var(--paper) !important;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+.specimen-shell pre {
+  background: var(--ink) !important;
+  border: 1px solid var(--line) !important;
+}
+.specimen-shell :not(pre) > code {
+  background: color-mix(in oklch, var(--fg) 8%, transparent);
+  color: var(--fg) !important;
+  padding: 1px 6px;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+
 /* ── ⌘K command bar overrides ─────────────────────────────────────────────
  * The CommandBar's `oli-cmdk-*` styles (in globals.css) are tuned for the
  * old OLI shell: rounded modal + box-shadow + soft backdrop. Specimen
