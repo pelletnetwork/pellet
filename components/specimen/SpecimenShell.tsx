@@ -80,7 +80,7 @@ function TopBar({
 }) {
   return (
     <header className="spec-topbar">
-      <div className="spec-brand">
+      <Link href="/" className="spec-brand" aria-label="Pellet Network — home">
         <svg
           className="spec-brand-mark"
           viewBox="0 0 1024 1024"
@@ -95,7 +95,7 @@ function TopBar({
           </g>
         </svg>
         <span className="spec-brand-name">Pellet Network</span>
-      </div>
+      </Link>
       <nav className="spec-nav" aria-label="Specimen sections">
         {NAV.map((item) => {
           const active = item.href ? pathname === item.href : false;
