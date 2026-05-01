@@ -335,7 +335,11 @@ button.spec-keycap {
 .spec-switch-seg:last-child {
   border-right: none;
 }
-.spec-switch-seg-active {
+/* Higher specificity than the global `.specimen-shell a { color: inherit }`
+   rule so the inverted text color survives when the active segment is an
+   <a> / Next <Link>, not just a <button>. */
+.specimen-shell .spec-switch-seg-active,
+.specimen-shell a.spec-switch-seg-active {
   background: var(--fg);
   color: var(--bg);
 }
