@@ -11,10 +11,9 @@ const NAV: Array<{ num: string; label: string; href?: string }> = [
   { num: "02", label: "Wallet", href: "/oli/wallet/dashboard" },
   { num: "03", label: "Services", href: "/oli/services" },
   { num: "04", label: "Agents", href: "/oli/agents" },
-  { num: "05", label: "Leaderboard" },
-  { num: "06", label: "Methodology", href: "/oli/methodology" },
-  { num: "07", label: "Webhooks", href: "/oli/webhooks" },
-  { num: "08", label: "Status" },
+  { num: "05", label: "Methodology", href: "/oli/methodology" },
+  { num: "06", label: "Webhooks", href: "/oli/webhooks" },
+  { num: "07", label: "Status" },
 ];
 
 export type KeymapItem = {
