@@ -8,11 +8,9 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-// `/oli/wallet` is just an alias for the dashboard. The dashboard handles
-// auth itself (renders if signed in, redirects to /sign-in otherwise) so
-// there's exactly one source of truth for the wallet UX inside /oli.
-// The marketing-landing explainer still lives at `/wallet` for direct
-// visitors who land there from outside the OLI surface.
+// `/oli/wallet` always lands on sign-in. Sign-in itself is auth-aware
+// (signed-in users get bounced straight to /oli/wallet/dashboard) so
+// there's no marketing landing in the flow.
 export default function OliWalletRedirect() {
-  redirect("/oli/wallet/dashboard");
+  redirect("/oli/wallet/sign-in");
 }

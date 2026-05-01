@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { readUserSession } from "@/lib/wallet/challenge-cookie";
 import { SpecimenSignInForm } from "./SpecimenSignInForm";
 
 export const metadata: Metadata = {
@@ -7,7 +9,12 @@ export const metadata: Metadata = {
 };
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
-export default function OliWalletSignInPage() {
+export default async function OliWalletSignInPage() {
+  // Already signed in → straight to the dashboard. Avoids re-auth prompts
+  // for users who land on /oli/wallet (which redirects here).
+  const userId = await readUserSession();
+  if (userId) redirect("/oli/wallet/dashboard");
   return <SpecimenSignInForm basePath="/oli/wallet" />;
 }
