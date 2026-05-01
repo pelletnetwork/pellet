@@ -55,143 +55,202 @@ const SKILLS: Skill[] = [
 ];
 
 export default function SkillsPage() {
+  const live = SKILLS.filter((s) => s.status === "live");
+
   return (
-    <div
-      className="oli-page oli-skills"
-      style={{
-        padding: "32px 48px",
-        display: "flex",
-        flexDirection: "column",
-        gap: 24,
-        maxWidth: 880,
-      }}
-    >
-      <header>
-        <span className="oli-meth-kicker">Reference</span>
-        <h1 className="oli-meth-h1">Skills</h1>
-        <p className="oli-meth-lede">
-          A curated index of <code className="oli-meth-mono">skill.md</code>{" "}
-          manifests an agent can install — anchored on autonomous payments
-          and observability. The convention emerged from Anthropic and
-          went mainstream when Stripe shipped one for Link the same day
-          this page launched. Whichever rail or service publishes a public
-          install URL, we list it here.
-        </p>
-      </header>
+    <>
+      <section className="spec-page-header">
+        <div className="spec-page-header-row">
+          <h1 className="spec-page-title">
+            <span>09</span>
+            <span>Skills</span>
+          </h1>
+        </div>
+        <div className="spec-page-subhead">
+          <span>
+            A curated index of <code>skill.md</code> manifests an agent can
+            install — anchored on autonomous payments and observability. Whichever
+            rail or service publishes a public install URL, we list it here.
+          </span>
+        </div>
+      </section>
 
-      <Section title="Live" subtitle="installable today">
-        {SKILLS.filter((s) => s.status === "live").map((s) => (
-          <SkillCard key={s.id} skill={s} />
-        ))}
-      </Section>
+      <section className="spec-tables">
+        <div className="spec-table" style={{ flex: 1 }}>
+          <div className="spec-table-header">
+            <span className="spec-table-title">LIVE · INSTALLABLE TODAY</span>
+            <span className="spec-table-meta">
+              <span className="spec-table-meta-faint">ROWS</span>
+              <span>{live.length}</span>
+            </span>
+          </div>
+          {live.map((s) => (
+            <SkillCard key={s.id} skill={s} />
+          ))}
+        </div>
+      </section>
 
-      <Section title="Watching" subtitle="catalogued as they ship">
-        <ul className="oli-skills-watch">
-          <li>
-            <Mono>x402</Mono> endpoints publishing skill manifests for
-            agent-direct invocation (Coinbase agent kit, etc.)
-          </li>
-          <li>
-            <Mono>MCP</Mono> servers exposing payment flows via skill.md —
-            the natural intersection of the two emerging install conventions
-          </li>
-          <li>
-            Per-rail aggregator skills (Tempo MPP, Locus MPP) advertising
-            their own install URLs as they mature
-          </li>
-        </ul>
-      </Section>
+      <section className="spec-tables">
+        <div className="spec-table" style={{ flex: 1 }}>
+          <div className="spec-table-header">
+            <span className="spec-table-title">
+              WATCHING · CATALOGUED AS THEY SHIP
+            </span>
+          </div>
+          <ul
+            style={{
+              listStyle: "none",
+              padding: "16px 0 0",
+              margin: 0,
+              display: "flex",
+              flexDirection: "column",
+              gap: 12,
+              fontSize: 13,
+              lineHeight: 1.55,
+            }}
+          >
+            <li>
+              <code>x402</code> endpoints publishing skill manifests for
+              agent-direct invocation (Coinbase agent kit, etc.)
+            </li>
+            <li>
+              <code>MCP</code> servers exposing payment flows via{" "}
+              <code>skill.md</code> — the natural intersection of the two
+              emerging install conventions
+            </li>
+            <li>
+              Per-rail aggregator skills (Tempo MPP, Locus MPP) advertising
+              their own install URLs as they mature
+            </li>
+          </ul>
+        </div>
+      </section>
 
-      <p className="oli-meth-foot">
-        Know one we're missing? Open an issue at{" "}
+      <p
+        style={{
+          margin: "0 32px 32px",
+          fontSize: 12,
+          opacity: 0.6,
+          letterSpacing: "0.02em",
+          maxWidth: 720,
+          lineHeight: 1.6,
+        }}
+      >
+        Know one we&apos;re missing? Open an issue at{" "}
         <a
           href="https://github.com/pelletnetwork/pellet/issues"
-          className="oli-meth-link"
+          style={{ textDecoration: "underline", textUnderlineOffset: 2 }}
         >
           pelletnetwork/pellet
         </a>
         . Bar for inclusion: live install URL, real autonomous-agent use
         case, vendor identifiable.
       </p>
-    </div>
-  );
-}
-
-function Section({
-  title,
-  subtitle,
-  children,
-}: {
-  title: string;
-  subtitle: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "baseline",
-          gap: 12,
-          paddingBottom: 8,
-          marginBottom: 12,
-          borderBottom: "1px solid var(--color-border-subtle)",
-        }}
-      >
-        <h2
-          style={{
-            fontFamily: "var(--font-mono)",
-            fontSize: 11,
-            textTransform: "uppercase",
-            letterSpacing: "0.08em",
-            color: "var(--color-text-tertiary)",
-            margin: 0,
-          }}
-        >
-          {title}
-        </h2>
-        <span
-          style={{
-            fontFamily: "var(--font-mono)",
-            fontSize: 10,
-            color: "var(--color-text-quaternary)",
-          }}
-        >
-          {subtitle}
-        </span>
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        {children}
-      </div>
-    </section>
+    </>
   );
 }
 
 function SkillCard({ skill }: { skill: Skill }) {
   return (
-    <article className="oli-skill-card">
-      <header className="oli-skill-card-head">
-        <div className="oli-skill-card-id">
-          <h3 className="oli-skill-card-name">{skill.name}</h3>
-          <span className="oli-skill-card-vendor">
+    <article
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 12,
+        padding: "16px 0",
+        borderTop: "1px solid var(--line-thin)",
+      }}
+    >
+      <header
+        style={{
+          display: "flex",
+          alignItems: "baseline",
+          justifyContent: "space-between",
+          gap: 16,
+          flexWrap: "wrap",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
+          <h3
+            style={{
+              fontSize: 18,
+              fontWeight: 500,
+              letterSpacing: "-0.01em",
+              margin: 0,
+            }}
+          >
+            {skill.name}
+          </h3>
+          <span
+            style={{
+              fontSize: 10,
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              opacity: 0.55,
+            }}
+          >
             {skill.vendor} · {skill.category}
           </span>
         </div>
       </header>
 
-      <p className="oli-skill-card-bio">{skill.bio}</p>
+      <p
+        style={{
+          margin: 0,
+          fontSize: 13,
+          lineHeight: 1.55,
+          opacity: 0.85,
+          maxWidth: 720,
+        }}
+      >
+        {skill.bio}
+      </p>
 
-      <div className="oli-skill-card-install">
-        <span className="oli-skill-card-install-label">install</span>
-        <code className="oli-skill-card-install-url">{skill.installUrl}</code>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          flexWrap: "wrap",
+        }}
+      >
+        <span
+          style={{
+            fontSize: 10,
+            letterSpacing: "0.08em",
+            textTransform: "uppercase",
+            opacity: 0.55,
+          }}
+        >
+          install
+        </span>
+        <code
+          style={{
+            fontVariantNumeric: "tabular-nums",
+            wordBreak: "break-all",
+          }}
+        >
+          {skill.installUrl}
+        </code>
       </div>
 
-      <div style={{ display: "flex", gap: 16, alignItems: "baseline" }}>
+      <div
+        style={{
+          display: "flex",
+          gap: 18,
+          alignItems: "baseline",
+          fontSize: 12,
+        }}
+      >
         <a
           href={skill.installUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="oli-rail-card-link"
+          style={{
+            textDecoration: "underline",
+            textUnderlineOffset: 2,
+            opacity: 0.85,
+          }}
         >
           view manifest ↗
         </a>
@@ -199,15 +258,15 @@ function SkillCard({ skill }: { skill: Skill }) {
           href={skill.link.href}
           target={skill.link.href.startsWith("http") ? "_blank" : undefined}
           rel="noopener noreferrer"
-          className="oli-rail-card-link"
+          style={{
+            textDecoration: "underline",
+            textUnderlineOffset: 2,
+            opacity: 0.85,
+          }}
         >
           {skill.link.label} ↗
         </a>
       </div>
     </article>
   );
-}
-
-function Mono({ children }: { children: React.ReactNode }) {
-  return <code className="oli-meth-mono">{children}</code>;
 }
