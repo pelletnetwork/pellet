@@ -68,7 +68,6 @@ function PageHeader({ currentHours }: { currentHours: number }) {
       </div>
       <div className="spec-page-subhead">
         <span>The open ledger of the agent economy.</span>
-        <span className="spec-page-subhead-dot">·</span>
         <Clock />
       </div>
     </section>
