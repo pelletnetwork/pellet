@@ -128,9 +128,13 @@ export default async function OliAgentsPage() {
                   style={{ width: 110, flexShrink: 0, marginLeft: 24, opacity: 0.7 }}
                   className="spec-cell-r"
                 >
-                  <code style={{ fontVariantNumeric: "tabular-nums", fontFamily: "inherit" }}>
-                    {row.walletAddress ? shortAddr(row.walletAddress) : "—"}
-                  </code>
+                  {row.walletAddress ? (
+                    <code style={{ fontVariantNumeric: "tabular-nums", fontFamily: "inherit" }}>
+                      {shortAddr(row.walletAddress)}
+                    </code>
+                  ) : (
+                    <span style={{ opacity: 0.55 }}>—</span>
+                  )}
                 </span>
               </Link>
             );
