@@ -536,7 +536,7 @@ function DeliveryRow({ d }: { d: Delivery }) {
               </>
             )}
 
-            {d.next_retry_at && d.status !== "delivered" && (
+            {d.next_retry_at && d.status === "retry" && (
               <>
                 <span className="spec-activity-detail-label">Next retry</span>
                 <span className="spec-activity-detail-value">
