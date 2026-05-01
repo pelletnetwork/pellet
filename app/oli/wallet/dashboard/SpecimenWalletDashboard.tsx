@@ -108,7 +108,6 @@ export function SpecimenWalletDashboard({
 }) {
   const [copied, setCopied] = useState(false);
   const [revoking, setRevoking] = useState<string | null>(null);
-  const [signingOut, setSigningOut] = useState(false);
 
   const totalUsd = balances.reduce((acc, b) => acc + Number(b.display), 0);
   const usdce = balances.find((b) => b.symbol === "USDC.e");
@@ -148,19 +147,6 @@ export function SpecimenWalletDashboard({
       setTimeout(() => setCopied(false), 1500);
     } catch {
       /* noop */
-    }
-  };
-
-  const onSignOut = async () => {
-    if (!confirm("Sign out of this browser?\n\nAgent sessions and on-chain keys stay live — this just clears your browser session.")) {
-      return;
-    }
-    setSigningOut(true);
-    try {
-      await fetch("/api/wallet/me/sign-out", { method: "POST" });
-      window.location.href = `${basePath}/sign-in`;
-    } catch {
-      setSigningOut(false);
     }
   };
 
@@ -213,15 +199,13 @@ export function SpecimenWalletDashboard({
             >
               EXPORT
             </button>
-            <button
-              type="button"
+            <Link
               className="spec-switch-seg spec-switch-seg-active"
-              onClick={onSignOut}
-              disabled={signingOut}
-              title="Sign out of this browser — agent sessions stay live"
+              href={`${basePath}/dashboard/settings`}
+              title="Wallet settings"
             >
-              {signingOut ? "SIGNING OUT…" : "SIGN OUT"}
-            </button>
+              SETTINGS
+            </Link>
           </div>
         </div>
         <div className="spec-page-subhead">

@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 const STORAGE_KEY = "specimen-theme";
 
 const NAV: Array<{ num: string; label: string; href?: string }> = [
-  { num: "01", label: "Dashboard", href: "/oli" },
+  { num: "01", label: "Ledger", href: "/oli" },
   { num: "02", label: "Wallet", href: "/oli/wallet/dashboard" },
   { num: "03", label: "Services", href: "/oli/services" },
   { num: "04", label: "Agents", href: "/oli/agents" },

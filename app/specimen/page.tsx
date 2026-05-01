@@ -165,7 +165,7 @@ function PageHeader({ currentHours }: { currentHours: number }) {
       <div className="spec-page-header-row">
         <h1 className="spec-page-title">
           <span>01</span>
-          <span>Dashboard</span>
+          <span>Ledger</span>
         </h1>
         <SpecimenTimeToggle current={currentHours} />
       </div>
