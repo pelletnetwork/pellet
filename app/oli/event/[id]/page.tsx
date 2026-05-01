@@ -2,10 +2,11 @@ import { eventDetail } from "@/lib/oli/queries";
 import { formatBlockNumber, formatUsdcAmount, shortHash, shortAddress } from "@/lib/oli/format";
 import { decodeEventLine } from "@/lib/oli/decode";
 import { buildLabelMap } from "@/lib/oli/labelMap";
-import { ProvenanceBadge } from "@/components/oli/ProvenanceBadge";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+
+const EXPLORER = "https://explore.tempo.xyz";
 
 export const dynamic = "force-dynamic";
 
@@ -76,159 +77,292 @@ export default async function OliEventDetailPage({
     labelMap,
   );
 
-  return (
-    <div className="oli-page" style={{ display: "flex", flexDirection: "column", gap: 24, maxWidth: 880 }}>
-      <header>
-        <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--color-text-quaternary)" }}>
-          Event #{detail.id}
-        </span>
-        <h1
-          style={{
-            fontFamily: "'Instrument Serif', Georgia, serif",
-            fontStyle: "italic",
-            fontSize: 36,
-            fontWeight: 400,
-            margin: "8px 0 0",
-            letterSpacing: "-0.015em",
-            color: "var(--color-text-primary)",
-          }}
-        >
-          {decoded.summary}
-        </h1>
-        <p style={{ marginTop: 8, color: "var(--color-text-tertiary)", fontSize: 13, display: "flex", gap: 12, alignItems: "center" }}>
-          <span>{detail.ts.toUTCString()}</span>
-          <span style={{ color: "var(--color-text-quaternary)" }}>·</span>
-          <ProvenanceBadge sourceBlock={detail.sourceBlock} methodologyVersion={detail.methodologyVersion} />
-        </p>
-      </header>
+  const counterpartyDisplay =
+    detail.counterpartyLabel ??
+    (detail.counterpartyAddress ? shortAddress(detail.counterpartyAddress) : null);
+  const routedDisplay = detail.routedToAddress
+    ? detail.routedToLabel ?? shortAddress(detail.routedToAddress)
+    : null;
 
-      <section className="oli-event-page-section">
-        <h2 className="oli-event-page-h2">Parties</h2>
-        <dl className="oli-event-page-fields">
-          <dt>Agent</dt>
-          <dd>
-            <Link href={`/oli/agents/${detail.agentId}`} className="oli-event-page-link">
-              {detail.agentLabel}
-            </Link>
-            {detail.agentBio && (
-              <span style={{ width: "100%", marginTop: 4, fontSize: 11, color: "var(--color-text-quaternary)" }}>
-                {detail.agentBio}
-              </span>
-            )}
-          </dd>
-          <dt>Counterparty</dt>
-          <dd>
-            {detail.counterpartyLabel ?? (detail.counterpartyAddress ? shortAddress(detail.counterpartyAddress) : "—")}
-            {detail.counterpartyAddress && (
-              <a
-                href={`https://explore.tempo.xyz/address/${detail.counterpartyAddress}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="oli-event-page-action"
-              >
-                ↗ explorer
-              </a>
-            )}
-            {detail.counterpartyCategory && (
-              <span style={{ fontSize: 11, color: "var(--color-text-quaternary)", fontFamily: "var(--font-mono)" }}>
-                category: {detail.counterpartyCategory}
-              </span>
-            )}
-          </dd>
-          {detail.routedToAddress && (
-            <>
-              <dt>Routed to</dt>
-              <dd>
-                <span style={{ color: "var(--color-accent)" }}>
-                  {detail.routedToLabel ?? shortAddress(detail.routedToAddress)}
-                </span>
-                <a
-                  href={`https://explore.tempo.xyz/address/${detail.routedToAddress}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="oli-event-page-action"
-                >
-                  ↗ explorer
-                </a>
-                <span style={{ fontSize: 11, color: "var(--color-text-quaternary)", fontFamily: "var(--font-mono)" }}>
-                  {detail.routedToCategory ? `category: ${detail.routedToCategory}` : "underlying provider"}
-                </span>
-              </dd>
-            </>
-          )}
-        </dl>
+  return (
+    <>
+      <section className="spec-page-header">
+        <div className="spec-page-header-row">
+          <h1 className="spec-page-title">
+            <span>01</span>
+            <span>Event</span>
+            <span className="spec-page-title-em">— #{detail.id}</span>
+          </h1>
+          <Link href="/oli" className="spec-switch">
+            <span className="spec-switch-seg">← LEDGER</span>
+          </Link>
+        </div>
+        <div className="spec-page-subhead">
+          <span>{decoded.summary}</span>
+          <span className="spec-page-subhead-dot">·</span>
+          <span style={{ fontVariantNumeric: "tabular-nums" }}>
+            {detail.ts.toUTCString()}
+          </span>
+          <span className="spec-page-subhead-dot">·</span>
+          <span className="spec-page-subhead-label">METHODOLOGY</span>
+          <span style={{ fontVariantNumeric: "tabular-nums" }}>
+            {detail.methodologyVersion}
+          </span>
+        </div>
       </section>
 
-      <section className="oli-event-page-section">
-        <h2 className="oli-event-page-h2">Transaction</h2>
-        <dl className="oli-event-page-fields">
-          <dt>Hash</dt>
-          <dd>
-            <code style={{ fontFamily: "var(--font-mono)", fontSize: 13 }}>{shortHash(detail.txHash)}</code>
-            <a
-              href={`https://explore.tempo.xyz/tx/${detail.txHash}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="oli-event-page-action"
-            >
-              ↗ explorer
-            </a>
-          </dd>
-          <dt>Block</dt>
-          <dd>
-            <span style={{ fontFamily: "var(--font-mono)", fontSize: 13 }}>{formatBlockNumber(detail.sourceBlock)}</span>
-            <a
-              href={`https://explore.tempo.xyz/block/${detail.sourceBlock}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="oli-event-page-action"
-            >
-              ↗ explorer
-            </a>
-          </dd>
-          <dt>Log index</dt>
-          <dd><span style={{ fontFamily: "var(--font-mono)", fontSize: 13 }}>{detail.logIndex}</span></dd>
-          <dt>Kind</dt>
-          <dd>{detail.kind}</dd>
-          <dt>Amount</dt>
-          <dd>
+      <section className="spec-strip">
+        <div className="spec-strip-cell">
+          <span className="spec-strip-label">AMOUNT</span>
+          <span className="spec-strip-value spec-strip-value-md">
             {detail.amountWei ? formatUsdcAmount(detail.amountWei, 6) : "—"}
-            {detail.tokenAddress && (
-              <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--color-text-quaternary)" }}>
+          </span>
+          <span className="spec-strip-sub">
+            {detail.tokenAddress ? (
+              <span style={{ fontVariantNumeric: "tabular-nums" }}>
                 token {shortAddress(detail.tokenAddress)}
               </span>
+            ) : (
+              <span className="spec-strip-sub-faint">no token</span>
             )}
-          </dd>
-        </dl>
+          </span>
+        </div>
+        <div className="spec-strip-cell">
+          <span className="spec-strip-label">KIND</span>
+          <span className="spec-strip-value spec-strip-value-md">{detail.kind}</span>
+          <span className="spec-strip-sub">
+            <span>decoded event class</span>
+          </span>
+        </div>
+        <div className="spec-strip-cell">
+          <span className="spec-strip-label">BLOCK</span>
+          <span className="spec-strip-value spec-strip-value-md">
+            {formatBlockNumber(detail.sourceBlock)}
+          </span>
+          <span className="spec-strip-sub">
+            <a
+              href={`${EXPLORER}/block/${detail.sourceBlock}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ textDecoration: "underline", textUnderlineOffset: 2 }}
+            >
+              explorer ↗
+            </a>
+          </span>
+        </div>
+        <div className="spec-strip-cell">
+          <span className="spec-strip-label">LOG INDEX</span>
+          <span className="spec-strip-value spec-strip-value-md">{detail.logIndex}</span>
+          <span className="spec-strip-sub">
+            <span>position in tx</span>
+          </span>
+        </div>
       </section>
 
-      <section className="oli-event-page-section">
-        <h2 className="oli-event-page-h2">OLI provenance</h2>
-        <dl className="oli-event-page-fields">
-          <dt>Methodology</dt>
-          <dd><code style={{ fontFamily: "var(--font-mono)", fontSize: 13 }}>{detail.methodologyVersion}</code></dd>
-          <dt>Source block</dt>
-          <dd><span style={{ fontFamily: "var(--font-mono)", fontSize: 13 }}>{formatBlockNumber(detail.sourceBlock)}</span></dd>
-          <dt>Matched at</dt>
-          <dd><span style={{ fontFamily: "var(--font-mono)", fontSize: 13 }}>{detail.matchedAt.toUTCString()}</span></dd>
-        </dl>
+      <section className="spec-tables">
+        <div className="spec-table" style={{ flex: 1 }}>
+          <div className="spec-table-header">
+            <span className="spec-table-title">PARTIES</span>
+          </div>
+          <div className="spec-meta-grid spec-meta-grid-wide" style={{ paddingTop: 12 }}>
+            <span className="spec-meta-label">agent</span>
+            <span>
+              <Link
+                href={`/oli/agents/${detail.agentId}`}
+                style={{ textDecoration: "underline", textUnderlineOffset: 2 }}
+              >
+                {detail.agentLabel}
+              </Link>
+              {detail.agentBio && (
+                <span
+                  style={{
+                    display: "block",
+                    marginTop: 4,
+                    fontSize: 11,
+                    opacity: 0.6,
+                  }}
+                >
+                  {detail.agentBio}
+                </span>
+              )}
+            </span>
+
+            <span className="spec-meta-label">counterparty</span>
+            <span style={{ fontVariantNumeric: "tabular-nums" }}>
+              {counterpartyDisplay ?? <span style={{ opacity: 0.55 }}>—</span>}
+              {detail.counterpartyAddress && (
+                <a
+                  href={`${EXPLORER}/address/${detail.counterpartyAddress}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    marginLeft: 8,
+                    textDecoration: "underline",
+                    textUnderlineOffset: 2,
+                    opacity: 0.7,
+                  }}
+                >
+                  explorer ↗
+                </a>
+              )}
+              {detail.counterpartyCategory && (
+                <span
+                  style={{
+                    display: "block",
+                    marginTop: 4,
+                    fontSize: 11,
+                    opacity: 0.55,
+                    letterSpacing: "0.04em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  category: {detail.counterpartyCategory}
+                </span>
+              )}
+            </span>
+
+            {routedDisplay && (
+              <>
+                <span className="spec-meta-label">routed to</span>
+                <span style={{ fontVariantNumeric: "tabular-nums" }}>
+                  {routedDisplay}
+                  {detail.routedToAddress && (
+                    <a
+                      href={`${EXPLORER}/address/${detail.routedToAddress}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        marginLeft: 8,
+                        textDecoration: "underline",
+                        textUnderlineOffset: 2,
+                        opacity: 0.7,
+                      }}
+                    >
+                      explorer ↗
+                    </a>
+                  )}
+                  <span
+                    style={{
+                      display: "block",
+                      marginTop: 4,
+                      fontSize: 11,
+                      opacity: 0.55,
+                      letterSpacing: "0.04em",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    {detail.routedToCategory
+                      ? `category: ${detail.routedToCategory}`
+                      : "underlying provider"}
+                  </span>
+                </span>
+              </>
+            )}
+          </div>
+        </div>
+      </section>
+
+      <section className="spec-tables">
+        <div className="spec-table" style={{ flex: 1 }}>
+          <div className="spec-table-header">
+            <span className="spec-table-title">TRANSACTION</span>
+          </div>
+          <div className="spec-meta-grid spec-meta-grid-wide" style={{ paddingTop: 12 }}>
+            <span className="spec-meta-label">hash</span>
+            <span style={{ fontVariantNumeric: "tabular-nums", wordBreak: "break-all" }}>
+              {detail.txHash}
+              <a
+                href={`${EXPLORER}/tx/${detail.txHash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  marginLeft: 8,
+                  textDecoration: "underline",
+                  textUnderlineOffset: 2,
+                  opacity: 0.7,
+                }}
+              >
+                explorer ↗
+              </a>
+            </span>
+
+            <span className="spec-meta-label">matched at</span>
+            <span style={{ fontVariantNumeric: "tabular-nums" }}>
+              {detail.matchedAt.toUTCString()}
+            </span>
+          </div>
+        </div>
       </section>
 
       {detail.related.length > 0 && (
-        <section className="oli-event-page-section">
-          <h2 className="oli-event-page-h2">Related events in this transaction</h2>
-          <ul className="oli-event-page-related">
+        <section className="spec-tables">
+          <div className="spec-table" style={{ flex: 1 }}>
+            <div className="spec-table-header">
+              <span className="spec-table-title">
+                RELATED EVENTS · SAME TX
+              </span>
+              <span className="spec-table-meta">
+                <span className="spec-table-meta-faint">ROWS</span>
+                <span>{detail.related.length}</span>
+              </span>
+            </div>
+            <div className="spec-row-head">
+              <span style={{ width: 60, flexShrink: 0 }}>#</span>
+              <span style={{ flex: 1, minWidth: 0 }}>AGENT</span>
+              <span style={{ width: 86, flexShrink: 0 }} className="spec-cell-r">
+                KIND
+              </span>
+              <span style={{ width: 110, flexShrink: 0 }} className="spec-cell-r">
+                AMOUNT
+              </span>
+              <span style={{ flex: 1, minWidth: 0, marginLeft: 16 }}>
+                COUNTERPARTY
+              </span>
+            </div>
             {detail.related.map((r) => (
-              <li key={r.id}>
-                <Link href={`/oli/event/${r.id}`} className="oli-event-page-link">
-                  #{r.id} · {r.agentLabel} · {r.kind} · {r.amountWei ? formatUsdcAmount(r.amountWei, 6) : "—"}
-                  {r.counterpartyLabel && ` ← ${r.counterpartyLabel}`}
-                </Link>
-              </li>
+              <Link key={r.id} href={`/oli/event/${r.id}`} className="spec-row">
+                <span style={{ width: 60, flexShrink: 0 }}>#{r.id}</span>
+                <span
+                  style={{
+                    flex: 1,
+                    minWidth: 0,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {r.agentLabel}
+                </span>
+                <span
+                  style={{ width: 86, flexShrink: 0, opacity: 0.7 }}
+                  className="spec-cell-r"
+                >
+                  {r.kind}
+                </span>
+                <span
+                  style={{ width: 110, flexShrink: 0 }}
+                  className="spec-cell-r"
+                >
+                  {r.amountWei ? formatUsdcAmount(r.amountWei, 6) : "—"}
+                </span>
+                <span
+                  style={{
+                    flex: 1,
+                    minWidth: 0,
+                    marginLeft: 16,
+                    opacity: 0.7,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {r.counterpartyLabel ?? "—"}
+                </span>
+              </Link>
             ))}
-          </ul>
+          </div>
         </section>
       )}
-    </div>
+    </>
   );
 }
