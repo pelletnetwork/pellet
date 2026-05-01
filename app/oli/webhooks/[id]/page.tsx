@@ -38,7 +38,7 @@ export default async function WebhookDetailPage({
       <section className="spec-page-header">
         <div className="spec-page-header-row">
           <h1 className="spec-page-title">
-            <span>07</span>
+            <span>06</span>
             <span>Webhook</span>
             <span className="spec-page-title-em">— {sub.label ?? sub.id.slice(0, 8)}</span>
           </h1>

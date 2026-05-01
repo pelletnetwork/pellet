@@ -17,7 +17,7 @@ export default async function OliEmbeddedMcpPage() {
       <section className="spec-page-header">
         <div className="spec-page-header-row">
           <h1 className="spec-page-title">
-            <span>10</span>
+            <span>08</span>
             <span>MCP</span>
           </h1>
         </div>

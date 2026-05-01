@@ -20,9 +20,8 @@ function PageHeader() {
     <section className="spec-page-header">
       <div className="spec-page-header-row">
         <h1 className="spec-page-title">
-          <span>07</span>
-          <span>Pellet Wallet</span>
-          <span className="spec-page-title-em">— main</span>
+          <span>02</span>
+          <span>Wallet</span>
         </h1>
         <div className="spec-switch" role="group" aria-label="Wallet actions">
           <button type="button" className="spec-switch-seg">PAIR DEVICE</button>

@@ -17,7 +17,7 @@ export default async function OliEmbeddedCliPage() {
       <section className="spec-page-header">
         <div className="spec-page-header-row">
           <h1 className="spec-page-title">
-            <span>09</span>
+            <span>07</span>
             <span>CLI</span>
           </h1>
         </div>

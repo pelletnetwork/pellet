@@ -12,7 +12,7 @@ export default function MethodologyPage() {
       <section className="spec-page-header">
         <div className="spec-page-header-row">
           <h1 className="spec-page-title">
-            <span>06</span>
+            <span>05</span>
             <span>Methodology</span>
           </h1>
         </div>

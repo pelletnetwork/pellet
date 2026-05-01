@@ -24,7 +24,7 @@ export default async function NewWebhookPage() {
       <section className="spec-page-header">
         <div className="spec-page-header-row">
           <h1 className="spec-page-title">
-            <span>07</span>
+            <span>06</span>
             <span>New webhook</span>
           </h1>
           <Link href="/oli/webhooks" className="spec-switch">
