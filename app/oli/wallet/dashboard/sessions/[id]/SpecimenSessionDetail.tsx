@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { SpecimenPaymentRow } from "@/components/oli/SpecimenPaymentRow";
 
 type Session = {
   id: string;
@@ -216,11 +217,11 @@ export function SpecimenSessionDetail({
             </div>
           ) : (
             <>
-              <div className="spec-activity-head">
-                <span style={{ width: 100, flexShrink: 0 }}>WHEN</span>
-                <span style={{ width: 100, flexShrink: 0 }}>TX</span>
+              <div className="spec-activity-head" style={{ paddingLeft: 24 }}>
+                <span style={{ width: 80, flexShrink: 0 }}>WHEN</span>
+                <span style={{ width: 92, flexShrink: 0 }}>TX</span>
                 <span style={{ flex: 1, minWidth: 0 }}>RECIPIENT</span>
-                <span style={{ width: 110, flexShrink: 0 }} className="spec-cell-r">
+                <span style={{ width: 100, flexShrink: 0 }} className="spec-cell-r">
                   AMOUNT
                 </span>
                 <span style={{ width: 70, flexShrink: 0 }} className="spec-cell-r">
@@ -228,53 +229,12 @@ export function SpecimenSessionDetail({
                 </span>
               </div>
               {payments.map((p) => (
-                <div key={p.id} className="spec-activity-row">
-                  <span style={{ width: 100, flexShrink: 0, opacity: 0.7 }}>
-                    {timeAgo(p.createdAt)}
-                  </span>
-                  <span style={{ width: 100, flexShrink: 0 }}>
-                    {p.txHash ? (
-                      <a
-                        href={`${EXPLORER}/tx/${p.txHash}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ textDecoration: "underline", textUnderlineOffset: 2 }}
-                      >
-                        {shortHash(p.txHash)}
-                      </a>
-                    ) : (
-                      <span style={{ opacity: 0.5 }}>—</span>
-                    )}
-                  </span>
-                  <span
-                    style={{
-                      flex: 1,
-                      minWidth: 0,
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {shortAddr(p.recipient)}
-                  </span>
-                  <span style={{ width: 110, flexShrink: 0 }} className="spec-cell-r">
-                    {fmtUsd(Number(p.amountWei) / 1_000_000)}
-                  </span>
-                  <span
-                    style={{
-                      width: 70,
-                      flexShrink: 0,
-                      display: "inline-flex",
-                      alignItems: "center",
-                      justifyContent: "flex-end",
-                      gap: 6,
-                    }}
-                    className="spec-cell-r"
-                  >
-                    <span className="spec-status-dot-sm" aria-hidden="true" />
-                    <span style={{ textTransform: "uppercase" }}>{p.status}</span>
-                  </span>
-                </div>
+                <SpecimenPaymentRow
+                  key={p.id}
+                  payment={{ ...p, sessionId: session.id }}
+                  basePath={basePath}
+                  showSession={false}
+                />
               ))}
             </>
           )}
