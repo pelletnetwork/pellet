@@ -156,10 +156,10 @@ export function SpecimenWalletChat({
             </Link>
             <Link
               className="spec-switch-seg"
-              href={`${basePath}/dashboard/pair`}
-              title="Pair an agent so it can post here"
+              href={`${basePath}/onboard`}
+              title="Connect Claude Code, Cursor, ChatGPT, or a custom agent"
             >
-              PAIR AGENT
+              CONNECT
             </Link>
             <span className="spec-switch-seg spec-switch-seg-active">CHAT</span>
             <Link

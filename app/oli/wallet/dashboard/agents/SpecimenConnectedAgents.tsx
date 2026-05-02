@@ -98,9 +98,10 @@ export function SpecimenConnectedAgents({
             </Link>
             <Link
               className="spec-switch-seg"
-              href={`${basePath}/dashboard/pair`}
+              href={`${basePath}/onboard`}
+              title="Connect a new agent"
             >
-              PAIR AGENT
+              CONNECT
             </Link>
             <Link className="spec-switch-seg" href={`${basePath}/chat`}>
               CHAT
@@ -121,9 +122,10 @@ export function SpecimenConnectedAgents({
         <section className="spec-agents-empty">
           <h2 className="spec-agents-empty-head">no agents connected</h2>
           <p className="spec-agents-empty-hint">
-            Add Pellet to your AI client to grant it wallet access. Setup
-            instructions for Claude Code, Cursor, Claude Desktop, ChatGPT,
-            and Claude.ai are at <Link href="/oli/mcp">/oli/mcp</Link>.
+            Add Pellet to your AI client to grant it wallet access.
+            Walk through the connection cards at{" "}
+            <Link href={`${basePath}/onboard`}>Connect</Link>, or read the
+            full setup at <Link href="/oli/mcp">/oli/mcp</Link>.
           </p>
         </section>
       ) : (

@@ -178,10 +178,10 @@ export function SpecimenWalletDashboard({
           <div className="spec-switch" role="group" aria-label="Wallet actions">
             <Link
               className="spec-switch-seg"
-              href={`${basePath}/dashboard/pair`}
-              title="Approve an agent's spend authority"
+              href={`${basePath}/onboard`}
+              title="Connect Claude Code, Cursor, ChatGPT, Claude.ai, or a custom agent"
             >
-              PAIR AGENT
+              CONNECT
             </Link>
             <Link
               className="spec-switch-seg"

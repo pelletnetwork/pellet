@@ -2148,6 +2148,163 @@ body:has(.specimen-shell) main {
   }
 }
 
+/* ── Onboarding "Connect your agent" screen ──────────────────────────────── */
+.spec-onboard-skip {
+  align-self: center;
+  font-family: var(--font-commit-mono), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: color-mix(in oklch, var(--fg) 70%, var(--bg));
+  padding: 8px 14px;
+  border: 1px solid var(--line-thin);
+  transition: color 120ms ease, border-color 120ms ease;
+}
+.spec-onboard-skip:hover {
+  color: var(--fg);
+  border-color: var(--fg);
+}
+.spec-onboard-shell {
+  padding: 24px 32px 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.spec-onboard-group-head {
+  font-family: var(--font-commit-mono), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: color-mix(in oklch, var(--fg) 60%, var(--bg));
+  margin: 16px 0 0 0;
+  font-weight: 400;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line-thin);
+}
+.spec-onboard-group-head:first-child {
+  margin-top: 0;
+}
+.spec-onboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 14px;
+}
+.spec-onboard-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  transition: border-color 120ms ease;
+}
+.spec-onboard-card-soon {
+  opacity: 0.55;
+}
+.spec-onboard-card:hover:not(.spec-onboard-card-soon) {
+  border-color: var(--fg);
+}
+.spec-onboard-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.spec-onboard-card-name {
+  font-size: 16px;
+  font-weight: 500;
+}
+.spec-onboard-pill {
+  font-family: var(--font-commit-mono), ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  padding: 2px 7px;
+  border: 1px solid var(--line-thin);
+}
+.spec-onboard-pill-live {
+  color: var(--fg);
+  border-color: var(--fg);
+  font-weight: 700;
+}
+.spec-onboard-pill-guide {
+  color: color-mix(in oklch, var(--fg) 65%, var(--bg));
+}
+.spec-onboard-pill-soon {
+  color: color-mix(in oklch, var(--fg) 50%, var(--bg));
+}
+.spec-onboard-card-blurb {
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0;
+  color: color-mix(in oklch, var(--fg) 80%, var(--bg));
+}
+.spec-onboard-snippet {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: color-mix(in oklch, var(--fg) 8%, var(--bg));
+  border: 1px solid var(--line-thin);
+  font-family: var(--font-commit-mono), ui-monospace, monospace;
+  font-size: 11px;
+  overflow: hidden;
+}
+.spec-onboard-snippet code {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--fg);
+  background: transparent;
+  padding: 0;
+}
+.spec-onboard-copy {
+  flex-shrink: 0;
+  padding: 4px 8px;
+  font-family: var(--font-commit-mono), ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--bg);
+  background: var(--fg);
+  border: 1px solid var(--fg);
+  cursor: pointer;
+  border-radius: 0;
+}
+.spec-onboard-copy:hover {
+  opacity: 0.85;
+}
+.spec-onboard-card-link {
+  font-family: var(--font-commit-mono), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--fg);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  align-self: flex-start;
+}
+.spec-onboard-foot {
+  font-size: 13px;
+  line-height: 1.55;
+  color: color-mix(in oklch, var(--fg) 70%, var(--bg));
+  text-align: center;
+  margin: 16px 0 0 0;
+}
+.spec-onboard-foot a {
+  color: var(--fg);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+@media (max-width: 720px) {
+  .spec-onboard-shell {
+    padding: 24px 16px 48px;
+  }
+  .spec-onboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ── Connected agents (wallet → connected OAuth tokens) ─────────────────── */
 .spec-agents-empty {
   padding: 64px 32px;
