@@ -191,6 +191,13 @@ export function SpecimenWalletDashboard({
               CHAT
             </Link>
             <Link
+              className="spec-switch-seg"
+              href={`${basePath}/dashboard/agents`}
+              title="Manage connected agents and revoke OAuth tokens"
+            >
+              AGENTS
+            </Link>
+            <Link
               className="spec-switch-seg spec-switch-seg-active"
               href={`${basePath}/dashboard/settings`}
               title="Wallet settings"

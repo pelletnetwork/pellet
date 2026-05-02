@@ -2148,6 +2148,154 @@ body:has(.specimen-shell) main {
   }
 }
 
+/* ── Connected agents (wallet → connected OAuth tokens) ─────────────────── */
+.spec-agents-empty {
+  padding: 64px 32px;
+  text-align: center;
+}
+.spec-agents-empty-head {
+  font-family: var(--font-commit-mono), ui-monospace, monospace;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in oklch, var(--fg) 55%, var(--bg));
+  margin: 0 0 12px 0;
+  font-weight: 400;
+}
+.spec-agents-empty-hint {
+  font-size: 14px;
+  line-height: 1.55;
+  max-width: 60ch;
+  margin: 0 auto;
+  color: color-mix(in oklch, var(--fg) 80%, var(--bg));
+}
+.spec-agents-empty-hint a {
+  color: var(--fg);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.spec-agents-table {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  margin: 0 32px;
+}
+.spec-agents-row {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: start;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line-thin);
+}
+.spec-agents-row:last-child {
+  border-bottom: 0;
+}
+.spec-agents-row-head {
+  font-family: var(--font-commit-mono), ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: color-mix(in oklch, var(--fg) 55%, var(--bg));
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+.spec-agents-cell-name {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.spec-agents-name {
+  font-size: 14px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.spec-agents-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-commit-mono), ui-monospace, monospace;
+  font-size: 10px;
+  color: color-mix(in oklch, var(--fg) 55%, var(--bg));
+}
+.spec-agents-tag {
+  padding: 1px 5px;
+  border: 1px solid var(--line-thin);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.spec-agents-tag-dynamic { border-color: var(--fg); color: var(--fg); }
+.spec-agents-id {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.spec-agents-cell-scopes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.spec-agents-scope {
+  font-family: var(--font-commit-mono), ui-monospace, monospace;
+  font-size: 10px;
+  padding: 2px 6px;
+  border: 1px solid var(--line-thin);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+.spec-agents-cell-time {
+  font-family: var(--font-commit-mono), ui-monospace, monospace;
+  font-size: 12px;
+  color: color-mix(in oklch, var(--fg) 75%, var(--bg));
+  font-variant-numeric: tabular-nums;
+}
+.spec-agents-cell-action {
+  display: flex;
+  justify-content: flex-end;
+}
+.spec-agents-revoke {
+  padding: 6px 12px;
+  font-family: var(--font-commit-mono), ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 0;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+}
+.spec-agents-revoke:hover:not(:disabled) {
+  background: var(--fg);
+  color: var(--bg);
+}
+.spec-agents-revoke:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.spec-agents-error {
+  margin: 16px 32px;
+  padding: 10px 12px;
+  font-family: var(--font-commit-mono), ui-monospace, monospace;
+  font-size: 12px;
+  border-left: 2px solid var(--fg);
+}
+
+@media (max-width: 720px) {
+  .spec-agents-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .spec-agents-row-head {
+    display: none;
+  }
+}
+
 /* ── OAuth consent screen ────────────────────────────────────────────────
  * The trust moment. Lives at /oauth/authorize. Centered card, generous
  * padding, terminal type for technical params, sentence type for the

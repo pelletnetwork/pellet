@@ -162,6 +162,13 @@ export function SpecimenWalletChat({
               PAIR AGENT
             </Link>
             <span className="spec-switch-seg spec-switch-seg-active">CHAT</span>
+            <Link
+              className="spec-switch-seg"
+              href={`${basePath}/dashboard/agents`}
+              title="Manage connected agents and revoke tokens"
+            >
+              AGENTS
+            </Link>
           </div>
         </div>
         <div className="spec-page-subhead">
