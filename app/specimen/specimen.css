@@ -1874,3 +1874,94 @@ button.spec-keycap {
     line-height: 28px;
   }
 }
+
+/* ── Wallet chat (in-wallet agent message thread) ────────────────────────
+ * Terminal-flat aesthetic: no bubbles, no avatars, just rows.
+ * Each row is a metadata line (time · sender · kind) above the content.
+ * Sender colors and kind tints are intentionally subtle — content is
+ * the focus, meta is reference.
+ */
+.spec-chat-pane {
+  margin-top: 24px;
+  border-top: 1px solid var(--line-thin);
+  padding-top: 16px;
+  min-height: 60vh;
+}
+.spec-chat-empty {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 48px 16px;
+  text-align: center;
+  color: color-mix(in oklch, var(--fg) 55%, var(--bg));
+}
+.spec-chat-empty-label {
+  font-family: var(--font-commit-mono), ui-monospace, monospace;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.spec-chat-empty-hint {
+  font-size: 13px;
+  max-width: 44ch;
+  margin: 0 auto;
+  line-height: 1.55;
+}
+.spec-chat-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.spec-chat-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line-thin);
+}
+.spec-chat-row:last-child {
+  border-bottom: 0;
+}
+.spec-chat-meta {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-commit-mono), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: color-mix(in oklch, var(--fg) 55%, var(--bg));
+}
+.spec-chat-time {
+  font-variant-numeric: tabular-nums;
+}
+.spec-chat-sep {
+  opacity: 0.5;
+}
+.spec-chat-sender {
+  text-transform: lowercase;
+}
+.spec-chat-kind {
+  text-transform: uppercase;
+}
+.spec-chat-kind-approval_request {
+  color: var(--fg);
+  font-weight: 700;
+}
+.spec-chat-content {
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.spec-chat-row-user .spec-chat-content {
+  /* Right-align user replies for visual contrast even without bubbles. */
+  align-self: flex-end;
+  max-width: 70ch;
+  text-align: right;
+}
+.spec-chat-row-system {
+  opacity: 0.7;
+}

@@ -183,18 +183,13 @@ export function SpecimenWalletDashboard({
             >
               PAIR AGENT
             </Link>
-            <button
-              type="button"
+            <Link
               className="spec-switch-seg"
-              onClick={() =>
-                alert(
-                  "Wallet export — coming soon.\n\nYour passkey is your only required backup; raw key export will be available later.",
-                )
-              }
-              title="Export wallet credentials — coming soon"
+              href={`${basePath}/chat`}
+              title="Live chat thread between you and your agents"
             >
-              EXPORT
-            </button>
+              CHAT
+            </Link>
             <Link
               className="spec-switch-seg spec-switch-seg-active"
               href={`${basePath}/dashboard/settings`}
