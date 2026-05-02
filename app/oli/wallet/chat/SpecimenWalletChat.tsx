@@ -14,6 +14,7 @@ type ChatMessage = {
 };
 
 const MAX_MESSAGES = 500;
+const MAX_INPUT = 8_000;
 
 function formatTime(iso: string): string {
   try {
@@ -43,8 +44,12 @@ export function SpecimenWalletChat({
 }) {
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [connected, setConnected] = useState(false);
+  const [input, setInput] = useState("");
+  const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
   const seen = useRef<Set<string>>(new Set(initialMessages.map((m) => m.id)));
   const tailRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     const es = new EventSource("/api/wallet/chat/stream");
@@ -76,6 +81,40 @@ export function SpecimenWalletChat({
   useEffect(() => {
     tailRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages.length]);
+
+  async function sendReply() {
+    const content = input.trim();
+    if (!content || sending) return;
+    setSending(true);
+    setSendError(null);
+    try {
+      const res = await fetch("/api/wallet/chat/reply", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ content }),
+      });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(data.error ?? `failed (${res.status})`);
+      }
+      setInput("");
+      // The SSE stream will deliver our own message back via the bus, so
+      // we don't optimistically render — keeps the message ordering canonical.
+      inputRef.current?.focus();
+    } catch (err) {
+      setSendError(err instanceof Error ? err.message : "send failed");
+    } finally {
+      setSending(false);
+    }
+  }
+
+  function onKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    // Enter to send, Shift-Enter for newline. Mirrors iMessage / Claude Code.
+    if (e.key === "Enter" && !e.shiftKey && !e.metaKey && !e.ctrlKey) {
+      e.preventDefault();
+      void sendReply();
+    }
+  }
 
   return (
     <>
@@ -145,6 +184,40 @@ export function SpecimenWalletChat({
         )}
         <div ref={tailRef} />
       </section>
+
+      <form
+        className="spec-chat-composer"
+        onSubmit={(e) => {
+          e.preventDefault();
+          void sendReply();
+        }}
+      >
+        <textarea
+          ref={inputRef}
+          className="spec-chat-input"
+          placeholder="reply to your agents…"
+          rows={1}
+          maxLength={MAX_INPUT}
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={onKeyDown}
+          disabled={sending}
+          aria-label="Type a reply"
+        />
+        <button
+          type="submit"
+          className="spec-chat-send"
+          disabled={sending || input.trim().length === 0}
+          title="Send (Enter)"
+        >
+          {sending ? "…" : "SEND"}
+        </button>
+        {sendError && (
+          <span className="spec-chat-send-err" role="alert">
+            {sendError}
+          </span>
+        )}
+      </form>
     </>
   );
 }

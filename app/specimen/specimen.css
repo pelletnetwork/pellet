@@ -1965,3 +1965,61 @@ button.spec-keycap {
 .spec-chat-row-system {
   opacity: 0.7;
 }
+
+/* Composer — sticky textarea at the bottom for user replies. Auto-grows
+ * to a max height; Enter sends, Shift-Enter inserts a newline. */
+.spec-chat-composer {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 12px 0;
+  margin-top: 8px;
+  background: var(--bg);
+  border-top: 1px solid var(--line-thin);
+}
+.spec-chat-input {
+  flex: 1;
+  resize: none;
+  min-height: 38px;
+  max-height: 160px;
+  padding: 9px 10px;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--fg);
+  background: var(--bg);
+  border: 1px solid var(--line-thin);
+  border-radius: 0;
+  outline: none;
+}
+.spec-chat-input:focus-visible {
+  border-color: var(--fg);
+}
+.spec-chat-input:disabled {
+  opacity: 0.5;
+}
+.spec-chat-send {
+  flex-shrink: 0;
+  padding: 9px 14px;
+  font-family: var(--font-commit-mono), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--bg);
+  background: var(--fg);
+  border: 1px solid var(--fg);
+  border-radius: 0;
+  cursor: pointer;
+  text-transform: uppercase;
+}
+.spec-chat-send:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.spec-chat-send-err {
+  font-family: var(--font-commit-mono), ui-monospace, monospace;
+  font-size: 11px;
+  color: color-mix(in oklch, var(--fg) 70%, var(--bg));
+  align-self: center;
+}
