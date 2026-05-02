@@ -431,56 +431,98 @@ body:has(.specimen-shell) main {
   border: 1px solid var(--line) !important;
 }
 
-/* ── Keymap legend (bottom) ──────────────────────────────────────────────── */
+/* ── Live status strip (bottom of every OLI/wallet page) ────────────────── */
+/* Replaces the old keymap legend. Polls /api/wallet/status-strip every 30s
+ * and listens to the OLI feed SSE for live last-event updates. Mono ticker-
+ * tape type per the chart aesthetic memory. */
 
-.spec-keymap {
+.spec-status-strip {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 28px;
-  padding: 16px 32px;
+  gap: 0;
+  padding: 0 24px;
+  height: 40px;
   border-top: 1px solid var(--line);
+  font-family: var(--font-commit-mono), ui-monospace, monospace;
   font-size: 11px;
+  letter-spacing: 0.04em;
   margin-top: auto;
+  overflow: hidden;
+  white-space: nowrap;
 }
-.spec-keymap-item {
+.spec-status-cell {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  padding: 0 18px;
+  height: 100%;
+  border-right: 1px solid var(--line-thin);
 }
-.spec-keymap-keys {
-  display: inline-flex;
-  align-items: center;
+.spec-status-cell:first-child {
+  padding-left: 0;
 }
-.spec-keymap-label {
-  letter-spacing: 0.02em;
+.spec-status-cell-last {
+  flex: 1;
+  min-width: 0;
+  border-right: 0;
+  padding-right: 0;
 }
-
-/* Keycap — 18px square, 1px ink border, contiguous (shared edges in combos). */
-.spec-keycap {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 18px;
-  height: 18px;
-  border: 1px solid var(--fg);
-  background: transparent;
-  font-size: 11px;
-  font-weight: 500;
+.spec-status-label {
+  color: color-mix(in oklch, var(--fg) 55%, var(--bg));
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  flex-shrink: 0;
+}
+.spec-status-value {
   color: var(--fg);
-  line-height: 1;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
 }
-.spec-keycap + .spec-keycap {
-  border-left: none;
+.spec-status-value-trim {
+  display: inline-flex;
+  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-/* M-key gets a button styling (it's interactive) */
-button.spec-keycap {
-  cursor: pointer;
-  font-family: inherit;
-  padding: 0;
+.spec-status-agent {
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.spec-status-sep {
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+.spec-status-summary {
+  font-weight: 400;
+  color: color-mix(in oklch, var(--fg) 75%, var(--bg));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+.spec-status-spark {
+  color: var(--fg);
+  flex-shrink: 0;
 }
 
-/* ── Shell layout: column flex so keymap pins to bottom of viewport-ish ──── */
+@media (max-width: 720px) {
+  .spec-status-strip {
+    padding: 0 12px;
+    height: 36px;
+  }
+  .spec-status-cell {
+    padding: 0 10px;
+  }
+  /* Hide the volume + agents cells on narrow viewports — leave txs +
+   * sparkline + last-activity ticker, which is the most signal-rich. */
+  .spec-status-cell:nth-child(2),
+  .spec-status-cell:nth-child(3) {
+    display: none;
+  }
+}
+
+/* ── Shell layout: column flex so the strip pins to bottom of viewport-ish ── */
 
 .specimen-shell {
   display: flex;
@@ -1854,10 +1896,6 @@ button.spec-keycap {
     min-width: 560px;
   }
 
-  /* keymap: hidden on mobile */
-  .spec-keymap {
-    display: none;
-  }
 }
 
 @media (max-width: 480px) {

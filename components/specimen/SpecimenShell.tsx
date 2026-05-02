@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { SpecimenStatusStrip } from "./SpecimenStatusStrip";
 
 const STORAGE_KEY = "specimen-theme";
 
@@ -17,60 +18,6 @@ const NAV: Array<{ num: string; label: string; href?: string }> = [
   { num: "08", label: "MCP", href: "/oli/mcp" },
   { num: "09", label: "Skills", href: "/oli/skills" },
 ];
-
-export type KeymapItem = {
-  keys: string[];
-  label: string;
-  toggle?: boolean;
-};
-
-export const DEFAULT_KEYMAP: KeymapItem[] = [
-  { keys: ["↑", "↓", "←", "→"], label: "Navigate" },
-  { keys: ["1", "2", "3"], label: "To section" },
-  { keys: ["W", "A", "S", "D"], label: "Scroll" },
-  { keys: ["+", "−"], label: "Zoom" },
-  { keys: ["R"], label: "Reset" },
-  { keys: ["F"], label: "Filter" },
-  { keys: ["M"], label: "Light/dark", toggle: true },
-  { keys: ["H"], label: "Hide keys" },
-];
-
-export const WALLET_KEYMAP: KeymapItem[] = [
-  { keys: ["↑", "↓"], label: "Navigate" },
-  { keys: ["P"], label: "Pair device" },
-  { keys: ["S"], label: "Sign" },
-  { keys: ["N"], label: "New session" },
-  { keys: ["A"], label: "Approve pending" },
-  { keys: ["E"], label: "Export" },
-  { keys: ["F"], label: "Filter" },
-  { keys: ["M"], label: "Light/dark", toggle: true },
-  { keys: ["H"], label: "Hide keys" },
-];
-
-function Keycap({
-  children,
-  onClick,
-  ariaLabel,
-}: {
-  children: React.ReactNode;
-  onClick?: () => void;
-  ariaLabel?: string;
-}) {
-  if (onClick) {
-    return (
-      <button
-        type="button"
-        className="spec-keycap"
-        onClick={onClick}
-        aria-label={ariaLabel}
-        title={ariaLabel}
-      >
-        {children}
-      </button>
-    );
-  }
-  return <span className="spec-keycap">{children}</span>;
-}
 
 function TopBar({
   pathname,
@@ -182,46 +129,15 @@ function ThemeToggleButton({
   );
 }
 
-function KeymapLegend({
-  items,
-  onToggleTheme,
-}: {
-  items: KeymapItem[];
-  onToggleTheme: () => void;
-}) {
-  return (
-    <footer className="spec-keymap" role="contentinfo" aria-label="Keymap legend">
-      {items.map((item) => (
-        <span key={item.label} className="spec-keymap-item">
-          <span className="spec-keymap-keys">
-            {item.keys.map((k, i) => {
-              if (item.toggle && k === "M") {
-                return (
-                  <Keycap
-                    key={`${item.label}-${i}-${k}`}
-                    onClick={onToggleTheme}
-                    ariaLabel="Toggle light/dark (M)"
-                  >
-                    {k}
-                  </Keycap>
-                );
-              }
-              return <Keycap key={`${item.label}-${i}-${k}`}>{k}</Keycap>;
-            })}
-          </span>
-          <span className="spec-keymap-label">{item.label}</span>
-        </span>
-      ))}
-    </footer>
-  );
-}
-
 /**
- * Specimen shell — top nav, content slot, keymap legend. Dark is default;
- * pressing `M` (or clicking the M keycap) flips a `dark` class on the root
- * div and persists to localStorage. We intentionally do NOT honor
- * prefers-color-scheme — first-load is always ink unless the user has
- * explicitly chosen light before.
+ * Specimen shell — top nav, content slot, live status strip. Dark is
+ * default; pressing `M` (or clicking the theme button) flips a `dark`
+ * class on the root div and persists to localStorage. We intentionally do
+ * NOT honor prefers-color-scheme — first-load is always ink unless the
+ * user has explicitly chosen light before.
+ *
+ * Bottom strip used to be a static keymap legend; replaced by a live OLI
+ * stat strip (24h MPP txs + sparkline, volume, agents, last activity).
  */
 export function SpecimenShell({
   children,
@@ -229,8 +145,6 @@ export function SpecimenShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname() ?? "/oli";
-  const isWallet = pathname.startsWith("/oli/wallet") || pathname.startsWith("/specimen/wallet");
-  const keymap = isWallet ? WALLET_KEYMAP : DEFAULT_KEYMAP;
   const [dark, setDark] = useState(true);
 
   // Hydrate from storage; URL `?theme=dark|light` overrides for screenshots.
@@ -289,7 +203,7 @@ export function SpecimenShell({
     <div className={`specimen-shell${dark ? " dark" : ""}`}>
       <TopBar pathname={pathname} dark={dark} onToggleTheme={toggleTheme} />
       <div className="spec-main">{children}</div>
-      <KeymapLegend items={keymap} onToggleTheme={toggleTheme} />
+      <SpecimenStatusStrip />
     </div>
   );
 }
