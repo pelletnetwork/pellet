@@ -25,7 +25,7 @@ function Logo() {
 
 export function Nav() {
   const pathname = usePathname();
-  if (pathname === "/") return null;
+  if (pathname === "/" || pathname === "/wallet") return null;
   return <NavContent />;
 }
 

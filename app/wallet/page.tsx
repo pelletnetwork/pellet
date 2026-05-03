@@ -1,102 +1,66 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import styles from "../page.module.css";
 
 export const metadata: Metadata = {
-  title: "Pellet Wallet — Soon",
+  title: "Pellet Wallet — Testnet",
   description:
     "Pellet Wallet is currently running in testnet. Mainnet access opens soon.",
 };
 
 export default function WalletSoonPage() {
   return (
-    <section
-      style={{
-        minHeight: "calc(100svh - 48px)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "48px 24px",
-      }}
-    >
-      <div
-        style={{
-          width: "min(100%, 520px)",
-          display: "flex",
-          flexDirection: "column",
-          gap: 18,
-          textAlign: "center",
-        }}
-      >
-        <p
-          style={{
-            margin: 0,
-            color: "var(--color-text-tertiary)",
-            fontSize: 12,
-            letterSpacing: "0.1em",
-            textTransform: "uppercase",
-          }}
-        >
-          Wallet soon
-        </p>
-        <h1
-          style={{
-            margin: 0,
-            color: "var(--color-text-primary)",
-            fontSize: "clamp(42px, 7vw, 76px)",
-            lineHeight: 0.95,
-            fontWeight: 400,
-            letterSpacing: 0,
-          }}
-        >
-          Pellet Wallet is currently running in testnet.
-        </h1>
-        <p
-          style={{
-            margin: 0,
-            color: "var(--color-text-secondary)",
-            fontSize: 15,
-            lineHeight: 1.6,
-          }}
-        >
-          Mainnet access opens soon. The OLI and docs remain public while the
-          wallet surface keeps hardening behind the scenes.
-        </p>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-            border: "1px solid var(--color-border-default)",
-          }}
-        >
-          <Link
-            href="/oli"
-            style={{
-              padding: "12px 14px",
-              color: "var(--color-text-primary)",
-              fontSize: 11,
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-              textDecoration: "none",
-            }}
-          >
-            OLI
-          </Link>
-          <Link
-            href="/docs"
-            style={{
-              padding: "12px 14px",
-              color: "var(--color-text-primary)",
-              fontSize: 11,
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-              textDecoration: "none",
-              borderLeft: "1px solid var(--color-border-default)",
-            }}
-          >
-            Docs
-          </Link>
+    <>
+      <style>{`
+        html:has(.landing-soon),
+        body:has(.landing-soon) {
+          background: #bcbcbc;
+          color: #111111;
+          color-scheme: light;
+        }
+
+        body:has(.landing-soon) {
+          --color-bg-base: #bcbcbc;
+          --color-bg-subtle: #b5b5b5;
+          --color-bg-muted: #adadad;
+          --color-bg-emphasis: #a5a5a5;
+          --color-border-subtle: rgba(17, 17, 17, 0.26);
+          --color-border-default: rgba(17, 17, 17, 0.48);
+          --color-border-emphasis: #111111;
+          --color-text-primary: #111111;
+          --color-text-secondary: rgba(17, 17, 17, 0.72);
+          --color-text-tertiary: rgba(17, 17, 17, 0.58);
+          --color-text-quaternary: rgba(17, 17, 17, 0.46);
+        }
+
+        body:has(.landing-soon) main {
+          background: #bcbcbc;
+          animation: none;
+        }
+      `}</style>
+      <section className={`${styles.landing} landing-soon`} aria-label="Pellet Wallet testnet">
+        <div className={styles.shell}>
+          <div className={styles.videoFrame}>
+            <video
+              className={styles.video}
+              src="/pellet-landing.mp4"
+              autoPlay
+              loop
+              muted
+              playsInline
+              preload="auto"
+              aria-label="Pellet wallet agent identity card preview"
+            />
+          </div>
+          <p className={styles.footnote}>
+            Pellet Wallet is currently running in testnet. Mainnet access opens soon.
+          </p>
+          <nav className={styles.links} aria-label="Pellet links">
+            <Link href="/oli">OLI</Link>
+            <Link href="/docs">Docs</Link>
+          </nav>
         </div>
-      </div>
-    </section>
+      </section>
+    </>
   );
 }
