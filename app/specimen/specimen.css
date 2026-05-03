@@ -89,9 +89,9 @@ body:has(.specimen-shell) main {
 /* ── Top bar ─────────────────────────────────────────────────────────────── */
 
 .spec-topbar {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  justify-content: space-between;
   padding: 18px 32px;
   border-bottom: 1px solid var(--line);
   gap: 24px;
@@ -104,6 +104,7 @@ body:has(.specimen-shell) main {
   gap: 6px;
   font-size: 12px;
   letter-spacing: 0.04em;
+  justify-self: start;
 }
 
 .spec-brand-mark {
@@ -127,26 +128,107 @@ body:has(.specimen-shell) main {
 }
 
 .spec-nav {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, 112px);
   align-items: center;
-  gap: 20px;
+  justify-content: center;
+  gap: 6px;
   font-size: 12px;
+  justify-self: center;
 }
-.spec-nav-item {
+.spec-nav-group {
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+.spec-nav-trigger {
   display: inline-flex;
   align-items: center;
-  gap: 2px;
-  padding: 3px 8px;
-  border: 1px solid transparent;
-  color: var(--fg);
+  justify-content: center;
+  width: 100%;
+  padding: 5px 8px;
+  border: 0;
+  background: transparent;
+  color: color-mix(in oklch, var(--fg) 72%, var(--bg));
   cursor: pointer;
+  font: inherit;
+  letter-spacing: 0;
+  list-style: none;
   white-space: nowrap;
+  transition: color 120ms ease, opacity 120ms ease;
 }
-.spec-nav-item-active {
-  border-color: var(--fg);
+.spec-nav-trigger:hover,
+.spec-nav-trigger:focus-visible,
+.spec-nav-group-open .spec-nav-trigger {
+  color: var(--fg);
+  outline: none;
 }
-.spec-nav-num {
-  opacity: 1;
+.spec-nav-label {
+  display: inline-block;
+  position: relative;
+}
+.spec-nav-label::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -7px;
+  height: 1px;
+  background: currentColor;
+  opacity: 0;
+  transform: scaleX(0.45);
+  transition: opacity 140ms ease, transform 140ms ease;
+}
+.spec-nav-trigger:hover .spec-nav-label::after,
+.spec-nav-trigger:focus-visible .spec-nav-label::after,
+.spec-nav-group-open .spec-nav-label::after {
+  opacity: 0.7;
+  transform: scaleX(1);
+}
+.spec-nav-group-active > .spec-nav-trigger {
+  color: var(--fg);
+}
+.spec-nav-menu {
+  position: absolute;
+  top: calc(100% + 14px);
+  left: 50%;
+  z-index: 40;
+  display: none;
+  min-width: 172px;
+  transform: translateX(-50%);
+  flex-direction: column;
+  padding: 7px 0;
+  border: 0;
+  background: color-mix(in oklch, var(--bg) 94%, var(--fg));
+  box-shadow:
+    0 18px 38px color-mix(in oklch, var(--ink) 32%, transparent),
+    inset 0 1px 0 color-mix(in oklch, var(--fg) 12%, transparent);
+}
+.spec-nav-group-open .spec-nav-menu {
+  display: flex;
+}
+.spec-nav-menu-item {
+  display: flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 7px 12px;
+  border: 0;
+  color: color-mix(in oklch, var(--fg) 68%, var(--bg));
+  white-space: nowrap;
+  transition: background 120ms ease, color 120ms ease;
+}
+.spec-nav-menu-item:hover,
+.spec-nav-menu-item:focus-visible,
+.spec-nav-menu-item-active {
+  color: var(--fg);
+  outline: none;
+}
+.spec-nav-menu-item-active {
+  background: color-mix(in oklch, var(--fg) 7%, transparent);
+}
+.spec-nav-menu-item:hover,
+.spec-nav-menu-item:focus-visible {
+  background: color-mix(in oklch, var(--fg) 5%, transparent);
 }
 
 .spec-status {
@@ -162,6 +244,15 @@ body:has(.specimen-shell) main {
   height: 8px;
   background: var(--fg);
   flex-shrink: 0;
+}
+
+.spec-topbar-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  min-width: 42px;
+  justify-self: end;
 }
 
 /* Theme toggle (top-right) — bare icon, no chrome. The icon glyph itself
@@ -195,6 +286,25 @@ body:has(.specimen-shell) main {
 .spec-theme-toggle:active svg circle,
 .spec-theme-toggle:active svg path {
   fill: currentColor;
+}
+
+.spec-mobile-nav-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  color: var(--fg);
+  opacity: 0.78;
+  cursor: pointer;
+}
+.spec-mobile-nav-toggle:hover,
+.spec-mobile-nav-toggle:focus-visible {
+  opacity: 1;
+  outline: none;
 }
 
 /* ── MDX prose / shiki code-block monochrome ──────────────────────────────
@@ -1624,29 +1734,76 @@ body:has(.specimen-shell) main {
 
   /* topbar: brand + status row, nav scrolls horizontally beneath */
   .spec-topbar {
+    grid-template-columns: minmax(0, 1fr) auto;
     padding: 12px 16px;
     gap: 10px;
-    flex-wrap: wrap;
+  }
+  .spec-brand {
+    min-width: 0;
   }
   .spec-status {
     font-size: 10px;
     letter-spacing: 0.04em;
   }
+  .spec-topbar-actions {
+    gap: 10px;
+    margin-left: auto;
+  }
+  .spec-mobile-nav-toggle {
+    display: inline-flex;
+  }
   .spec-nav {
-    order: 3;
-    width: 100%;
-    overflow-x: auto;
-    gap: 12px;
-    padding-bottom: 2px;
-    scrollbar-width: none;
-  }
-  .spec-nav::-webkit-scrollbar {
+    grid-column: 1 / -1;
     display: none;
+    grid-template-columns: none;
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    padding-top: 8px;
+    border-top: 1px solid var(--line-thin);
   }
-  .spec-nav-item {
-    padding: 2px 6px;
+  .spec-nav-open {
+    display: flex;
+  }
+  .spec-nav-group {
+    display: block;
+    border-bottom: 1px solid var(--line-thin);
+  }
+  .spec-nav-group:last-child {
+    border-bottom: 0;
+  }
+  .spec-nav-trigger {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    padding: 11px 0;
+    border: 0;
     font-size: 11px;
-    flex-shrink: 0;
+  }
+  .spec-nav-label::after {
+    bottom: -3px;
+  }
+  .spec-nav-group-active > .spec-nav-trigger {
+    border-color: transparent;
+  }
+  .spec-nav-menu {
+    position: static;
+    display: none;
+    min-width: 0;
+    transform: none;
+    padding: 0 0 8px 10px;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+  .spec-nav-group-open .spec-nav-menu {
+    display: flex;
+  }
+  .spec-nav-menu-item {
+    min-height: 28px;
+    padding: 7px 10px;
+    font-size: 11px;
   }
 
   /* page header */
