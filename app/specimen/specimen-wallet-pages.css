@@ -431,6 +431,51 @@
   }
 }
 
+@media (max-width: 480px) {
+  .spec-swap-modal {
+    padding: 16px;
+    gap: 14px;
+  }
+  .spec-holding-row {
+    height: 32px;
+    gap: 6px;
+    font-size: 10px;
+  }
+  .spec-holding-icon {
+    width: 16px;
+    height: 16px;
+  }
+  .spec-holding-icon svg,
+  .spec-holding-icon img {
+    width: 16px;
+    height: 16px;
+  }
+  .spec-keys-grid {
+    grid-template-columns: 56px 1fr;
+    font-size: 9px;
+  }
+  .spec-subhead-addr {
+    max-width: 120px;
+    font-size: 10px;
+  }
+  .spec-page-subhead {
+    font-size: 10px;
+    gap: 4px;
+  }
+  .spec-page-subhead-label {
+    font-size: 8px;
+  }
+  .spec-col-head {
+    gap: 4px;
+    font-size: 9px;
+    padding-bottom: 8px;
+  }
+  .spec-col-head-right {
+    gap: 6px;
+    font-size: 9px;
+  }
+}
+
 /* ── Sign-in surface ────────────────────────────────────────────────────── */
 
 .spec-signin-shell {

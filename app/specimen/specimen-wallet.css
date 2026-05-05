@@ -1131,6 +1131,62 @@
   }
 }
 
+/* ── Small mobile (≤480px) ─────────────────────────────────────────────── */
+
+@media (max-width: 480px) {
+  .spec-wallet-float .spec-kpi-stack {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .spec-wallet-float .spec-kpi-card {
+    padding: 12px;
+    gap: 6px;
+  }
+
+  .spec-wallet-float .spec-page-header {
+    padding: 12px 10px 10px;
+  }
+  .spec-wallet-float .spec-cols {
+    margin: 0;
+    gap: 8px;
+  }
+  .spec-col-activity {
+    padding: 10px 10px !important;
+  }
+  .spec-col-rail {
+    padding: 0 !important;
+  }
+
+  .spec-agent-id-ascii {
+    font-size: 4.5px;
+    height: 80px;
+    max-width: 100%;
+    overflow: hidden;
+  }
+  .spec-agent-id-card {
+    padding: 10px 12px 12px;
+  }
+
+  .spec-session-card {
+    padding: 12px 14px;
+    gap: 6px;
+  }
+  .spec-meta-grid {
+    grid-template-columns: 60px 1fr;
+    font-size: 10px;
+  }
+
+  .spec-activity-head {
+    font-size: 9px;
+  }
+  .spec-pay-col-when {
+    width: 50px !important;
+  }
+  .spec-pay-col-amount {
+    width: 70px !important;
+  }
+}
+
 /* ── Ledger float (shader bg + card sections) ────────────────────────────── */
 
 .spec-ledger-float {
