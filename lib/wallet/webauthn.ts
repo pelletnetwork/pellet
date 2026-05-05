@@ -130,17 +130,3 @@ export async function verifyAuthentication(opts: {
   });
 }
 
-// ── Placeholder address derivation (phase 3 replaces this) ───────────────
-
-// Phase 2: derive a deterministic, valid-looking 0x address from the
-// credential id so wallet_users.managed_address is non-null and unique.
-// This is NOT a real Tempo account address — funds sent here go nowhere.
-// Phase 3 swaps this for the actual passkey-derived Tempo account.
-export function placeholderAddressFromCredId(credId: string): string {
-  // SHA-256 the cred id; take the last 20 bytes (40 hex chars). Stable per
-  // credential, never collides in practice.
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { createHash } = require("crypto");
-  const hex = createHash("sha256").update(credId).digest("hex");
-  return ("0x" + hex.slice(-40)).toLowerCase();
-}

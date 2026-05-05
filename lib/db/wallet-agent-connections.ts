@@ -4,6 +4,7 @@ import { db } from "@/lib/db/client";
 import {
   oauthAccessTokens,
   walletAgentConnections,
+  walletSessions,
 } from "@/lib/db/schema";
 import type { ScopeName } from "@/lib/oauth/scopes";
 
@@ -254,7 +255,7 @@ export async function getConnectedAgentForSession(input: {
 export async function revokeAgentConnection(input: {
   userId: string;
   connectionId: string;
-}): Promise<{ id: string; clientId: string; revokedTokenCount: number } | null> {
+}): Promise<{ id: string; clientId: string; revokedTokenCount: number; revokedSessionCount: number } | null> {
   const now = new Date();
   const updated = await db
     .update(walletAgentConnections)
@@ -282,11 +283,35 @@ export async function revokeAgentConnection(input: {
         isNull(oauthAccessTokens.revokedAt),
       ),
     )
-    .returning({ id: oauthAccessTokens.id });
+    .returning({ id: oauthAccessTokens.id, sessionId: oauthAccessTokens.sessionId });
+
+  // Revoke all sessions linked to the agent's tokens. Without this, a
+  // revoked agent's access key stays active server-side until expiry.
+  const sessionIds = [...new Set(
+    revokedTokens.map((t) => t.sessionId).filter((id): id is string => id != null),
+  )];
+  let revokedSessionCount = 0;
+  if (sessionIds.length > 0) {
+    for (const sid of sessionIds) {
+      const res = await db
+        .update(walletSessions)
+        .set({ revokedAt: now })
+        .where(
+          and(
+            eq(walletSessions.id, sid),
+            eq(walletSessions.userId, input.userId),
+            isNull(walletSessions.revokedAt),
+          ),
+        )
+        .returning({ id: walletSessions.id });
+      revokedSessionCount += res.length;
+    }
+  }
 
   return {
     id: connection.id,
     clientId: connection.clientId,
     revokedTokenCount: revokedTokens.length,
+    revokedSessionCount,
   };
 }

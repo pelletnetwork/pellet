@@ -3,6 +3,7 @@ import { walletUsers, walletSessions, walletSpendLog } from "@/lib/db/schema";
 import { sql, eq, and, desc } from "drizzle-orm";
 import { readWalletBalances } from "@/lib/wallet/tempo-balance";
 import { listConnectedAgents } from "@/lib/db/wallet-agent-connections";
+import { syncSessionsChainStatus } from "@/lib/wallet/sync-chain-status";
 
 export type DashboardData = {
   user: {
@@ -58,6 +59,10 @@ export async function loadDashboardData(userId: string): Promise<DashboardData |
     .limit(1);
   const user = userRows[0];
   if (!user) return null;
+
+  // Sync on-chain key status before reading sessions so the dashboard
+  // reflects any keys revoked or expired on-chain since last load.
+  await syncSessionsChainStatus(userId, user.managedAddress).catch(() => {});
 
   const sessions = await db
     .select({

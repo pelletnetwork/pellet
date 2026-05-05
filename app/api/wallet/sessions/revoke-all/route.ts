@@ -8,8 +8,9 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 // Revoke every active (non-revoked, non-expired) session for the caller in
-// one statement. Mirrors single-session revoke semantics: bearer dies
-// server-side immediately; on-chain access keys still expire on schedule.
+// one statement. DB revoke is immediate; on-chain revoke requires passkey
+// assertions from the browser (handled per-session by the single-session
+// revoke endpoint + the client-side flow).
 
 export async function POST() {
   const userId = await readUserSession();

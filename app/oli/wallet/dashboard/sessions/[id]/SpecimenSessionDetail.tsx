@@ -100,6 +100,40 @@ export function SpecimenSessionDetail({
         alert(`revoke failed: ${d.error ?? res.statusText}`);
         return;
       }
+      const data = await res.json();
+
+      // Best-effort on-chain revoke via passkey. DB revoke already blocks
+      // server-side, so failures here are non-fatal.
+      if (data.on_chain) {
+        try {
+          const { Account, withRelay, tempoActions } = await import("viem/tempo");
+          const { createWalletClient, http } = await import("viem");
+          const { tempoModerato, tempo: tempoMainnet } = await import("viem/chains");
+          const oc = data.on_chain;
+
+          const userAccount = Account.fromWebAuthnP256(
+            { id: oc.credential_id, publicKey: oc.public_key_uncompressed },
+            { rpId: oc.rp_id },
+          );
+          const baseChain = oc.chain_id === tempoMainnet.id ? tempoMainnet : tempoModerato;
+          const chain = { ...baseChain, feeToken: oc.usdc_e };
+          const transport = oc.sponsor_url
+            ? withRelay(http(oc.rpc_url), http(oc.sponsor_url), { policy: "sign-only" as const })
+            : http(oc.rpc_url);
+          const client = createWalletClient({ account: userAccount, chain, transport }).extend(
+            tempoActions(),
+          );
+
+          await client.accessKey.revoke({
+            accessKey: oc.agent_key_address,
+            feePayer: true,
+            gas: BigInt(5_000_000),
+          } as never);
+        } catch (e) {
+          console.warn("[revoke] on-chain revoke failed (DB already revoked):", e);
+        }
+      }
+
       window.location.reload();
     } finally {
       setRevoking(false);
@@ -139,8 +173,8 @@ export function SpecimenSessionDetail({
         </div>
       </section>
 
-      <section className="spec-strip">
-        <div className="spec-strip-cell" style={{ flex: "1.4 1 0" }}>
+      <section className="spec-kpi-stack">
+        <div className="spec-kpi-card">
           <span className="spec-strip-label">CAP USAGE</span>
           <span className="spec-strip-value spec-strip-value-md">
             {fmtUsd(used)} / {fmtUsd(cap, 2)}
@@ -153,21 +187,21 @@ export function SpecimenSessionDetail({
             <span className="spec-strip-sub-faint">per-call max {fmtUsd(perCall)}</span>
           </span>
         </div>
-        <div className="spec-strip-cell">
+        <div className="spec-kpi-card">
           <span className="spec-strip-label">EXPIRES</span>
           <span className="spec-strip-value spec-strip-value-md">{expiryIn(session.expiresAt)}</span>
           <span className="spec-strip-sub">
             <span className="spec-strip-sub-faint">{fmtAbs(session.expiresAt)}</span>
           </span>
         </div>
-        <div className="spec-strip-cell">
+        <div className="spec-kpi-card">
           <span className="spec-strip-label">ISSUED</span>
           <span className="spec-strip-value spec-strip-value-md">{timeAgo(session.createdAt)}</span>
           <span className="spec-strip-sub">
             <span className="spec-strip-sub-faint">{fmtAbs(session.createdAt)}</span>
           </span>
         </div>
-        <div className="spec-strip-cell">
+        <div className="spec-kpi-card">
           <span className="spec-strip-label">AUTHORIZE TX</span>
           <span className="spec-strip-value spec-strip-value-md" style={{ fontSize: 18 }}>
             {session.authorizeTxHash ? (
