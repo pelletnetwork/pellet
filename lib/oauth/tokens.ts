@@ -14,12 +14,7 @@ import type { ScopeName } from "./scopes";
 // `audience` matches their own URI before serving — this prevents a token
 // minted for resource A from being replayed against resource B.
 //
-// Default TTL is 1 hour. Refresh tokens are not implemented in v1; clients
-// re-authorize when their token expires (the agent can keep a long-lived
-// PKCE handshake state if needed, or the user can re-approve via a fresh
-// OAuth flow). Refresh-token support comes in Phase 2.
-
-const TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hour
+const TOKEN_TTL_MS = 365 * 24 * 60 * 60 * 1000; // 1 year
 
 function base64Url(buf: Buffer): string {
   return buf

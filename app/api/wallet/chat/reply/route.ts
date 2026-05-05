@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { readUserSession } from "@/lib/wallet/challenge-cookie";
 import { insertChatMessage } from "@/lib/db/wallet-chat";
-import { getConnectedAgent } from "@/lib/db/wallet-agent-connections";
+import { getConnectedAgent, listConnectedAgents } from "@/lib/db/wallet-agent-connections";
 import { rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
@@ -64,7 +64,7 @@ export async function POST(req: Request) {
       : typeof agentId === "string"
         ? agentId
         : null;
-  const connection = requestedConnectionId
+  let connection = requestedConnectionId
     ? await getConnectedAgent({ userId, connectionId: requestedConnectionId })
     : null;
   if (requestedConnectionId && !connection) {
@@ -72,6 +72,10 @@ export async function POST(req: Request) {
       { error: "agent connection not found" },
       { status: 404 },
     );
+  }
+  if (!connection) {
+    const agents = await listConnectedAgents(userId);
+    if (agents.length === 1) connection = agents[0];
   }
 
   const row = await insertChatMessage({

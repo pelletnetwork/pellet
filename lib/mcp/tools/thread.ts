@@ -7,6 +7,7 @@ import {
   recentChatMessages,
   type WalletChatRow,
 } from "@/lib/db/wallet-chat";
+import { bus } from "@/lib/realtime/bus";
 import { type McpAuthInfo, requireScope } from "@/lib/mcp/auth";
 
 // Three thread tools:
@@ -124,6 +125,75 @@ export function registerThreadTools(
         structuredContent: {
           messages: rows.map(toWire),
         },
+      };
+    },
+  );
+
+  server.registerTool(
+    "wallet.thread.await",
+    {
+      title: "Wait for a new user message",
+      description:
+        "Block until the user sends a new chat message, then return it. Use this instead of polling wallet.thread.list — it delivers messages in real-time via the server's pg_notify bus. Returns the message immediately if one arrives, or {timeout: true} after the wait expires. Call in a loop to maintain a live conversation.",
+      inputSchema: {
+        timeout: z
+          .number()
+          .int()
+          .min(5)
+          .max(55)
+          .default(55)
+          .describe("Max seconds to wait before returning empty (default 55)."),
+      },
+      annotations: { readOnlyHint: true },
+    },
+    async ({ timeout }) => {
+      const auth = getAuth();
+      if (!auth) {
+        return {
+          isError: true,
+          content: [{ type: "text", text: "no authenticated session" }],
+        };
+      }
+      requireScope(auth, "wallet:chat");
+
+      const userId = auth.user.id;
+      const clientId = auth.token.clientId;
+
+      await bus().start();
+
+      const msg = await new Promise<WalletChatRow | null>((resolve) => {
+        const timer = setTimeout(() => {
+          bus().off("chat-message", handler);
+          resolve(null);
+        }, timeout * 1000);
+
+        function handler(row: WalletChatRow) {
+          if (row.userId !== userId) return;
+          if (row.sender !== "user") return;
+          if (row.clientId && row.clientId !== clientId) return;
+          clearTimeout(timer);
+          bus().off("chat-message", handler);
+          resolve(row);
+        }
+
+        bus().on("chat-message", handler);
+      });
+
+      if (!msg) {
+        return {
+          content: [{ type: "text", text: "no new messages (timeout)" }],
+          structuredContent: { timeout: true },
+        };
+      }
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: `[${msg.createdAt.toISOString()}] ${msg.sender}/${msg.kind}: ${msg.content}`,
+          },
+        ],
+        structuredContent: { timeout: false, message: toWire(msg) },
       };
     },
   );

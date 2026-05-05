@@ -28,6 +28,7 @@ export function buildPelletMcpServer(auth: McpAuthInfo): McpServer {
     {
       capabilities: {
         tools: {},
+        logging: {},
       },
     },
   );

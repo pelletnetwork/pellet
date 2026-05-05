@@ -147,7 +147,6 @@ export function DeviceApproval({ initialCode }: { initialCode: string }) {
       return;
     }
 
-    // Build the user's passkey-rooted Tempo account + sponsored client.
     setState({ kind: "submitting", stage: "signing" });
     let txHash: `0x${string}`;
     try {
@@ -159,18 +158,12 @@ export function DeviceApproval({ initialCode }: { initialCode: string }) {
         { rpId: init.rp_id },
       );
 
-      // The access key Account — wraps the freshly-generated agent
-      // private key. `access: userAccount` tells viem this key is
-      // derived/scoped to the user account.
       const accessKey = Account.fromSecp256k1(init.agent_private_key, {
         access: userAccount,
       });
 
       const baseChain =
         init.chain.id === tempoMainnet.id ? tempoMainnet : tempoModerato;
-      // Tempo's chainConfig.prepareTransactionRequest reads chain.feeToken
-      // when feePayer is set; surface the chain's USDC.e as the fee token
-      // so sponsor accounting is well-formed.
       const chain = { ...baseChain, feeToken: init.chain.usdc_e };
 
       const transport = init.chain.sponsor_url
@@ -185,17 +178,6 @@ export function DeviceApproval({ initialCode }: { initialCode: string }) {
         transport,
       }).extend(tempoActions());
 
-      // T3 authorizeKey via the high-level Tempo action. Constructs a
-      // type-0x76 envelope with keyAuthorization, signs the keyAuth
-      // payload with the access key + the outer envelope with the
-      // user's passkey, sends with feePayer:true so withRelay engages
-      // the sponsor for gas.
-      //
-      // Explicit gas budget — viem's default estimate (~40k) doesn't
-      // account for on-chain WebAuthn signature verification (~2M)
-      // plus AccountKeychain storage writes (~500k) plus first-tx
-      // account activation. Set generous and let the precompile use
-      // what it needs; sponsor pays the actual amount metered.
       setState({ kind: "submitting", stage: "broadcasting" });
       const result = await client.accessKey.authorizeSync({
         accessKey,
@@ -261,48 +243,17 @@ export function DeviceApproval({ initialCode }: { initialCode: string }) {
   };
 
   return (
-    <div
-      style={{
-        width: "100%",
-        maxWidth: 480,
-        background: "var(--color-bg-base)",
-        border: "1px solid var(--color-border-subtle)",
-        padding: 32,
-        fontVariantNumeric: "tabular-nums",
-      }}
-    >
-      <style>{`
-        .dev-h1 { font-family: 'Instrument Serif', Georgia, serif; font-size: 32px; font-weight: 400; margin: 0 0 8px; letter-spacing: -0.02em; }
-        .dev-kicker { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-text-quaternary); }
-        .dev-mono { font-family: var(--font-mono); }
-        .dev-input { width: 100%; padding: 12px 14px; font-family: var(--font-mono); font-size: 16px; background: rgba(255,255,255,0.03); border: 1px solid var(--color-border-subtle); color: var(--color-text-primary); letter-spacing: 0.04em; outline: none; }
-        .dev-input:focus { border-color: var(--color-accent); }
-        .dev-cap-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 10px; }
-        .dev-cap { padding: 14px 8px; border: 1px solid var(--color-border-subtle); cursor: pointer; text-align: center; transition: border-color var(--duration-fast) ease; background: transparent; color: var(--color-text-secondary); font-family: var(--font-mono); font-size: 12px; }
-        .dev-cap:hover { border-color: rgba(255,255,255,0.18); }
-        .dev-cap-active { border-color: var(--color-accent); color: var(--color-text-primary); background: rgba(46,80,144,0.08); }
-        .dev-btn { width: 100%; padding: 14px; background: var(--color-accent); color: #fff; border: 0; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; transition: opacity var(--duration-fast) ease; }
-        .dev-btn:hover { opacity: 0.9; }
-        .dev-btn[disabled] { opacity: 0.4; cursor: wait; }
-        .dev-btn-secondary { background: transparent; color: var(--color-text-tertiary); border: 1px solid var(--color-border-subtle); margin-top: 10px; }
-        .dev-btn-secondary:hover { color: var(--color-text-primary); border-color: rgba(255,255,255,0.18); opacity: 1; }
-        .dev-rule { height: 1px; background: var(--color-border-subtle); margin: 24px 0; }
-        .dev-mono-addr { font-family: var(--font-mono); font-size: 11px; color: var(--color-text-quaternary); word-break: break-all; }
-        .dev-stage { font-family: var(--font-mono); font-size: 11px; color: var(--color-text-tertiary); line-height: 1.6; }
-        .dev-stage-active { color: var(--color-accent); }
-        .dev-stage-done { color: var(--color-text-quaternary); }
-      `}</style>
-
-      <span className="dev-kicker">Pellet Wallet · Connect agent</span>
+    <div className="device-card">
+      <span className="device-kicker">pellet wallet · connect agent</span>
 
       {state.kind === "input" && (
         <>
-          <h1 className="dev-h1">Enter code</h1>
-          <p style={{ color: "var(--color-text-tertiary)", fontSize: 13, lineHeight: 1.5, margin: "0 0 16px" }}>
+          <h1 className="device-title">enter code</h1>
+          <p className="device-desc">
             Type or paste the three-word code from your CLI to begin pairing.
           </p>
           <input
-            className="dev-input"
+            className="device-input"
             value={code}
             onChange={(e) => setCode(e.target.value)}
             placeholder="e.g. blue-tape-river"
@@ -310,7 +261,7 @@ export function DeviceApproval({ initialCode }: { initialCode: string }) {
             autoComplete="off"
           />
           <button
-            className="dev-btn"
+            className="device-btn"
             style={{ marginTop: 12 }}
             onClick={() => {
               if (code.trim().length > 0) setState({ kind: "auth", code: code.trim() });
@@ -323,25 +274,25 @@ export function DeviceApproval({ initialCode }: { initialCode: string }) {
 
       {state.kind === "auth" && (
         <>
-          <h1 className="dev-h1">Sign in or enroll</h1>
-          <p style={{ color: "var(--color-text-tertiary)", fontSize: 13, lineHeight: 1.5, margin: "0 0 16px" }}>
+          <h1 className="device-title">sign in or enroll</h1>
+          <p className="device-desc">
             Pellet Wallet is rooted in your passkey. Sign in if you've used
             this device before; otherwise enroll a new passkey.
           </p>
-          <p style={{ color: "var(--color-text-quaternary)", fontSize: 11, fontFamily: "var(--font-mono)", margin: "0 0 16px" }}>
-            Code: <span style={{ color: "var(--color-accent)" }}>{state.code}</span>
+          <p className="device-code">
+            Code: <em>{state.code}</em>
           </p>
 
           {supportsPasskey === false && (
-            <p style={{ color: "var(--color-error)", fontSize: 12, fontFamily: "var(--font-mono)" }}>
+            <p className="device-error-msg" style={{ marginBottom: 12 }}>
               this browser doesn't support passkeys. try Chrome, Safari, or Edge.
             </p>
           )}
 
-          <button className="dev-btn" onClick={onPasskeySignIn} disabled={!supportsPasskey}>
+          <button className="device-btn" onClick={onPasskeySignIn} disabled={!supportsPasskey}>
             sign in with passkey
           </button>
-          <button className="dev-btn dev-btn-secondary" onClick={onPasskeyEnroll} disabled={!supportsPasskey}>
+          <button className="device-btn device-btn-secondary" onClick={onPasskeyEnroll} disabled={!supportsPasskey}>
             enroll new passkey
           </button>
         </>
@@ -349,63 +300,45 @@ export function DeviceApproval({ initialCode }: { initialCode: string }) {
 
       {state.kind === "confirming" && (
         <>
-          <h1 className="dev-h1">Approve agent</h1>
-          <p style={{ color: "var(--color-text-tertiary)", fontSize: 13, lineHeight: 1.5, margin: "0 0 12px" }}>
-            Code: <span className="dev-mono" style={{ color: "var(--color-accent)" }}>{state.code}</span>
+          <h1 className="device-title">approve agent</h1>
+          <p className="device-code">
+            Code: <em>{state.code}</em>
           </p>
-          <p className="dev-mono-addr">
+          <p className="device-mono-addr">
             wallet · {state.managedAddress.slice(0, 14)}…{state.managedAddress.slice(-6)}
           </p>
 
-          <div className="dev-rule" />
+          <hr className="device-rule" />
 
           <div>
-            <span className="dev-kicker">Spend caps</span>
-            <div className="dev-cap-row">
+            <span className="device-kicker">spend caps</span>
+            <div className="device-cap-row">
               {PRESET_CAPS.map((c, i) => (
                 <button
                   key={c.label}
                   type="button"
-                  className={`dev-cap${i === capIdx ? " dev-cap-active" : ""}`}
+                  className={`device-cap${i === capIdx ? " device-cap-active" : ""}`}
                   onClick={() => setCapIdx(i)}
                 >
                   {c.label}
                 </button>
               ))}
             </div>
-            <p
-              style={{
-                fontSize: 11,
-                color: "var(--color-text-quaternary)",
-                fontFamily: "var(--font-mono)",
-                marginTop: 8,
-                lineHeight: 1.5,
-              }}
-            >
+            <p className="device-cap-detail">
               max ${cap.perCallUsdc} per call · {cap.spendCapUsdc} total · expires in{" "}
               {cap.ttlSeconds < 86400 ? `${cap.ttlSeconds / 3600}h` : `${cap.ttlSeconds / 86400}d`}
             </p>
           </div>
 
-          <div className="dev-rule" />
+          <hr className="device-rule" />
 
-          <p
-            style={{
-              fontSize: 11,
-              color: "var(--color-text-quaternary)",
-              fontFamily: "var(--font-mono)",
-              lineHeight: 1.5,
-              margin: "0 0 16px",
-            }}
-          >
-            ⚠ <strong>Phase 3.B.</strong> Approving will prompt your passkey
-            to sign an{" "}
-            <span className="dev-mono">AccountKeychain.authorizeKey</span> tx
-            on Tempo Moderato testnet. Gas is sponsored. The agent key gets
+          <p className="device-warn">
+            Approving will prompt your passkey to sign an authorizeKey tx on
+            Tempo Moderato testnet. Gas is sponsored. The agent key gets
             on-chain caps — Tempo enforces them.
           </p>
 
-          <button className="dev-btn" onClick={onApprove}>
+          <button className="device-btn" onClick={onApprove}>
             approve · grant {cap.label}
           </button>
         </>
@@ -413,19 +346,19 @@ export function DeviceApproval({ initialCode }: { initialCode: string }) {
 
       {state.kind === "submitting" && (
         <>
-          <h1 className="dev-h1">Working…</h1>
-          <p className="dev-stage">
-            <span className={state.stage === "init" ? "dev-stage-active" : "dev-stage-done"}>
+          <h1 className="device-title">working…</h1>
+          <p className="device-stage">
+            <span className={state.stage === "init" ? "device-stage-active" : "device-stage-done"}>
               · preparing agent key
             </span>
             <br />
             <span
               className={
                 state.stage === "signing"
-                  ? "dev-stage-active"
+                  ? "device-stage-active"
                   : state.stage === "init"
                   ? ""
-                  : "dev-stage-done"
+                  : "device-stage-done"
               }
             >
               · waiting for passkey
@@ -434,18 +367,16 @@ export function DeviceApproval({ initialCode }: { initialCode: string }) {
             <span
               className={
                 state.stage === "broadcasting"
-                  ? "dev-stage-active"
-                  : state.stage === "finalizing" || state.stage === "init" || state.stage === "signing"
-                  ? state.stage === "finalizing"
-                    ? "dev-stage-done"
-                    : ""
-                  : "dev-stage-done"
+                  ? "device-stage-active"
+                  : state.stage === "finalizing"
+                  ? "device-stage-done"
+                  : ""
               }
             >
               · broadcasting tx
             </span>
             <br />
-            <span className={state.stage === "finalizing" ? "dev-stage-active" : ""}>
+            <span className={state.stage === "finalizing" ? "device-stage-active" : ""}>
               · finalizing
             </span>
           </p>
@@ -454,16 +385,16 @@ export function DeviceApproval({ initialCode }: { initialCode: string }) {
 
       {state.kind === "approved" && (
         <>
-          <h1 className="dev-h1">Approved.</h1>
-          <p style={{ color: "var(--color-text-tertiary)", fontSize: 13, lineHeight: 1.5, margin: "0 0 16px" }}>
-            Agent key authorized on Tempo. Your CLI should pick up the bearer token within a couple seconds.
+          <h1 className="device-title">approved.</h1>
+          <p className="device-desc">
+            Agent key authorized on Tempo. Your CLI should pick up the bearer
+            token within a couple seconds.
           </p>
           <a
             href={state.explorerUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="dev-mono-addr"
-            style={{ color: "var(--color-accent)", borderBottom: "1px solid var(--color-accent)", textDecoration: "none" }}
+            className="device-tx-link"
           >
             tx · {state.txHash.slice(0, 14)}…{state.txHash.slice(-6)} ↗
           </a>
@@ -472,12 +403,10 @@ export function DeviceApproval({ initialCode }: { initialCode: string }) {
 
       {state.kind === "error" && (
         <>
-          <h1 className="dev-h1">Something went wrong.</h1>
-          <p style={{ color: "var(--color-text-tertiary)", fontSize: 13, fontFamily: "var(--font-mono)", lineHeight: 1.6 }}>
-            {state.message}
-          </p>
+          <h1 className="device-title">something went wrong.</h1>
+          <p className="device-error-msg">{state.message}</p>
           <button
-            className="dev-btn dev-btn-secondary"
+            className="device-btn device-btn-secondary"
             style={{ marginTop: 16 }}
             onClick={() => setState({ kind: "input" })}
           >

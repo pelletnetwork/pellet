@@ -1,0 +1,120 @@
+.spec-oauth-frame {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  background: var(--bg);
+  color: var(--fg);
+}
+.spec-oauth-card {
+  width: 100%;
+  max-width: 520px;
+  border: 1px solid var(--line);
+  padding: 28px;
+  background: var(--bg);
+}
+.spec-oauth-title {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0 0 14px 0;
+  text-transform: lowercase;
+  letter-spacing: -0.01em;
+}
+.spec-oauth-lede {
+  font-size: 15px;
+  line-height: 1.55;
+  margin: 0 0 20px 0;
+}
+.spec-oauth-client {
+  font-weight: 700;
+}
+.spec-oauth-meta {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 12px;
+  margin: 0 0 22px 0;
+  font-family: var(--font-commit-mono), ui-monospace, monospace;
+  font-size: 11px;
+}
+.spec-oauth-meta dt {
+  color: color-mix(in oklch, var(--fg) 55%, var(--bg));
+  letter-spacing: 0.06em;
+}
+.spec-oauth-meta dd {
+  margin: 0;
+  word-break: break-all;
+}
+.spec-oauth-mono {
+  font-family: var(--font-commit-mono), ui-monospace, monospace;
+}
+.spec-oauth-subhead {
+  font-family: var(--font-commit-mono), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  margin: 0 0 8px 0;
+  color: color-mix(in oklch, var(--fg) 55%, var(--bg));
+  text-transform: uppercase;
+  font-weight: 400;
+}
+.spec-oauth-scopes {
+  list-style: none;
+  margin: 0 0 24px 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--line-thin);
+}
+.spec-oauth-scopes li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line-thin);
+}
+.spec-oauth-scope-name {
+  font-family: var(--font-commit-mono), ui-monospace, monospace;
+  font-size: 12px;
+  font-weight: 600;
+}
+.spec-oauth-scope-desc {
+  font-size: 13px;
+  line-height: 1.5;
+}
+.spec-oauth-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.spec-oauth-btn {
+  padding: 10px 20px;
+  font-family: var(--font-commit-mono), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--fg);
+  cursor: pointer;
+  border-radius: 0;
+}
+.spec-oauth-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.spec-oauth-btn-approve {
+  background: var(--fg);
+  color: var(--bg);
+  border-color: var(--fg);
+}
+.spec-oauth-btn-deny:hover {
+  background: color-mix(in oklch, var(--fg) 8%, var(--bg));
+}
+.spec-oauth-error {
+  margin: 16px 0 0 0;
+  font-family: var(--font-commit-mono), ui-monospace, monospace;
+  font-size: 12px;
+  color: var(--fg);
+  border-left: 2px solid var(--fg);
+  padding-left: 10px;
+}

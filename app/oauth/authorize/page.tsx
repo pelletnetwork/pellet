@@ -8,6 +8,7 @@ import {
 } from "@/lib/oauth/authorize";
 import { describeScope } from "@/lib/oauth/scopes";
 import { SpecimenConsent } from "./SpecimenConsent";
+import "./oauth.css";
 
 export const metadata: Metadata = {
   title: "Authorize agent — Pellet",

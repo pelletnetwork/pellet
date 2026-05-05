@@ -8,6 +8,18 @@ Entries are written in the first person of the project, not of an author. Materi
 
 ---
 
+## 2026-05-05 · Pellet Wallet · real-time agent chat + MCP session notifications
+
+The wallet chat becomes a first-class interface between users and their connected agents. Three changes land together:
+
+- **MCP session notifications.** When an agent sends `initialize`, the server creates a stateful MCP session. The agent opens a `GET /mcp` SSE stream and receives `notifications/message` pushes whenever the user sends a chat message. No polling, no configuration — baked into the connection protocol. Sessions auto-evict after 30 minutes; clients reconnect transparently.
+- **`wallet.thread.await` tool.** For agents that don't maintain an SSE stream, this tool blocks for up to 55 seconds on the server's pg_notify bus and returns the message the instant it arrives. Real-time delivery without polling. Call in a loop for continuous conversation.
+- **In-wallet chat UI.** Dashboard chat drawer with server-rendered initial messages, SSE-based live updates, agent identity labels, and reconnection on stream drop. The wallet chat replaces the terminal as the primary way users interact with their connected agent.
+
+The server now supports three delivery tiers — push (MCP SSE), long-poll (await), and webhook — so agents can pick the mechanism that fits their runtime. All three use the same pg_notify bus; delivery latency is identical.
+
+---
+
 ## 2026-04-29 · Pellet Wallet · live on testnet (Phases 0 → 5)
 
 Pellet ships its first agent wallet — passkey-rooted, self-custody, on-chain-cap-bounded, sponsored-gas, public-receipts. End-to-end on [Moderato testnet](https://explore.testnet.tempo.xyz) (chainId 42431).

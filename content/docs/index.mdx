@@ -28,7 +28,8 @@ Together: an agent can pay through Pellet Wallet, and you can audit the result t
 
 - **OLI dashboard, attribution, deep-link event pages** — live at [pellet.network/oli](/oli). All MPP txs ingested every six hours; gateway routing recovered via Pattern A (`Settlement` event from the escrow contract) and Pattern B (calldata fingerprint). Methodology documented at [/oli/methodology](/oli/methodology).
 - **Pellet Wallet — passkey-rooted, on-chain authorize, sponsored gas, autonomous payments within caps** — live on [Moderato testnet](https://explore.testnet.tempo.xyz). Mainnet release pending sponsor + key custody hardening.
-- **Pellet MCP server** — bundled with `@pelletnetwork/cli`. One config line installs `pellet_pay` + `pellet_status` into any stdio-MCP runtime.
+- **Pellet MCP server** — remote MCP server at `/mcp` with OAuth 2.1 auth, seven tools, and real-time chat push via MCP session notifications. One config line connects Claude Code, Cursor, Codex, or any Streamable HTTP client. See [MCP docs](/docs/wallet-mcp).
+- **Real-time agent chat** — in-wallet chat with three delivery tiers: MCP SSE push (instant, baked into the connection), `wallet.thread.await` long-poll (55s block on pg_notify), and webhooks. The wallet chat is the user's interface to their connected agent.
 - **`skill.md` install convention** at [pellet.network/skill.md](https://pellet.network/skill.md). Mirrors the convention Anthropic seeded and Stripe Link normalized.
 
 See [the changelog](/docs/changelog) for dated milestones.

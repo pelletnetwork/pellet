@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { DeviceApproval } from "./DeviceApproval";
-import "./device.css";
 
 export const dynamic = "force-dynamic";
 
@@ -9,16 +8,11 @@ export const metadata: Metadata = {
   description: "Approve an agent to spend from your Pellet Wallet on Tempo.",
 };
 
-export default async function DeviceApprovalPage({
+export default async function OliDeviceApprovalPage({
   searchParams,
 }: {
   searchParams: Promise<{ code?: string }>;
 }) {
   const { code } = await searchParams;
-
-  return (
-    <div className="device-frame">
-      <DeviceApproval initialCode={code ?? ""} />
-    </div>
-  );
+  return <DeviceApproval initialCode={code ?? ""} />;
 }

@@ -307,7 +307,7 @@
 }
 .spec-col-activity {
   flex: 2.2 1 0;
-  border-right: 1px solid var(--line);
+  border-right: 1px solid var(--line-thin, var(--line));
   padding: 18px 22px 22px;
   display: flex;
   flex-direction: column;
@@ -327,7 +327,7 @@
   justify-content: space-between;
   gap: 16px;
   padding-bottom: 12px;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--line-thin, var(--line));
   font-size: 11px;
   letter-spacing: 0.04em;
 }
@@ -506,8 +506,8 @@
 
 /* Session card / pending card */
 .spec-session-card {
-  padding: 14px 0;
-  border-bottom: 1px solid var(--line);
+  padding: 18px 20px;
+  border-bottom: none;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -546,10 +546,12 @@
 .spec-pill {
   display: inline-flex;
   align-items: center;
-  border: 1px solid var(--fg);
-  padding: 2px 6px;
-  font-size: 11px;
-  letter-spacing: 0.04em;
+  border: 1px solid color-mix(in oklch, var(--fg) 25%, var(--bg));
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  opacity: 0.7;
 }
 .spec-meta-grid {
   display: grid;
@@ -580,35 +582,47 @@
   color: color-mix(in oklch, var(--fg) 72%, var(--bg));
 }
 .spec-session-progress {
-  height: 4px;
+  height: 3px;
   width: 100%;
-  background: color-mix(in oklch, var(--fg) 13%, var(--bg));
+  background: color-mix(in oklch, var(--fg) 10%, var(--bg));
   overflow: hidden;
+  border-radius: 2px;
 }
 .spec-session-progress span {
   display: block;
   height: 100%;
   background: var(--fg);
+  border-radius: 2px;
 }
 
 .spec-issue-new {
-  padding: 14px 0;
+  padding: 10px 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  font-size: 12px;
-  letter-spacing: 0.04em;
+  gap: 6px;
+  font-size: 10px;
+  letter-spacing: 0.08em;
   cursor: pointer;
+  opacity: 0.5;
+  transition: opacity 150ms ease;
+  text-decoration: none;
+  color: var(--fg);
+}
+.spec-issue-new:hover {
+  opacity: 1;
 }
 
 .spec-pending-card {
   margin-top: 14px;
-  border: 1px solid var(--fg);
-  padding: 14px 16px;
+  border: none;
+  border-radius: 14px;
+  padding: 18px 20px;
   display: flex;
   flex-direction: column;
   gap: 12px;
+  background: color-mix(in oklch, var(--fg) 6%, var(--bg));
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4), 0 16px 48px rgba(0, 0, 0, 0.35);
 }
 .spec-pending-top {
   display: flex;
@@ -618,26 +632,40 @@
 }
 .spec-pending-actions {
   display: flex;
-  border: 1px solid var(--fg);
+  border: none;
+  border-radius: 14px;
+  overflow: hidden;
+  background: color-mix(in oklch, var(--fg) 14%, var(--bg));
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5), 0 20px 60px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.06);
 }
 .spec-pending-btn {
   flex: 1 1 0;
-  padding: 6px 12px;
+  padding: 8px 12px;
   text-align: center;
-  font-size: 12px;
-  letter-spacing: 0.04em;
-  border-right: 1px solid var(--fg);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border: none;
   background: transparent;
-  color: var(--fg);
+  color: color-mix(in oklch, var(--fg) 70%, var(--bg));
   font-family: inherit;
   cursor: pointer;
+  transition: background 150ms ease, color 150ms ease;
 }
 .spec-pending-btn:last-child {
   border-right: none;
 }
+.spec-pending-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--fg);
+}
 .spec-pending-btn-primary {
-  background: var(--fg);
-  color: var(--bg);
+  background: transparent;
+  color: color-mix(in oklch, var(--fg) 70%, var(--bg));
+}
+.spec-pending-btn-primary:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--fg);
 }
 
 /* ── Activity rows (wallet) ──────────────────────────────────────────────── */

@@ -113,18 +113,21 @@ export async function POST(req: Request) {
     scopes,
     audience: codeRow.audience,
   });
-  // Free tier: 1 agent connection max.
-  const sub = await getActiveSubscription(codeRow.userId);
-  if (!sub) {
-    const count = await countActiveAgentConnections(codeRow.userId);
-    if (count >= 1) {
-      return NextResponse.json(
-        {
-          error: "agent_limit_reached",
-          error_description: "Free tier allows 1 agent. Upgrade to Pro for unlimited.",
-        },
-        { status: 403 },
-      );
+  // Free tier: 1 agent connection max (skipped in dev so multiple
+  // test agents can connect without hitting the gate).
+  if (process.env.NODE_ENV === "production") {
+    const sub = await getActiveSubscription(codeRow.userId);
+    if (!sub) {
+      const count = await countActiveAgentConnections(codeRow.userId);
+      if (count >= 1) {
+        return NextResponse.json(
+          {
+            error: "agent_limit_reached",
+            error_description: "Free tier allows 1 agent. Upgrade to Pro for unlimited.",
+          },
+          { status: 403 },
+        );
+      }
     }
   }
 

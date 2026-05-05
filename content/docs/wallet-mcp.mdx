@@ -1,10 +1,10 @@
 ---
 title: MCP
-description: Pellet wallet exposes an OAuth 2.1 + MCP server at /mcp. Add the URL to Claude Code, Claude Desktop, Cursor, or Claude.ai Connectors and your agent gets six wallet tools — read balances, post to chat, request approvals, signal typing, spend within caps. One config line + one passkey approval; no shared keys, no copy-pasted tokens.
+description: Pellet wallet exposes an OAuth 2.1 + MCP server at /mcp. Add the URL to Claude Code, Claude Desktop, Cursor, or Claude.ai Connectors and your agent gets wallet tools — read balances, chat in real-time, request approvals, spend within caps. One config line + one passkey approval; no shared keys, no copy-pasted tokens.
 icon: Bot
 ---
 
-Pellet wallet runs a remote MCP server at `https://pellet.network/mcp` (or `http://localhost:3000/mcp` in dev). Connect any MCP-compatible agent — Claude Code, Claude Desktop, Cursor, Codex, Claude.ai Connectors, ChatGPT Connectors — and the agent gets six callable tools.
+Pellet wallet runs a remote MCP server at `https://pellet.network/mcp` (or `http://localhost:3000/mcp` in dev). Connect any MCP-compatible agent — Claude Code, Claude Desktop, Cursor, Codex, Claude.ai Connectors, ChatGPT Connectors — and the agent gets callable wallet tools.
 
 Auth is OAuth 2.1 with PKCE. The first time your agent calls a Pellet tool, your MCP client opens a browser, you approve the requested scopes via your wallet passkey, and the agent gets an audience-bound bearer token. No shared API keys.
 
@@ -52,16 +52,49 @@ Settings → Connectors → Add → paste `https://pellet.network/mcp`. The brow
 
 Same pattern via the Connectors feature — paste the URL, OAuth in browser, done.
 
-## Tools the agent gets
+## Tools
 
 | Tool | Scope | What it does |
 |---|---|---|
 | `wallet.balance.get` | `wallet:read` | Read your stablecoin balances on Tempo |
 | `wallet.thread.post` | `wallet:chat` | Post a message into your wallet chat thread |
 | `wallet.thread.list` | `wallet:chat` | Read recent chat history |
+| `wallet.thread.await` | `wallet:chat` | Block until the user sends a new message (real-time via pg_notify) |
 | `wallet.thread.signal_typing` | `wallet:chat` | Show "agent is thinking" pulsing dots in your wallet UI |
 | `wallet.spend.request_approval` | `wallet:spend:request` | Request your approval for a transaction |
 | `wallet.spend.execute` | `wallet:spend:authorized` | Spend within an authorized cap (no per-tx approval) |
+
+## Real-time chat
+
+The wallet chat is the user's interface to their connected agent. Three delivery mechanisms ensure agents receive messages instantly:
+
+### 1. Push notifications (MCP sessions)
+
+When your client sends `initialize`, Pellet creates a stateful MCP session. Open a `GET /mcp` SSE stream with the session ID and the server pushes `notifications/message` logging notifications whenever the user sends a chat message. No polling — messages arrive the instant they're sent.
+
+```
+← event: message
+← data: {"jsonrpc":"2.0","method":"notifications/message","params":{"level":"info","logger":"wallet.chat","data":{"type":"chat.message","message":{"id":"...","sender":"user","kind":"reply","content":"hey","ts":"..."}}}}
+```
+
+This is baked into the MCP connection — no extra configuration. If your client supports Streamable HTTP with sessions, it works automatically.
+
+### 2. Long-poll (wallet.thread.await)
+
+For clients that don't maintain an SSE stream, `wallet.thread.await` blocks for up to 55 seconds on the server's pg_notify bus and returns the message the instant it arrives. Call in a loop:
+
+```
+→ tools/call: wallet.thread.await { timeout: 55 }
+← { timeout: false, message: { id: "...", content: "hey", ... } }
+
+→ tools/call: wallet.thread.post { content: "on it", kind: "reply" }
+
+→ tools/call: wallet.thread.await { timeout: 55 }  // loop
+```
+
+### 3. Webhooks
+
+For hosted agents with a public HTTPS endpoint, Pellet POSTs `chat.message` events to your registered webhook URL with HMAC signing (`X-Pellet-Signature: sha256=...`). Register via the agent-management dashboard.
 
 ## Approval flow
 
@@ -76,12 +109,6 @@ When your client first connects:
 
 Tokens default to 1-hour TTL and are scoped narrowly. Revoke any time from your wallet settings.
 
-## For hosted agents (custom backend / Zapier)
-
-If your agent runs on a server with a public HTTPS endpoint, you can also receive user-side wallet messages via webhook. Pellet POSTs `chat.message` events to your registered URL with HMAC signing (`X-Pellet-Signature: sha256=...`).
-
-Webhook self-registration UI ships with the agent-management dashboard. For now, contact us to register your webhook destination manually.
-
 ## Security model
 
 - **Audience binding (RFC 8707)** — every token is minted FOR `https://pellet.network/mcp` specifically. Tokens can't be replayed against other resources.
@@ -89,13 +116,18 @@ Webhook self-registration UI ships with the agent-management dashboard. For now,
 - **Least-privilege scopes** — agents request only what they need; you approve each scope explicitly.
 - **Single-use authorization codes** — atomic consume prevents code-replay attacks.
 - **Passkey-rooted approval** — every `/oauth/authorize` consent requires you to be signed into your Pellet wallet via your passkey. Agents can't grant themselves access.
+- **Session isolation** — MCP sessions are bound to the authenticated user. Notifications are filtered by userId and clientId — agents only see messages addressed to them.
 
 ## Troubleshooting
 
-**"Server not initialized" on every call** — your MCP client is in stateful mode but Pellet runs stateless. Most modern clients handle this transparently; if yours doesn't, check that it's sending `initialize` per-request or look for an `enableJsonResponse` option.
+**"Session expired" on tool calls** — your MCP session was evicted (30-minute TTL) or the server instance recycled. Your client should reconnect automatically and get a new session. If it doesn't, restart the client.
+
+**"Server not initialized" on every call** — your client is sending tool calls without a prior `initialize`. Pellet supports both stateful (with sessions) and stateless (without) modes. Most modern clients handle this transparently.
 
 **OAuth redirect loops** — usually means the client's `redirect_uri` doesn't match what was registered. Re-register or check your client's MCP config.
 
 **401 "invalid or expired token"** — your token aged out (1h default). Most clients refresh transparently; if not, re-run the connect flow.
 
 **Tools not showing up after connect** — check that the OAuth scopes you approved cover the tools you want. Re-OAuth with broader scopes if needed.
+
+**No push notifications arriving** — your client may not support MCP Streamable HTTP SSE streams. Use `wallet.thread.await` as a fallback — it delivers messages in real-time without SSE.

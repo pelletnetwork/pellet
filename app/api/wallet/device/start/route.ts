@@ -13,6 +13,7 @@ type StartBody = {
 };
 
 export async function POST(req: Request) {
+  const origin = new URL(req.url).origin;
   let body: StartBody = {};
   try {
     body = (await req.json()) as StartBody;
@@ -41,7 +42,7 @@ export async function POST(req: Request) {
       return NextResponse.json({
         code,
         device_id: deviceId,
-        approve_url: `https://pellet.network/wallet/device?code=${code}`,
+        approve_url: `${origin}/oli/wallet/device?code=${code}`,
         expires_at: expiresAt.toISOString(),
         poll_interval_seconds: 2,
         pairing_id: row.id,

@@ -104,6 +104,277 @@
   }
 }
 
+/* ── Holdings rows ──────────────────────────────────────────────────────── */
+
+.spec-balances-card {
+  padding-bottom: 16px !important;
+  gap: 0 !important;
+}
+.spec-balances-card .spec-col-head {
+  margin-bottom: 8px;
+}
+.spec-holding-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.spec-holding-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.spec-holding-icon svg {
+  width: 20px;
+  height: 20px;
+}
+.spec-holding-symbol {
+  flex: 1;
+  min-width: 0;
+  letter-spacing: 0.04em;
+}
+.spec-holding-amount {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.85;
+}
+.spec-holding-actions {
+  display: flex;
+  flex-shrink: 0;
+}
+.spec-holding-action {
+  background: transparent;
+  border: none;
+  color: var(--fg);
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0.4;
+  transition: opacity 0.1s;
+  padding: 0;
+}
+.spec-holding-action svg {
+  width: 12px;
+  height: 12px;
+}
+.spec-holding-action:hover {
+  opacity: 1;
+}
+
+/* ── Keys & devices card ──────────────────────────────────────────────── */
+
+.spec-keys-grid {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  row-gap: 4px;
+  column-gap: 8px;
+  font-size: 11px;
+  padding: 4px 0 0;
+}
+
+/* ── Swap modal ────────────────────────────────────────────────────────── */
+
+.spec-swap-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  background: color-mix(in oklch, var(--ink) 50%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.spec-swap-modal {
+  background: color-mix(in oklch, var(--fg) 8%, var(--bg));
+  border: none !important;
+  border-radius: 20px !important;
+  overflow: hidden;
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.2),
+    0 8px 24px rgba(0, 0, 0, 0.35),
+    0 24px 64px rgba(0, 0, 0, 0.4);
+  width: 360px;
+  max-width: calc(100vw - 32px);
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  gap: 20px;
+}
+.spec-swap-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.spec-swap-title {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  font-weight: 500;
+  opacity: 0.45;
+}
+.spec-swap-close {
+  background: transparent;
+  border: none;
+  color: var(--fg);
+  cursor: pointer;
+  opacity: 0.35;
+  padding: 2px;
+}
+.spec-swap-close:hover {
+  opacity: 1;
+}
+.spec-swap-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.spec-swap-field-label {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.35;
+  margin-top: 16px;
+}
+.spec-swap-field-label:first-child {
+  margin-top: 0;
+}
+.spec-swap-amount-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  border-bottom: 1px solid var(--line-thin);
+  border-radius: 0;
+  padding: 8px 0;
+  background: transparent;
+}
+.spec-swap-amount-row:focus-within {
+  border-bottom-color: var(--fg);
+}
+.spec-swap-input,
+.spec-swap-modal input[type="text"] {
+  flex: 1;
+  background: none;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  -webkit-appearance: none;
+  appearance: none;
+  color: var(--fg);
+  font-family: inherit;
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+  min-width: 0;
+  padding: 0;
+  margin: 0;
+}
+.spec-swap-input::placeholder {
+  color: var(--fg);
+  opacity: 0.2;
+}
+.spec-swap-input-symbol {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+.spec-swap-available {
+  font-size: 10px;
+  opacity: 0.35;
+  text-align: right;
+  margin-top: 2px;
+}
+.spec-swap-select-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.spec-swap-select {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--line-thin);
+  border-radius: 0;
+  color: var(--fg);
+  font-family: inherit;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  padding: 8px 0;
+  cursor: pointer;
+  outline: none;
+  appearance: none;
+}
+.spec-swap-select-bal {
+  font-size: 10px;
+  opacity: 0.35;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+.spec-swap-quote {
+  padding: 8px 0;
+  border: none;
+  border-bottom: 1px solid var(--line-thin);
+  border-radius: 0;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+  margin-top: 4px;
+  background: transparent;
+  opacity: 0.85;
+}
+.spec-swap-fee {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  opacity: 0.35;
+  padding: 8px 0 0;
+}
+.spec-swap-error {
+  font-size: 11px;
+  color: #c44;
+  padding: 4px 0;
+}
+.spec-swap-actions {
+  display: flex;
+  border: none;
+  border-radius: 14px;
+  overflow: hidden;
+  background: color-mix(in oklch, var(--fg) 14%, var(--bg));
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5), 0 20px 60px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+.spec-swap-btn {
+  flex: 1 1 0;
+  border: none;
+  padding: 10px 0;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-align: center;
+  background: transparent;
+  color: color-mix(in oklch, var(--fg) 70%, var(--bg));
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease;
+}
+.spec-swap-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--fg);
+}
+.spec-swap-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.spec-swap-btn:disabled:hover {
+  background: transparent;
+  color: color-mix(in oklch, var(--fg) 70%, var(--bg));
+}
+
 /* ── Sign-in surface ────────────────────────────────────────────────────── */
 
 .spec-signin-shell {
@@ -1925,128 +2196,3 @@
   }
 }
 
-/* ── OAuth consent screen ────────────────────────────────────────────────
- * The trust moment. Lives at /oauth/authorize. Centered card, generous
- * padding, terminal type for technical params, sentence type for the
- * lede so it reads like a sentence not a config dump.
- */
-.spec-oauth-frame {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 32px 16px;
-  background: var(--bg);
-  color: var(--fg);
-}
-.spec-oauth-card {
-  width: 100%;
-  max-width: 520px;
-  border: 1px solid var(--line);
-  padding: 28px;
-  background: var(--bg);
-}
-.spec-oauth-title {
-  font-size: 20px;
-  font-weight: 600;
-  margin: 0 0 14px 0;
-  text-transform: lowercase;
-  letter-spacing: -0.01em;
-}
-.spec-oauth-lede {
-  font-size: 15px;
-  line-height: 1.55;
-  margin: 0 0 20px 0;
-}
-.spec-oauth-client {
-  font-weight: 700;
-}
-.spec-oauth-meta {
-  display: grid;
-  grid-template-columns: max-content 1fr;
-  gap: 4px 12px;
-  margin: 0 0 22px 0;
-  font-family: var(--font-commit-mono), ui-monospace, monospace;
-  font-size: 11px;
-}
-.spec-oauth-meta dt {
-  color: color-mix(in oklch, var(--fg) 55%, var(--bg));
-  letter-spacing: 0.06em;
-}
-.spec-oauth-meta dd {
-  margin: 0;
-  word-break: break-all;
-}
-.spec-oauth-mono {
-  font-family: var(--font-commit-mono), ui-monospace, monospace;
-}
-.spec-oauth-subhead {
-  font-family: var(--font-commit-mono), ui-monospace, monospace;
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  margin: 0 0 8px 0;
-  color: color-mix(in oklch, var(--fg) 55%, var(--bg));
-  text-transform: uppercase;
-  font-weight: 400;
-}
-.spec-oauth-scopes {
-  list-style: none;
-  margin: 0 0 24px 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  border-top: 1px solid var(--line-thin);
-}
-.spec-oauth-scopes li {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--line-thin);
-}
-.spec-oauth-scope-name {
-  font-family: var(--font-commit-mono), ui-monospace, monospace;
-  font-size: 12px;
-  font-weight: 600;
-}
-.spec-oauth-scope-desc {
-  font-size: 13px;
-  line-height: 1.5;
-}
-.spec-oauth-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-}
-.spec-oauth-btn {
-  padding: 10px 20px;
-  font-family: var(--font-commit-mono), ui-monospace, monospace;
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  border: 1px solid var(--line);
-  background: var(--bg);
-  color: var(--fg);
-  cursor: pointer;
-  border-radius: 0;
-}
-.spec-oauth-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-.spec-oauth-btn-approve {
-  background: var(--fg);
-  color: var(--bg);
-  border-color: var(--fg);
-}
-.spec-oauth-btn-deny:hover {
-  background: color-mix(in oklch, var(--fg) 8%, var(--bg));
-}
-.spec-oauth-error {
-  margin: 16px 0 0 0;
-  font-family: var(--font-commit-mono), ui-monospace, monospace;
-  font-size: 12px;
-  color: var(--fg);
-  border-left: 2px solid var(--fg);
-  padding-left: 10px;
-}

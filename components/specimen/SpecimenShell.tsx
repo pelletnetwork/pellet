@@ -58,6 +58,7 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: "Developers",
     items: [
+      { label: "Docs", href: "/docs" },
       { label: "MCP", href: "/oli/mcp" },
       { label: "CLI", href: "/oli/cli" },
       { label: "Webhooks", href: "/oli/webhooks" },

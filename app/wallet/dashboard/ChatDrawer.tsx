@@ -15,9 +15,15 @@ type ChatMessage = {
   ts: string;
 };
 
-export function ChatDrawer() {
+export function ChatDrawer({
+  agentNames = {},
+  initialMessages = [],
+}: {
+  agentNames?: Record<string, string>;
+  initialMessages?: ChatMessage[];
+}) {
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [typing, setTyping] = useState(false);
@@ -25,7 +31,10 @@ export function ChatDrawer() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
-  const seenIds = useRef(new Set<string>());
+  const seenIds = useRef(new Set<string>(initialMessages.map((m) => m.id)));
+  const lastAgentConnectionId = useRef<string | null>(
+    initialMessages.filter((m) => m.sender === "agent" && m.connectionId).at(-1)?.connectionId ?? null,
+  );
   const openRef = useRef(open);
   openRef.current = open;
 
@@ -35,30 +44,44 @@ export function ChatDrawer() {
   }, []);
 
   useEffect(() => {
-    const es = new EventSource("/api/wallet/chat/stream");
-    eventSourceRef.current = es;
+    let dead = false;
 
-    es.onmessage = (e) => {
-      try {
-        const msg: ChatMessage = JSON.parse(e.data);
-        setMessages((prev) => {
-          if (seenIds.current.has(msg.id)) return prev;
-          seenIds.current.add(msg.id);
-          if (!openRef.current && msg.sender === "agent") {
-            setUnread((n) => n + 1);
+    function connect() {
+      if (dead) return;
+      const es = new EventSource("/api/wallet/chat/stream");
+      eventSourceRef.current = es;
+
+      es.onmessage = (e) => {
+        try {
+          const msg: ChatMessage = JSON.parse(e.data);
+          if (msg.sender === "agent" && msg.connectionId) {
+            lastAgentConnectionId.current = msg.connectionId;
           }
-          return [...prev, msg];
-        });
-        setTimeout(scrollToBottom, 30);
-      } catch { /* malformed */ }
-    };
+          setMessages((prev) => {
+            if (seenIds.current.has(msg.id)) return prev;
+            seenIds.current.add(msg.id);
+            if (!openRef.current && msg.sender === "agent") {
+              setUnread((n) => n + 1);
+            }
+            return [...prev, msg];
+          });
+          setTimeout(scrollToBottom, 30);
+        } catch { /* malformed */ }
+      };
 
-    es.addEventListener("typing", () => {
-      setTyping(true);
-      setTimeout(() => setTyping(false), 3000);
-    });
+      es.addEventListener("typing", () => {
+        setTyping(true);
+        setTimeout(() => setTyping(false), 3000);
+      });
 
-    return () => es.close();
+      es.onerror = () => {
+        es.close();
+        if (!dead) setTimeout(connect, 3000);
+      };
+    }
+
+    connect();
+    return () => { dead = true; eventSourceRef.current?.close(); };
   }, [scrollToBottom]);
 
   useEffect(() => {
@@ -78,7 +101,7 @@ export function ChatDrawer() {
       await fetch("/api/wallet/chat/reply", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content: text }),
+        body: JSON.stringify({ content: text, agentId: lastAgentConnectionId.current }),
       });
     } catch { /* swallow — SSE will show the message if it lands */ }
     setSending(false);
@@ -365,7 +388,7 @@ export function ChatDrawer() {
             messages.map((m) => (
               <div key={m.id} className={`chat-msg chat-msg-${m.sender === "user" ? "user" : "agent"}`}>
                 <div className="chat-msg-meta">
-                  {m.sender === "user" ? "you" : m.clientId ? m.clientId.slice(0, 12) : "agent"}
+                  {m.sender === "user" ? "you" : (m.connectionId && agentNames[m.connectionId]) || "agent"}
                   {" · "}
                   {formatTs(m.ts)}
                   {m.kind !== "reply" && m.kind !== "status" && (

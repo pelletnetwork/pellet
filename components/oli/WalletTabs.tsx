@@ -8,6 +8,7 @@ const TABS = [
   { label: "CONNECT", href: "/onboard" },
   { label: "CHAT", href: "/chat" },
   { label: "AGENTS", href: "/dashboard/agents" },
+  { label: "DOCS", href: "/docs", absolute: true },
   { label: "SETTINGS", href: "/dashboard/settings" },
 ] as const;
 
@@ -25,7 +26,9 @@ export function WalletTabs({ basePath = "/oli/wallet" }: { basePath?: string }) 
   return (
     <div className="spec-switch" role="group" aria-label="Wallet sections">
       {TABS.map((tab) => {
-        const active = isActive(pathname, tab.href, basePath);
+        const abs = "absolute" in tab && tab.absolute;
+        const full = abs ? tab.href : `${basePath}${tab.href}`;
+        const active = !abs && isActive(pathname, tab.href, basePath);
         if (active) {
           return (
             <span
@@ -40,7 +43,7 @@ export function WalletTabs({ basePath = "/oli/wallet" }: { basePath?: string }) 
           <Link
             key={tab.label}
             className="spec-switch-seg"
-            href={`${basePath}${tab.href}`}
+            href={full}
           >
             {tab.label}
           </Link>

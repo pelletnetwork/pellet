@@ -364,7 +364,7 @@ export function AgentIdentityCard({
       </div>
       <div className="spec-agent-id-name-row">
         <span className="spec-agent-id-provider">{providerLabel(agent)}</span>
-        <span className="spec-agent-id-name">{agent.clientName}</span>
+        <span className="spec-agent-id-name">{agent.clientName.replace(/\s*\(.*\)$/, "")}</span>
       </div>
       <pre className="spec-agent-id-ascii" aria-hidden="true">{art.map((line, index) => (
         <span key={index}>{line}</span>

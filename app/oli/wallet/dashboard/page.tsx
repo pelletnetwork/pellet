@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { readUserSession } from "@/lib/wallet/challenge-cookie";
 import { loadDashboardData, type DashboardData } from "@/lib/wallet/dashboard-data";
+import { recentChatMessages } from "@/lib/db/wallet-chat";
 import { SpecimenWalletDashboard } from "./SpecimenWalletDashboard";
 
 export const metadata: Metadata = {
@@ -144,6 +145,19 @@ export default async function OliWalletDashboardPage({
   );
   const displayData = shareAgent ? shareDashboardData(data, shareAgent) : data;
 
+  const recentChat = (await recentChatMessages(userId, 50)).reverse();
+  const chatMessages = recentChat.map((r) => ({
+    id: r.id,
+    connectionId: r.connectionId,
+    clientId: r.clientId,
+    sessionId: r.sessionId,
+    sender: r.sender,
+    kind: r.kind,
+    content: r.content,
+    intentId: r.intentId,
+    ts: r.createdAt.toISOString(),
+  }));
+
   return (
     <SpecimenWalletDashboard
       user={displayData.user}
@@ -153,6 +167,7 @@ export default async function OliWalletDashboardPage({
       payments={displayData.payments}
       agents={displayData.agents}
       basePath="/oli/wallet"
+      chatMessages={chatMessages}
     />
   );
 }

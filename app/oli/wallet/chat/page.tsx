@@ -47,7 +47,7 @@ export default async function OliWalletChatPage({
       agents={agents.map((agent) => ({
         id: agent.id,
         clientId: agent.clientId,
-        clientName: agent.clientName,
+        clientName: agent.clientName.replace(/\s*\(.*\)$/, ""),
         clientType: agent.clientType,
         tokenState: agent.tokenState,
         webhookEnabled: agent.webhookEnabled,

@@ -16,14 +16,26 @@ type ChatMessage = {
   ts: string;
 };
 
-export function ChatRailCard({ basePath = "/oli/wallet" }: { basePath?: string }) {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+export function ChatRailCard({
+  basePath = "/oli/wallet",
+  agentNames = {},
+  initialMessages = [],
+}: {
+  basePath?: string;
+  agentNames?: Record<string, string>;
+  initialMessages?: ChatMessage[];
+}) {
+  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [typing, setTyping] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const seenIds = useRef(new Set<string>());
+  const seenIds = useRef(new Set<string>(initialMessages.map((m) => m.id)));
+  const lastAgentConnectionId = useRef<string | null>(
+    initialMessages.filter((m) => m.sender === "agent" && m.connectionId).at(-1)?.connectionId ?? null,
+  );
 
   const scrollToBottom = useCallback(() => {
     const el = scrollRef.current;
@@ -31,26 +43,41 @@ export function ChatRailCard({ basePath = "/oli/wallet" }: { basePath?: string }
   }, []);
 
   useEffect(() => {
-    const es = new EventSource("/api/wallet/chat/stream");
+    let es: EventSource | null = null;
+    let dead = false;
 
-    es.onmessage = (e) => {
-      try {
-        const msg: ChatMessage = JSON.parse(e.data);
-        setMessages((prev) => {
-          if (seenIds.current.has(msg.id)) return prev;
-          seenIds.current.add(msg.id);
-          return [...prev, msg];
-        });
-        setTimeout(scrollToBottom, 30);
-      } catch { /* malformed */ }
-    };
+    function connect() {
+      if (dead) return;
+      es = new EventSource("/api/wallet/chat/stream");
 
-    es.addEventListener("typing", () => {
-      setTyping(true);
-      setTimeout(() => setTyping(false), 3000);
-    });
+      es.onmessage = (e) => {
+        try {
+          const msg: ChatMessage = JSON.parse(e.data);
+          if (msg.sender === "agent" && msg.connectionId) {
+            lastAgentConnectionId.current = msg.connectionId;
+          }
+          setMessages((prev) => {
+            if (seenIds.current.has(msg.id)) return prev;
+            seenIds.current.add(msg.id);
+            return [...prev, msg];
+          });
+          setTimeout(scrollToBottom, 30);
+        } catch { /* malformed */ }
+      };
 
-    return () => es.close();
+      es.addEventListener("typing", () => {
+        setTyping(true);
+        setTimeout(() => setTyping(false), 3000);
+      });
+
+      es.onerror = () => {
+        es?.close();
+        if (!dead) setTimeout(connect, 3000);
+      };
+    }
+
+    connect();
+    return () => { dead = true; es?.close(); };
   }, [scrollToBottom]);
 
   const send = async () => {
@@ -62,7 +89,7 @@ export function ChatRailCard({ basePath = "/oli/wallet" }: { basePath?: string }
       await fetch("/api/wallet/chat/reply", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content: text }),
+        body: JSON.stringify({ content: text, agentId: lastAgentConnectionId.current }),
       });
     } catch { /* SSE will show it if it lands */ }
     setSending(false);
@@ -85,7 +112,6 @@ export function ChatRailCard({ basePath = "/oli/wallet" }: { basePath?: string }
           display: flex;
           flex-direction: column;
           gap: 0;
-          min-height: 200px;
           max-height: 400px;
         }
 
@@ -240,56 +266,81 @@ export function ChatRailCard({ basePath = "/oli/wallet" }: { basePath?: string }
         }
       `}</style>
 
-      <div className="chat-rail-head">
-        <span className="chat-rail-head-left">Agent chat</span>
-        <span className="chat-rail-head-right">
-          <Link href={`${basePath}/chat`}>open full →</Link>
+      <div className="chat-rail-head" onClick={() => setCollapsed((c) => !c)} style={{ cursor: "pointer" }}>
+        <span className="chat-rail-head-left">
+          Agent chat
+          {collapsed && messages.length > 0 && (
+            <span style={{ opacity: 0.5, marginLeft: 8, fontSize: 9 }}>{messages.length}</span>
+          )}
+        </span>
+        <span className="chat-rail-head-right" style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <Link href={`${basePath}/chat`} onClick={(e) => e.stopPropagation()}>open full →</Link>
+          <svg
+            width="10"
+            height="10"
+            viewBox="0 0 10 10"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.2"
+            aria-hidden="true"
+            style={{
+              transition: "transform 150ms ease",
+              transform: collapsed ? "rotate(-90deg)" : "rotate(0deg)",
+              opacity: 0.55,
+            }}
+          >
+            <path d="M2.5 3.5L5 6.5L7.5 3.5" />
+          </svg>
         </span>
       </div>
 
-      <div className="chat-rail-messages" ref={scrollRef}>
-        {recent.length === 0 ? (
-          <div className="chat-rail-empty">
-            No messages yet.<br />
-            Agent updates and questions appear here.
-          </div>
-        ) : (
-          recent.map((m) => (
-            <div
-              key={m.id}
-              className={`chat-rail-msg chat-rail-msg-${m.sender === "user" ? "user" : "agent"}`}
-            >
-              <div className="chat-rail-msg-meta">
-                {m.sender === "user" ? "you" : m.clientId ? m.clientId.slice(0, 12) : "agent"}
-                {" · "}
-                {formatTs(m.ts)}
+      {!collapsed && (
+        <>
+          <div className="chat-rail-messages" ref={scrollRef}>
+            {recent.length === 0 ? (
+              <div className="chat-rail-empty">
+                No messages yet.<br />
+                Agent updates and questions appear here.
               </div>
-              <div className="chat-rail-msg-bubble">{m.content}</div>
-            </div>
-          ))
-        )}
-        {typing && <div className="chat-rail-typing">agent is typing…</div>}
-      </div>
+            ) : (
+              recent.map((m) => (
+                <div
+                  key={m.id}
+                  className={`chat-rail-msg chat-rail-msg-${m.sender === "user" ? "user" : "agent"}`}
+                >
+                  <div className="chat-rail-msg-meta">
+                    {m.sender === "user" ? "you" : (m.connectionId && agentNames[m.connectionId]) || "agent"}
+                    {" · "}
+                    {formatTs(m.ts)}
+                  </div>
+                  <div className="chat-rail-msg-bubble">{m.content}</div>
+                </div>
+              ))
+            )}
+            {typing && <div className="chat-rail-typing">agent is typing…</div>}
+          </div>
 
-      <div className="chat-rail-input">
-        <div className="chat-rail-input-wrap">
-          <textarea
-            ref={inputRef}
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={onKeyDown}
-            placeholder="Reply…"
-            rows={1}
-          />
-          <button
-            className="chat-rail-send"
-            onClick={send}
-            disabled={sending || !draft.trim()}
-          >
-            {sending ? "…" : "↑"}
-          </button>
-        </div>
-      </div>
+          <div className="chat-rail-input">
+            <div className="chat-rail-input-wrap">
+              <textarea
+                ref={inputRef}
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                onKeyDown={onKeyDown}
+                placeholder="Reply…"
+                rows={1}
+              />
+              <button
+                className="chat-rail-send"
+                onClick={send}
+                disabled={sending || !draft.trim()}
+              >
+                {sending ? "…" : "↑"}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
