@@ -43,6 +43,9 @@ export async function readWalletBalances(account: Address): Promise<WalletBalanc
   if (chain.chainId === tempoModerato.id) {
     tokens.push({ address: PATHUSD_MODERATO, symbol: "pathUSD" });
   }
+  if (chain.usdt0) {
+    tokens.push({ address: chain.usdt0, symbol: "USDT0" });
+  }
 
   const results = await Promise.all(
     tokens.map(async (t) => {

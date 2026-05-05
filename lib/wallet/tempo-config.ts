@@ -17,13 +17,13 @@ type ChainConfig = {
   chainId: number;
   name: string;
   rpcUrl: string;
-  /** Sponsor service URL. Mainnet is null — we'll run our own when we get there. */
   sponsorUrl: string | null;
   explorerUrl: string;
   /** Canonical USDC.e on this chain. NOTE: differs per-chain — never hardcode mainnet on testnet. */
   usdcE: `0x${string}`;
   /** Pellet's testnet demo stable. On mainnet this is just USDC.e. */
   demoStable: `0x${string}`;
+  usdt0: `0x${string}` | null;
 };
 
 const MODERATO: ChainConfig = {
@@ -39,16 +39,18 @@ const MODERATO: ChainConfig = {
   // No public USDC.e faucet on Moderato; pathUSD is the canonical test
   // stable for end-to-end demos. Funded via tempo_fundAddress RPC method.
   demoStable: "0x20c0000000000000000000000000000000000001", // pathUSD — TODO confirm exact addr from tokenlist
+  usdt0: null,
 };
 
 const PRESTO: ChainConfig = {
   chainId: TEMPO_CHAIN_IDS.PRESTO_MAINNET,
   name: "Presto",
   rpcUrl: "https://rpc.tempo.xyz",
-  sponsorUrl: null, // we'll run our own when we get there
+  sponsorUrl: process.env.SPONSOR_URL ?? `${process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000"}/api/wallet/sponsor`,
   explorerUrl: "https://explore.tempo.xyz",
   usdcE: "0x20c000000000000000000000b9537d11c60e8b50",
   demoStable: "0x20c000000000000000000000b9537d11c60e8b50", // mainnet uses real USDC.e
+  usdt0: "0x20c00000000000000000000014f22ca97301eb73",
 };
 
 export const TEMPO_CHAINS: Record<TempoChainId, ChainConfig> = {
@@ -69,6 +71,8 @@ export function defaultTempoChainId(): TempoChainId {
 export function tempoChainConfig(chainId: TempoChainId = defaultTempoChainId()): ChainConfig {
   return TEMPO_CHAINS[chainId];
 }
+
+export const TEMPO_EXPLORER_URL = tempoChainConfig().explorerUrl;
 
 // AccountKeychain precompile — same address on every Tempo chain.
 export const ACCOUNT_KEYCHAIN_ADDRESS =
@@ -92,6 +96,24 @@ export const SELECTORS = {
   // x402 settlement primitive on TIP-20.
   transferWithMemo: "0x95777d59",
 } as const;
+
+export type PlatformFeeConfig =
+  | { enabled: true; bps: number; treasury: `0x${string}` }
+  | { enabled: false };
+
+export function platformFeeConfig(): PlatformFeeConfig {
+  const bps = parseInt(process.env.PLATFORM_FEE_BPS ?? "0", 10);
+  const treasury = process.env.PLATFORM_TREASURY_ADDRESS;
+  if (!bps || !treasury || !/^0x[0-9a-fA-F]{40}$/.test(treasury)) {
+    return { enabled: false };
+  }
+  return { enabled: true, bps, treasury: treasury as `0x${string}` };
+}
+
+export function computeFee(amountWei: bigint, bps: number): { fee: bigint; remainder: bigint } {
+  const fee = (amountWei * BigInt(bps)) / BigInt(10_000);
+  return { fee, remainder: amountWei - fee };
+}
 
 export const SIG_TYPE = {
   Secp256k1: 0,
