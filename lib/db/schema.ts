@@ -231,6 +231,8 @@ export const walletSpendLog = pgTable(
     challengeId: text("challenge_id"),
     recipient: text("recipient").notNull(),
     amountWei: text("amount_wei").notNull(),
+    feeWei: text("fee_wei"),
+    feeTxHash: text("fee_tx_hash"),
     txHash: text("tx_hash"),
     // 'pending' | 'signed' | 'submitted' | 'confirmed' | 'failed' | 'rejected'
     status: text("status").notNull().default("pending"),
@@ -492,5 +494,22 @@ export const walletAgentConnections = pgTable(
     ),
     userIdx: index("wallet_agent_connections_user_idx").on(t.userId),
     clientIdx: index("wallet_agent_connections_client_idx").on(t.clientId),
+  }),
+);
+
+export const walletSubscriptions = pgTable(
+  "wallet_subscriptions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").notNull().references(() => walletUsers.id, { onDelete: "cascade" }),
+    plan: text("plan").notNull(),
+    amountWei: text("amount_wei").notNull(),
+    txHash: text("tx_hash").notNull(),
+    startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => ({
+    userIdx: index("wallet_subscriptions_user_idx").on(t.userId, t.expiresAt),
   }),
 );
