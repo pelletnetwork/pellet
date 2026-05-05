@@ -1147,10 +1147,4 @@
   }
 }
 
-@media (max-width: 420px) {
-  .spec-ledger-float .spec-kpi-stack {
-    grid-template-columns: 1fr;
-    gap: 10px;
-  }
-}
 
