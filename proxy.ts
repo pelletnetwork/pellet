@@ -22,6 +22,7 @@ export function proxy(request: NextRequest) {
   }
 
   if (pathname === "/wallet") return NextResponse.next();
+  if (pathname.startsWith("/oli/wallet")) return NextResponse.next();
 
   return walletSoonRedirect(request);
 }
@@ -29,7 +30,6 @@ export function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     "/wallet/:path*",
-    "/oli/wallet/:path*",
     "/api/wallet/:path*",
     "/oauth/:path*",
   ],
