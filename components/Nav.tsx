@@ -7,7 +7,7 @@ import { PelletMark } from "@/components/pellet-mark";
 
 const navLinks = [
   { label: "OLI", href: "/oli" },
-  { label: "Wallet", href: "/wallet", title: "Pellet Wallet coming soon", soon: true },
+  { label: "Wallet", href: "/oli/wallet" },
   { label: "Docs", href: "/docs" },
 ];
 
