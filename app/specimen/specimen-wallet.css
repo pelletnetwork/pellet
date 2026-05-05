@@ -1135,8 +1135,11 @@
 
 @media (max-width: 480px) {
   .spec-wallet-float .spec-kpi-stack {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
     gap: 8px;
+  }
+  .spec-wallet-float .spec-kpi-stack > .spec-kpi-card:first-child {
+    grid-column: auto;
   }
   .spec-wallet-float .spec-kpi-card {
     padding: 12px;
