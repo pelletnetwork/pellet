@@ -54,11 +54,9 @@ function NavContent() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`nav-link${link.soon ? " nav-link-soon" : ""}`}
-                title={link.title}
+                className="nav-link"
               >
                 <span className="nav-link-label">{link.label}</span>
-                {link.soon ? <span className="nav-link-soon-label">soon</span> : null}
               </Link>
             ))}
           </nav>
@@ -112,7 +110,6 @@ function NavContent() {
               <Link
                 key={link.href}
                 href={link.href}
-                title={link.title}
                 onClick={() => setOpen(false)}
                 style={{
                   display: "block",
@@ -123,7 +120,7 @@ function NavContent() {
                   borderBottom: "1px solid var(--color-border-subtle)",
                 }}
               >
-                {link.soon ? `${link.label} soon` : link.label}
+                {link.label}
               </Link>
             ))}
           </nav>
