@@ -57,3 +57,6 @@ node_modules/
 # local-only (Claude Code config + scratch screenshots)
 /.claude/
 /tmp/
+
+# Claude worktrees
+.claude/worktrees/
