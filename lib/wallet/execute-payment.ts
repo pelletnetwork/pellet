@@ -1,7 +1,8 @@
 import { db } from "@/lib/db/client";
 import { walletSessions, walletSpendLog } from "@/lib/db/schema";
 import { decryptSessionKey } from "@/lib/wallet/session-keys";
-import { tempoChainConfig } from "@/lib/wallet/tempo-config";
+import { tempoChainConfig, platformFeeConfig, computeFee } from "@/lib/wallet/tempo-config";
+import { resolveFeeBps } from "@/lib/wallet/subscriptions";
 import { eq, sql } from "drizzle-orm";
 import {
   createWalletClient,
@@ -42,6 +43,8 @@ export type PaymentSuccess = {
   amountWei: string;
   memo: `0x${string}`;
   token: `0x${string}`;
+  feeWei: string;
+  feeTxHash: `0x${string}` | null;
   spendUsedWeiAfter: string;
   spendCapWei: string;
   remainingWei: string;
@@ -187,6 +190,18 @@ export async function executePayment(input: PaymentInput): Promise<PaymentResult
     };
   }
 
+  const feeConfig = platformFeeConfig();
+  let feeWei = BigInt(0);
+  let recipientWei = amountWei;
+  if (feeConfig.enabled) {
+    const bps = await resolveFeeBps(session.userId);
+    if (bps > 0) {
+      const split = computeFee(amountWei, bps);
+      feeWei = split.fee;
+      recipientWei = split.remainder;
+    }
+  }
+
   const challengeId = input.memo ? input.memo.toLowerCase() : null;
   const [pendingLog] = await db
     .insert(walletSpendLog)
@@ -196,9 +211,32 @@ export async function executePayment(input: PaymentInput): Promise<PaymentResult
       challengeId,
       recipient: to,
       amountWei: amountWei.toString(),
+      feeWei: feeWei.toString(),
       status: "pending",
     })
     .returning({ id: walletSpendLog.id });
+
+  let feeTxHash: `0x${string}` | null = null;
+  if (feeConfig.enabled && feeWei > BigInt(0)) {
+    try {
+      feeTxHash = await client.writeContract({
+        address: token,
+        abi: TIP20_ABI,
+        functionName: "transferWithMemo",
+        args: [feeConfig.treasury, feeWei, pad("0x00", { size: 32 })],
+        feePayer: true,
+        gas: BigInt(800_000),
+      } as never);
+    } catch (e) {
+      const detail = e instanceof Error ? e.message : String(e);
+      console.error("[wallet/pay] fee transfer failed:", detail);
+      await db
+        .update(walletSpendLog)
+        .set({ status: "failed", reason: `fee transfer: ${detail}`.slice(0, 500), updatedAt: new Date() })
+        .where(eq(walletSpendLog.id, pendingLog.id));
+      return { ok: false, error: "fee transfer failed", detail, status: 500 };
+    }
+  }
 
   let txHash: `0x${string}`;
   try {
@@ -206,7 +244,7 @@ export async function executePayment(input: PaymentInput): Promise<PaymentResult
       address: token,
       abi: TIP20_ABI,
       functionName: "transferWithMemo",
-      args: [to, amountWei, memo],
+      args: [to, recipientWei, memo],
       feePayer: true,
       gas: BigInt(800_000),
     } as never);
@@ -215,17 +253,15 @@ export async function executePayment(input: PaymentInput): Promise<PaymentResult
     console.error("[wallet/pay] sign+send failed:", detail);
     await db
       .update(walletSpendLog)
-      .set({ status: "failed", reason: detail.slice(0, 500), updatedAt: new Date() })
+      .set({ status: "failed", reason: detail.slice(0, 500), feeTxHash, updatedAt: new Date() })
       .where(eq(walletSpendLog.id, pendingLog.id));
     return { ok: false, error: "on-chain payment failed", detail, status: 500 };
   }
 
-  // Bookkeeping: accumulate spendUsedWei for audit trail (lifetime total,
-  // not period-aware — the chain is the cap authority now).
   const newSpendUsedWei = await db.transaction(async (tx) => {
     await tx
       .update(walletSpendLog)
-      .set({ status: "submitted", txHash, updatedAt: new Date() })
+      .set({ status: "submitted", txHash, feeTxHash, updatedAt: new Date() })
       .where(eq(walletSpendLog.id, pendingLog.id));
     const updated = await tx
       .update(walletSessions)
@@ -248,6 +284,8 @@ export async function executePayment(input: PaymentInput): Promise<PaymentResult
     amountWei: amountWei.toString(),
     memo,
     token,
+    feeWei: feeWei.toString(),
+    feeTxHash,
     spendUsedWeiAfter: newSpendUsedWei,
     spendCapWei: session.spendCapWei,
     remainingWei: postPaymentRemaining.toString(),
