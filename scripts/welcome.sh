@@ -11,11 +11,12 @@ clear
 
 cat << 'ART'
 
-  pellet
+  welcome to pellet
+
+  let's connect your first agent.
 
 ART
 
-echo ""
 echo "  which agent? (type name)"
 printf "  > "
 read -r AGENT_NAME
