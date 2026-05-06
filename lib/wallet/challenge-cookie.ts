@@ -69,7 +69,7 @@ export async function clearChallenge(): Promise<void> {
 // User session cookie — set after successful auth, used by /api/wallet/device/approve
 // to know which user is approving.
 const USER_COOKIE = "pellet_wa_user";
-const USER_TTL_MS = 30 * 60 * 1000; // 30 min
+const USER_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 export async function setUserSession(userId: string): Promise<void> {
   const expiresAt = Date.now() + USER_TTL_MS;
