@@ -48,7 +48,7 @@ async function apiFetch(
 
 export async function listWebhooks(): Promise<Subscription[]> {
   try {
-    const res = await apiFetch("/api/oli/webhooks");
+    const res = await apiFetch("/api/webhooks");
     if (!res.ok) return [];
     const data = (await res.json()) as { subscriptions?: Subscription[] } | Subscription[];
     if (Array.isArray(data)) return data;
@@ -60,7 +60,7 @@ export async function listWebhooks(): Promise<Subscription[]> {
 
 export async function getWebhook(id: string): Promise<SubscriptionDetail | null> {
   try {
-    const res = await apiFetch(`/api/oli/webhooks/${encodeURIComponent(id)}`);
+    const res = await apiFetch(`/api/webhooks/${encodeURIComponent(id)}`);
     if (!res.ok) return null;
     return (await res.json()) as SubscriptionDetail;
   } catch {
@@ -70,7 +70,7 @@ export async function getWebhook(id: string): Promise<SubscriptionDetail | null>
 
 export async function listDeliveries(id: string): Promise<Delivery[]> {
   try {
-    const res = await apiFetch(`/api/oli/webhooks/${encodeURIComponent(id)}/deliveries`);
+    const res = await apiFetch(`/api/webhooks/${encodeURIComponent(id)}/deliveries`);
     if (!res.ok) return [];
     const data = (await res.json()) as { deliveries?: Delivery[] } | Delivery[];
     if (Array.isArray(data)) return data;

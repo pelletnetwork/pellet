@@ -97,7 +97,7 @@ export function WebhookDetail({
 
   const onPause = async () => {
     const ok = await callApi(
-      `/api/oli/webhooks/${sub.id}/pause`,
+      `/api/webhooks/${sub.id}/pause`,
       { method: "POST" },
       "pause",
     );
@@ -106,7 +106,7 @@ export function WebhookDetail({
 
   const onResume = async () => {
     const ok = await callApi(
-      `/api/oli/webhooks/${sub.id}/resume`,
+      `/api/webhooks/${sub.id}/resume`,
       { method: "POST" },
       "resume",
     );
@@ -119,7 +119,7 @@ export function WebhookDetail({
     );
     if (!confirmed) return;
     const res = await callApi(
-      `/api/oli/webhooks/${sub.id}/rotate-secret`,
+      `/api/webhooks/${sub.id}/rotate-secret`,
       { method: "POST" },
       "rotate",
     );
@@ -138,11 +138,11 @@ export function WebhookDetail({
     );
     if (!confirmed) return;
     const ok = await callApi(
-      `/api/oli/webhooks/${sub.id}`,
+      `/api/webhooks/${sub.id}`,
       { method: "DELETE" },
       "delete",
     );
-    if (ok) router.push("/oli/webhooks");
+    if (ok) router.push("/webhooks");
   };
 
   const onVerify = async () => {
@@ -151,7 +151,7 @@ export function WebhookDetail({
       return;
     }
     const ok = await callApi(
-      `/api/oli/webhooks/${sub.id}/verify`,
+      `/api/webhooks/${sub.id}/verify`,
       {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -170,7 +170,7 @@ export function WebhookDetail({
       <header className="oli-page-header">
         <div style={{ minWidth: 0, flex: 1 }}>
           <Link
-            href="/oli/webhooks"
+            href="/webhooks"
             style={{
               fontFamily: "var(--font-mono)",
               fontSize: 10,

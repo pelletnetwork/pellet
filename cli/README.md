@@ -115,7 +115,7 @@ Phase 4 of the [v0 plan](https://github.com/pelletnetwork/pellet/blob/main/docs/
 
 - [pellet.network/wallet](https://pellet.network/wallet) — manifesto + roadmap
 - [pellet.network/skill.md](https://pellet.network/skill.md) — agent install metadata
-- [pellet.network/oli/methodology](https://pellet.network/oli/methodology) — the ledger every payment writes to
+- [pellet.network/methodology](https://pellet.network/methodology) — the ledger every payment writes to
 
 ## License
 

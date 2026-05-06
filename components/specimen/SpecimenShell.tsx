@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
@@ -8,56 +8,10 @@ import Footer from "@/components/Footer";
 
 const STORAGE_KEY = "specimen-theme";
 
-type NavItem = {
-  label: string;
-  href: string;
-  exact?: boolean;
-  match?: string[];
-};
-
-type NavGroup = {
-  label: string;
-  items: NavItem[];
-};
-
-const NAV_GROUPS: NavGroup[] = [
-  {
-    label: "Wallet",
-    items: [
-      {
-        label: "Dashboard",
-        href: "/oli/wallet/dashboard",
-        exact: true,
-        match: [
-          "/oli/wallet/dashboard/pair",
-          "/oli/wallet/dashboard/sessions",
-          "/oli/wallet/dashboard/settings",
-        ],
-      },
-      { label: "Connect Agent", href: "/oli/wallet/onboard" },
-      {
-        label: "Agents",
-        href: "/oli/wallet/dashboard/agents",
-      },
-    ],
-  },
-  {
-    label: "Developers",
-    items: [
-      { label: "Docs", href: "/docs" },
-      { label: "MCP", href: "/oli/mcp" },
-      { label: "CLI", href: "/oli/cli" },
-      { label: "Webhooks", href: "/oli/webhooks" },
-      { label: "Skills", href: "/oli/skills" },
-    ],
-  },
+const NAV_LINKS = [
+  { label: "Docs", href: "/docs" },
+  { label: "CLI", href: "/cli" },
 ];
-
-function isItemActive(item: NavItem, pathname: string): boolean {
-  if (item.match?.some((prefix) => pathname.startsWith(prefix))) return true;
-  if (item.exact) return pathname === item.href;
-  return pathname === item.href || pathname.startsWith(`${item.href}/`);
-}
 
 function TopBar({
   pathname,
@@ -68,31 +22,12 @@ function TopBar({
   dark: boolean;
   onToggleTheme: () => void;
 }) {
-  const navRef = useRef<HTMLElement | null>(null);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const [openGroup, setOpenGroup] = useState<string | null>(null);
+  const isSignIn = pathname === "/wallet/sign-in" || pathname === "/wallet";
 
   useEffect(() => {
     setMobileNavOpen(false);
-    setOpenGroup(null);
   }, [pathname]);
-
-  useEffect(() => {
-    function onPointerDown(ev: PointerEvent) {
-      if (!navRef.current?.contains(ev.target as Node)) {
-        setOpenGroup(null);
-      }
-    }
-    function onKeyDown(ev: KeyboardEvent) {
-      if (ev.key === "Escape") setOpenGroup(null);
-    }
-    document.addEventListener("pointerdown", onPointerDown);
-    document.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.removeEventListener("pointerdown", onPointerDown);
-      document.removeEventListener("keydown", onKeyDown);
-    };
-  }, []);
 
   return (
     <header className="spec-topbar">
@@ -113,70 +48,33 @@ function TopBar({
         <span className="spec-brand-name">Pellet Network</span>
       </Link>
       <nav
-        ref={navRef}
         className={`spec-nav${mobileNavOpen ? " spec-nav-open" : ""}`}
         aria-label="Pellet sections"
       >
-        {NAV_GROUPS.map((group) => {
-          const groupActive = group.items.some((item) =>
-            isItemActive(item, pathname),
-          );
-          const groupOpen = openGroup === group.label;
-          return (
-            <div
-              key={group.label}
-              className={[
-                "spec-nav-group",
-                groupActive ? "spec-nav-group-active" : "",
-                groupOpen ? "spec-nav-group-open" : "",
-              ].filter(Boolean).join(" ")}
-            >
-              <button
-                type="button"
-                className="spec-nav-trigger"
-                aria-expanded={groupOpen}
-                onClick={() =>
-                  setOpenGroup((current) =>
-                    current === group.label ? null : group.label,
-                  )
-                }
-              >
-                <span className="spec-nav-label">{group.label}</span>
-              </button>
-              <div className="spec-nav-menu">
-                {group.items.map((item) => {
-                  const active = isItemActive(item, pathname);
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className={`spec-nav-menu-item${active ? " spec-nav-menu-item-active" : ""}`}
-                      aria-current={active ? "page" : undefined}
-                      onClick={() => {
-                        setOpenGroup(null);
-                        setMobileNavOpen(false);
-                      }}
-                    >
-                      {item.label}
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })}
+        {!isSignIn && NAV_LINKS.map((link) => (
+          <Link
+            key={link.href}
+            href={link.href}
+            className={`spec-nav-link${pathname.startsWith(link.href) ? " spec-nav-link-active" : ""}`}
+            onClick={() => setMobileNavOpen(false)}
+          >
+            {link.label}
+          </Link>
+        ))}
       </nav>
       <div className="spec-topbar-actions">
         <ThemeToggleButton dark={dark} onToggle={onToggleTheme} />
-        <button
-          type="button"
-          className="spec-mobile-nav-toggle"
-          aria-label={mobileNavOpen ? "Close navigation" : "Open navigation"}
-          aria-expanded={mobileNavOpen}
-          onClick={() => setMobileNavOpen((open) => !open)}
-        >
-          {mobileNavOpen ? <X size={16} /> : <Menu size={16} />}
-        </button>
+        {!isSignIn && (
+          <button
+            type="button"
+            className="spec-mobile-nav-toggle"
+            aria-label={mobileNavOpen ? "Close navigation" : "Open navigation"}
+            aria-expanded={mobileNavOpen}
+            onClick={() => setMobileNavOpen((open) => !open)}
+          >
+            {mobileNavOpen ? <X size={16} /> : <Menu size={16} />}
+          </button>
+        )}
       </div>
     </header>
   );
@@ -248,7 +146,7 @@ export function SpecimenShell({
 }: {
   children: React.ReactNode;
 }) {
-  const pathname = usePathname() ?? "/oli";
+  const pathname = usePathname() ?? "/";
   const [dark, setDark] = useState(true);
 
   // Hydrate from storage; URL `?theme=dark|light` overrides for screenshots.

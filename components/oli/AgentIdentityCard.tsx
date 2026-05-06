@@ -342,7 +342,9 @@ export function AgentIdentityCard({
   }, []);
 
   const art = useMemo(
-    () => (agent ? asciiFrame(agent, frame, cols) : []),
+    () => agent
+      ? asciiFrame(agent, frame, cols)
+      : cloudAsciiFrame("pellet-empty", frame, cols),
     [agent, frame, cols],
   );
 
@@ -351,19 +353,27 @@ export function AgentIdentityCard({
       <section className="spec-agent-id-card spec-agent-id-card-empty" aria-label="Agent identity">
         <div className="spec-agent-id-top">
           <span className="spec-agent-id-kicker">PELLET AGENT ID</span>
-          <span className="spec-pill">[ EMPTY ]</span>
+          <span className="spec-agent-ticker">
+            <span className="spec-agent-ticker-track">
+              <span>Claude</span>
+              <span>GPT</span>
+              <span>Cursor</span>
+              <span>Codex</span>
+              <span>Gemini</span>
+              <span>Hermes</span>
+              <span>Claude</span>
+            </span>
+          </span>
         </div>
-        <div className="spec-agent-id-empty-mark" aria-hidden="true">
-          <span>-- -- -- -- -- --</span>
-          <span>-- -- -- -- -- --</span>
-          <span>-- -- -- -- -- --</span>
-        </div>
+        <pre className="spec-agent-id-empty-mark" ref={asciiRef} aria-hidden="true">
+          {art.join("\n")}
+        </pre>
         <p className="spec-agent-id-empty-copy">
           No agent credential is living in this wallet yet.
         </p>
-        <Link href={`${basePath}/onboard`} className="spec-agent-id-action">
-          CONNECT AGENT
-        </Link>
+        <div className="spec-agent-id-actions">
+          <Link href={`${basePath}/onboard`}>CONNECT AGENT</Link>
+        </div>
       </section>
     );
   }

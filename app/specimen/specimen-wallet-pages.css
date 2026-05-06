@@ -484,6 +484,7 @@
   gap: 56px;
   align-items: start;
   padding: 56px 48px;
+  padding-top: min(18vh, 160px);
   max-width: 1080px;
   margin: 0 auto;
   width: 100%;
@@ -492,7 +493,7 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
-  padding-right: 48px;
+  padding-right: 16px;
 }
 .spec-signin-lede {
   font-size: 14px;
@@ -515,29 +516,34 @@
   padding: 14px 0;
   font-size: 13px;
   line-height: 1.45;
+  border-bottom: 1px solid var(--line-thin);
+}
+.spec-signin-bullets li:last-child {
+  border-bottom: none;
 }
 .spec-signin-bullet-num {
   font-size: 11px;
   letter-spacing: 0.08em;
-  opacity: 0.55;
+  opacity: 0.65;
   flex-shrink: 0;
   padding-top: 1px;
 }
 
 .spec-signin-card {
-  border: none;
+  border: 1px solid color-mix(in oklch, var(--fg) 10%, var(--bg));
   border-radius: 16px !important;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06), 0 8px 24px rgba(0, 0, 0, 0.06) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 16px 48px rgba(0, 0, 0, 0.08) !important;
   background: color-mix(in oklch, var(--bg) 92%, white);
   padding: 28px 28px 24px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
   align-self: start;
 }
 .specimen-shell.dark .spec-signin-card {
   background: color-mix(in oklch, var(--fg) 6%, var(--bg));
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.2) !important;
+  border-color: color-mix(in oklch, var(--fg) 10%, var(--bg));
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 16px 48px rgba(0, 0, 0, 0.3) !important;
 }
 .spec-signin-card-head {
   display: flex;
@@ -550,7 +556,7 @@
 .spec-signin-card-label {
   font-size: 11px;
   letter-spacing: 0.12em;
-  opacity: 0.6;
+  opacity: 0.65;
 }
 .spec-signin-tabs {
   display: inline-flex;
@@ -559,7 +565,7 @@
   overflow: hidden;
 }
 .spec-signin-tab {
-  padding: 5px 12px;
+  padding: 8px 12px;
   background: transparent;
   border: none;
   border-right: 1px solid var(--line-thin);
@@ -572,6 +578,13 @@
 }
 .spec-signin-tab:last-child {
   border-right: none;
+}
+.spec-signin-tab:hover:not(:disabled):not(.spec-signin-tab-active) {
+  background: color-mix(in oklch, var(--fg) 10%, var(--bg));
+}
+.spec-signin-tab:focus-visible {
+  outline: 2px solid var(--fg);
+  outline-offset: -2px;
 }
 .spec-signin-tab:disabled {
   cursor: not-allowed;
@@ -600,21 +613,33 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 12px 16px;
-  border: 1px solid var(--line-thin);
+  padding: 14px 16px;
+  border: none;
   border-radius: 10px !important;
-  background: transparent;
-  color: var(--fg);
+  background: var(--fg);
+  color: var(--bg);
   font-family: inherit;
   font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.08em;
   cursor: pointer;
   align-self: stretch;
+  transition: opacity 120ms ease;
+}
+.spec-signin-cta:hover:not(:disabled) {
+  opacity: 0.85;
+}
+.spec-signin-cta:active:not(:disabled) {
+  transform: scale(0.98);
+  transition: transform 0.08s ease;
+}
+.spec-signin-cta:focus-visible {
+  outline: 2px solid var(--fg);
+  outline-offset: 2px;
 }
 .spec-signin-cta:disabled {
   cursor: wait;
-  opacity: 0.6;
+  opacity: 0.5;
 }
 .spec-signin-error {
   border: 1px solid var(--fg);
@@ -635,7 +660,11 @@
   font-variant-numeric: tabular-nums;
   white-space: pre-wrap;
   word-break: break-word;
-  opacity: 0.85;
+  padding: 10px 12px;
+  background: color-mix(in oklch, var(--fg) 5%, var(--bg));
+  border-radius: 8px !important;
+  font-size: 11px;
+  line-height: 1.5;
 }
 
 @media (max-width: 900px) {
@@ -701,7 +730,6 @@
   .spec-nav {
     grid-column: 1 / -1;
     display: none;
-    grid-template-columns: none;
     width: 100%;
     flex-direction: column;
     align-items: stretch;
@@ -712,44 +740,17 @@
   .spec-nav-open {
     display: flex;
   }
-  .spec-nav-group {
+  .spec-nav-link {
     display: block;
+    padding: 11px 0;
+    font-size: 11px;
     border-bottom: 1px solid var(--line-thin);
   }
-  .spec-nav-group:last-child {
+  .spec-nav-link:last-child {
     border-bottom: 0;
   }
-  .spec-nav-trigger {
-    display: flex;
-    width: 100%;
-    justify-content: space-between;
-    padding: 11px 0;
-    border: 0;
-    font-size: 11px;
-  }
-  .spec-nav-label::after {
-    bottom: -3px;
-  }
-  .spec-nav-group-active > .spec-nav-trigger {
-    border-color: transparent;
-  }
-  .spec-nav-menu {
-    position: static;
+  .spec-nav-link::after {
     display: none;
-    min-width: 0;
-    transform: none;
-    padding: 0 0 8px 10px;
-    border: 0;
-    background: transparent;
-    box-shadow: none;
-  }
-  .spec-nav-group-open .spec-nav-menu {
-    display: flex;
-  }
-  .spec-nav-menu-item {
-    min-height: 28px;
-    padding: 7px 10px;
-    font-size: 11px;
   }
 
   /* page header */
@@ -1491,7 +1492,6 @@
   font-weight: 600;
 }
 .spec-chat-md code {
-  font-family: var(--font-commit-mono), ui-monospace, monospace;
   font-size: 0.9em;
   padding: 1px 5px;
   background: color-mix(in oklch, var(--fg) 8%, var(--bg));
@@ -1501,7 +1501,6 @@
   margin: 8px 0;
   padding: 10px 12px;
   overflow-x: auto;
-  font-family: var(--font-commit-mono), ui-monospace, monospace;
   font-size: 12px;
   line-height: 1.5;
   background: color-mix(in oklch, var(--fg) 6%, var(--bg));
@@ -1917,7 +1916,6 @@
 /* ── Onboarding "Connect your agent" screen ──────────────────────────────── */
 .spec-onboard-skip {
   align-self: center;
-  font-family: var(--font-commit-mono), ui-monospace, monospace;
   font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -1938,7 +1936,6 @@
   gap: 24px;
 }
 .spec-onboard-group-head {
-  font-family: var(--font-commit-mono), ui-monospace, monospace;
   font-size: 11px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -1998,7 +1995,6 @@
   opacity: 0.7;
 }
 .spec-onboard-pill {
-  font-family: var(--font-commit-mono), ui-monospace, monospace;
   font-size: 10px;
   letter-spacing: 0.1em;
   padding: 2px 7px;
@@ -2031,7 +2027,6 @@
   border-radius: 12px !important;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08), 0 12px 32px rgba(0, 0, 0, 0.10) !important;
   overflow: hidden;
-  font-family: var(--font-commit-mono), ui-monospace, monospace;
   font-size: 11px;
   overflow: hidden;
 }
@@ -2064,7 +2059,6 @@
   opacity: 0.5;
 }
 .spec-onboard-card-link {
-  font-family: var(--font-commit-mono), ui-monospace, monospace;
   font-size: 11px;
   letter-spacing: 0.06em;
   color: var(--fg);
@@ -2116,7 +2110,6 @@
   text-align: center;
 }
 .spec-agents-empty-head {
-  font-family: var(--font-commit-mono), ui-monospace, monospace;
   font-size: 12px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -2155,7 +2148,6 @@
   border-bottom: 0;
 }
 .spec-agents-row-head {
-  font-family: var(--font-commit-mono), ui-monospace, monospace;
   font-size: 10px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -2180,7 +2172,6 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-family: var(--font-commit-mono), ui-monospace, monospace;
   font-size: 10px;
   color: color-mix(in oklch, var(--fg) 55%, var(--bg));
 }
@@ -2202,7 +2193,6 @@
   gap: 4px;
 }
 .spec-agents-scope {
-  font-family: var(--font-commit-mono), ui-monospace, monospace;
   font-size: 10px;
   padding: 2px 6px;
   border: 1px solid var(--line-thin);
@@ -2210,7 +2200,6 @@
   white-space: nowrap;
 }
 .spec-agents-cell-time {
-  font-family: var(--font-commit-mono), ui-monospace, monospace;
   font-size: 12px;
   color: color-mix(in oklch, var(--fg) 75%, var(--bg));
   font-variant-numeric: tabular-nums;
@@ -2245,7 +2234,6 @@
 .spec-agents-chat,
 .spec-agents-revoke {
   padding: 6px 12px;
-  font-family: var(--font-commit-mono), ui-monospace, monospace;
   font-size: 10px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -2269,7 +2257,6 @@
 .spec-agents-error {
   margin: 16px 32px;
   padding: 10px 12px;
-  font-family: var(--font-commit-mono), ui-monospace, monospace;
   font-size: 12px;
   border-left: 2px solid var(--fg);
 }

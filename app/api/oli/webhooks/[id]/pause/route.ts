@@ -7,7 +7,7 @@ import { requireOwner } from "@/lib/wallet/owner-auth";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// POST /api/oli/webhooks/[id]/pause — owner-initiated pause. Future events
+// POST /api/webhooks/[id]/pause — owner-initiated pause. Future events
 // won't dispatch until /resume is called.
 
 export async function POST(

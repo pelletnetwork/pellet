@@ -75,7 +75,7 @@ Server-sent events stream. Pushes new events as they're matched on-chain (cron r
 
 ## Attribution
 
-OLI tracks gateway routing via two paths, documented at [pellet.network/oli/methodology](https://pellet.network/oli/methodology):
+OLI tracks gateway routing via two paths, documented at [pellet.network/methodology](https://pellet.network/methodology):
 
 - **Pattern A** — when the gateway forwards funds to a provider, its escrow contract emits a `Settlement` event whose `topic[2]` is the provider address. This recovers ~9% of gateway txs as named addresses.
 - **Pattern B** — user→gateway calldata carries a `bytes32 ref` whose bytes 5–14 are a stable per-service fingerprint set by Tempo's MPP client. This groups the remaining ~91% of gateway txs by service even when the provider address can't be recovered.

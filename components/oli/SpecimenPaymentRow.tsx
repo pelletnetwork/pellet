@@ -67,8 +67,8 @@ function statusKind(status: string): "ok" | "pending" | "err" {
 
 /**
  * Click-to-expand drawer row for a wallet payment (`wallet_spend_log`).
- * Used on /oli/wallet/dashboard's signed-payments table and on the
- * /oli/wallet/dashboard/sessions/[id] session-detail page so both surfaces
+ * Used on /wallet/dashboard's signed-payments table and on the
+ * /wallet/dashboard/sessions/[id] session-detail page so both surfaces
  * share the same drawer fields and `[ OK ]`-bracket status pills.
  *
  * `showSession` defaults to true (dashboard view, where each row's session

@@ -6,8 +6,7 @@ import { usePathname } from "next/navigation";
 import { PelletMark } from "@/components/pellet-mark";
 
 const navLinks = [
-  { label: "OLI", href: "/oli" },
-  { label: "Wallet", href: "/oli/wallet" },
+  { label: "Wallet", href: "/wallet" },
   { label: "Docs", href: "/docs" },
 ];
 

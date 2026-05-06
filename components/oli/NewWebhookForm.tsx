@@ -71,7 +71,7 @@ export function NewWebhookForm({ agents }: { agents: AgentChoice[] }) {
     if (token_address) filters.token_address = token_address;
 
     try {
-      const res = await fetch("/api/oli/webhooks", {
+      const res = await fetch("/api/webhooks", {
         method: "POST",
         credentials: "include",
         headers: { "content-type": "application/json" },
@@ -96,7 +96,7 @@ export function NewWebhookForm({ agents }: { agents: AgentChoice[] }) {
       const qs = data.signing_secret
         ? `?secret=${encodeURIComponent(data.signing_secret)}`
         : "";
-      router.push(`/oli/webhooks/${data.id}${qs}`);
+      router.push(`/webhooks/${data.id}${qs}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "network error");
       setSubmitting(false);

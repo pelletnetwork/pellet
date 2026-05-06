@@ -7,7 +7,7 @@ import { requireOwner } from "@/lib/wallet/owner-auth";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// POST /api/oli/webhooks/[id]/verify  body: { verify_token }
+// POST /api/webhooks/[id]/verify  body: { verify_token }
 // Flips status pending_verify → active when the token matches and hasn't expired.
 
 type VerifyBody = { verify_token?: unknown };

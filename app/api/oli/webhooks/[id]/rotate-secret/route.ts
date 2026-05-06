@@ -8,7 +8,7 @@ import { requireOwner } from "@/lib/wallet/owner-auth";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// POST /api/oli/webhooks/[id]/rotate-secret
+// POST /api/webhooks/[id]/rotate-secret
 // Hard cutover: the new secret takes effect immediately for the next dispatch.
 // No overlap window in v1 — receivers must be ready to accept new sigs the
 // moment they receive a 200 from this endpoint.

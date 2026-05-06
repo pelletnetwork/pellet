@@ -9,7 +9,7 @@ export function Footer() {
         textAlign: "center",
         fontSize: 11,
         letterSpacing: "0.04em",
-        color: "color-mix(in oklch, var(--fg) 55%, var(--bg))",
+        color: "color-mix(in oklch, var(--fg) 65%, var(--bg))",
       }}
     >
       © {new Date().getFullYear()} Pellet Network

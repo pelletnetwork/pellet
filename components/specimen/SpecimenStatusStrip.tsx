@@ -156,7 +156,7 @@ export function SpecimenStatusStrip() {
     return (
       <footer className="spec-status-strip" aria-label="Chain status">
         <span className="spec-status-cell">
-          <span className="spec-status-label">OLI</span>
+          <span className="spec-status-label">PELLET</span>
           <span className="spec-status-value">…</span>
         </span>
       </footer>

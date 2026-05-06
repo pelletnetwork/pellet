@@ -1,0 +1,133 @@
+<h2>Terminal Theme Options</h2>
+<p class="subtitle">How the embedded terminal looks inside the dashboard. Pick the vibe.</p>
+
+<div class="cards" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 24px;">
+
+  <!-- Option A: Light terminal -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)" style="padding: 0; overflow: hidden;">
+    <div style="background: #f5f5f5; border-bottom: 1px solid #e0e0e0; padding: 8px 14px; display: flex; align-items: center; gap: 8px;">
+      <div style="display: flex; gap: 5px;">
+        <span style="width: 10px; height: 10px; border-radius: 50%; background: #ff5f57;"></span>
+        <span style="width: 10px; height: 10px; border-radius: 50%; background: #febc2e;"></span>
+        <span style="width: 10px; height: 10px; border-radius: 50%; background: #28c840;"></span>
+      </div>
+      <span style="font-size: 11px; color: #888; letter-spacing: 0.03em;">terminal</span>
+    </div>
+    <div style="background: #ffffff; padding: 16px 18px; font-family: 'Commit Mono', ui-monospace, monospace; font-size: 12px; line-height: 1.7; color: #1a1a1a; min-height: 200px;">
+      <div style="color: #888;">Last login: Mon May 5 19:27:01</div>
+      <div style="margin-top: 8px;"><span style="color: #666;">~/pellet</span> <span style="color: #aaa;">$</span> claude</div>
+      <div style="margin-top: 12px; color: #555;">
+        <span style="color: #7c3aed;">claude</span> <span style="color: #999;">v1.0.33</span>
+      </div>
+      <div style="margin-top: 4px; color: #555;">
+        <span style="color: #888;">></span> What would you like to work on?
+      </div>
+      <div style="margin-top: 8px;">
+        <span style="color: #666;">~/pellet</span> <span style="color: #aaa;">$</span> <span style="border-right: 2px solid #1a1a1a; animation: blink 1s step-end infinite;">&nbsp;</span>
+      </div>
+    </div>
+    <div class="card-body" style="padding: 14px 18px;">
+      <h3>A. Light</h3>
+      <p>White background, dark text. Clean and minimal. Matches light dashboard theme.</p>
+    </div>
+  </div>
+
+  <!-- Option B: Dark terminal -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)" style="padding: 0; overflow: hidden;">
+    <div style="background: #1a1a1a; border-bottom: 1px solid #333; padding: 8px 14px; display: flex; align-items: center; gap: 8px;">
+      <div style="display: flex; gap: 5px;">
+        <span style="width: 10px; height: 10px; border-radius: 50%; background: #ff5f57;"></span>
+        <span style="width: 10px; height: 10px; border-radius: 50%; background: #febc2e;"></span>
+        <span style="width: 10px; height: 10px; border-radius: 50%; background: #28c840;"></span>
+      </div>
+      <span style="font-size: 11px; color: #666; letter-spacing: 0.03em;">terminal</span>
+    </div>
+    <div style="background: #111111; padding: 16px 18px; font-family: 'Commit Mono', ui-monospace, monospace; font-size: 12px; line-height: 1.7; color: #cccccc; min-height: 200px;">
+      <div style="color: #555;">Last login: Mon May 5 19:27:01</div>
+      <div style="margin-top: 8px;"><span style="color: #888;">~/pellet</span> <span style="color: #555;">$</span> claude</div>
+      <div style="margin-top: 12px;">
+        <span style="color: #a78bfa;">claude</span> <span style="color: #555;">v1.0.33</span>
+      </div>
+      <div style="margin-top: 4px;">
+        <span style="color: #666;">></span> What would you like to work on?
+      </div>
+      <div style="margin-top: 8px;">
+        <span style="color: #888;">~/pellet</span> <span style="color: #555;">$</span> <span style="border-right: 2px solid #ccc; animation: blink 1s step-end infinite;">&nbsp;</span>
+      </div>
+    </div>
+    <div class="card-body" style="padding: 14px 18px;">
+      <h3>B. Dark (always)</h3>
+      <p>Dark background regardless of dashboard theme. Terminal stays dark even in light mode — the contrast makes it pop.</p>
+    </div>
+  </div>
+
+  <!-- Option C: Match dashboard theme -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)" style="padding: 0; overflow: hidden;">
+    <div style="background: linear-gradient(90deg, #f5f5f5 50%, #1a1a1a 50%); padding: 8px 14px; display: flex; align-items: center; gap: 8px;">
+      <div style="display: flex; gap: 5px;">
+        <span style="width: 10px; height: 10px; border-radius: 50%; background: #ff5f57;"></span>
+        <span style="width: 10px; height: 10px; border-radius: 50%; background: #febc2e;"></span>
+        <span style="width: 10px; height: 10px; border-radius: 50%; background: #28c840;"></span>
+      </div>
+      <span style="font-size: 11px; color: #888; letter-spacing: 0.03em;">terminal</span>
+    </div>
+    <div style="display: flex; min-height: 200px;">
+      <div style="flex: 1; background: #ffffff; padding: 16px 18px; font-family: 'Commit Mono', ui-monospace, monospace; font-size: 12px; line-height: 1.7; color: #1a1a1a; border-right: 1px solid #e0e0e0;">
+        <div style="color: #888; font-size: 9px; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px;">light mode</div>
+        <div><span style="color: #666;">~</span> <span style="color: #aaa;">$</span> claude</div>
+        <div style="margin-top: 4px; color: #555;"><span style="color: #888;">></span> Ready.</div>
+      </div>
+      <div style="flex: 1; background: #111111; padding: 16px 18px; font-family: 'Commit Mono', ui-monospace, monospace; font-size: 12px; line-height: 1.7; color: #cccccc;">
+        <div style="color: #555; font-size: 9px; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px;">dark mode</div>
+        <div><span style="color: #888;">~</span> <span style="color: #555;">$</span> claude</div>
+        <div style="margin-top: 4px;"><span style="color: #666;">></span> Ready.</div>
+      </div>
+    </div>
+    <div class="card-body" style="padding: 14px 18px;">
+      <h3>C. Follow dashboard theme</h3>
+      <p>Light terminal in light mode, dark terminal in dark mode. Seamless integration.</p>
+    </div>
+  </div>
+
+  <!-- Option D: Dark with syntax theme -->
+  <div class="card" data-choice="d" onclick="toggleSelect(this)" style="padding: 0; overflow: hidden;">
+    <div style="background: #0d1117; border-bottom: 1px solid #21262d; padding: 8px 14px; display: flex; align-items: center; gap: 8px;">
+      <div style="display: flex; gap: 5px;">
+        <span style="width: 10px; height: 10px; border-radius: 50%; background: #ff5f57;"></span>
+        <span style="width: 10px; height: 10px; border-radius: 50%; background: #febc2e;"></span>
+        <span style="width: 10px; height: 10px; border-radius: 50%; background: #28c840;"></span>
+      </div>
+      <span style="font-size: 11px; color: #484f58; letter-spacing: 0.03em;">terminal</span>
+    </div>
+    <div style="background: #0d1117; padding: 16px 18px; font-family: 'Commit Mono', ui-monospace, monospace; font-size: 12px; line-height: 1.7; color: #c9d1d9; min-height: 200px;">
+      <div style="color: #484f58;">Last login: Mon May 5 19:27:01</div>
+      <div style="margin-top: 8px;"><span style="color: #79c0ff;">~/pellet</span> <span style="color: #484f58;">$</span> claude</div>
+      <div style="margin-top: 12px;">
+        <span style="color: #d2a8ff;">claude</span> <span style="color: #484f58;">v1.0.33</span>
+      </div>
+      <div style="margin-top: 4px;">
+        <span style="color: #8b949e;">></span> <span style="color: #c9d1d9;">What would you like to work on?</span>
+      </div>
+      <div style="margin-top: 8px;">
+        <span style="color: #79c0ff;">~/pellet</span> <span style="color: #484f58;">$</span> <span style="color: #58a6ff;">git status</span>
+      </div>
+      <div style="margin-top: 4px;">
+        <span style="color: #7ee787;">modified:</span> <span style="color: #c9d1d9;">app/wallet/dashboard/page.tsx</span>
+      </div>
+      <div style="margin-top: 4px;">
+        <span style="color: #ffa657;">untracked:</span> <span style="color: #c9d1d9;">components/Terminal.tsx</span>
+      </div>
+    </div>
+    <div class="card-body" style="padding: 14px 18px;">
+      <h3>D. Dark + syntax colors</h3>
+      <p>GitHub-dark style with colored paths, keywords, git status. Rich but not noisy. Always dark regardless of dashboard theme.</p>
+    </div>
+  </div>
+
+</div>
+
+<style>
+  @keyframes blink {
+    50% { border-color: transparent; }
+  }
+</style>

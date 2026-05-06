@@ -20,7 +20,7 @@ function isActive(pathname: string, tabHref: string, basePath: string): boolean 
   return pathname === full || pathname.startsWith(full + "/");
 }
 
-export function WalletTabs({ basePath = "/oli/wallet" }: { basePath?: string }) {
+export function WalletTabs({ basePath = "/wallet" }: { basePath?: string }) {
   const pathname = usePathname();
 
   return (

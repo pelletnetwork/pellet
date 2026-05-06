@@ -1,0 +1,7 @@
+{"type":"server-started","port":53049,"host":"127.0.0.1","url_host":"localhost","url":"http://localhost:53049","screen_dir":"/Users/jake/pellet/.superpowers/brainstorm/37100-1778031559/content","state_dir":"/Users/jake/pellet/.superpowers/brainstorm/37100-1778031559/state"}
+{"type":"screen-added","file":"/Users/jake/pellet/.superpowers/brainstorm/37100-1778031559/content/terminal-themes.html"}
+{"source":"user-event","type":"click","text":"terminal\n    \n    \n      \n        light mode\n        ~ $ claude\n        > Ready.\n      \n      \n        dark mode\n        ~ $ claude\n        > Ready.\n      \n    \n    \n      C. Follow dashboard theme\n      Light terminal in light mode, dark terminal in dark mode. Seamless integration.","choice":"c","id":null,"timestamp":1778032165763}
+{"type":"screen-added","file":"/Users/jake/pellet/.superpowers/brainstorm/37100-1778031559/content/waiting.html"}
+{"type":"screen-added","file":"/Users/jake/pellet/.superpowers/brainstorm/37100-1778031559/content/ascii-wordmarks.html"}
+{"type":"screen-added","file":"/Users/jake/pellet/.superpowers/brainstorm/37100-1778031559/content/waiting-2.html"}
+{"type":"server-stopped","reason":"idle timeout"}

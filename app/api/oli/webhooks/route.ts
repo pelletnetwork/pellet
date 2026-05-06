@@ -22,8 +22,8 @@ function newVerifyToken(): string {
   return randomBytes(16).toString("hex");
 }
 
-// POST /api/oli/webhooks — create.
-// GET  /api/oli/webhooks — list (no secrets).
+// POST /api/webhooks — create.
+// GET  /api/webhooks — list (no secrets).
 
 type CreateBody = {
   callback_url?: unknown;

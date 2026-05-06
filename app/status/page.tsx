@@ -94,8 +94,8 @@ export default async function StatusPage() {
         <Link href="/api/v1/health" className="status-footer-link">
           Raw JSON →
         </Link>
-        <Link href="/oli" className="status-footer-link">
-          Open ledger →
+        <Link href="/wallet" className="status-footer-link">
+          Wallet →
         </Link>
       </footer>
     </div>

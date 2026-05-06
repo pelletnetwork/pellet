@@ -245,23 +245,6 @@
   outline: none !important;
 }
 
-.spec-terminal-offline {
-  flex: 1;
-  min-height: 300px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 12px;
-  border: 1px solid color-mix(in oklch, var(--fg) 8%, var(--bg));
-  background: color-mix(in oklch, var(--fg) 3%, var(--bg));
-}
-.spec-terminal-offline pre {
-  font-family: 'Commit Mono', ui-monospace, monospace;
-  font-size: 12px;
-  line-height: 1.7;
-  color: color-mix(in oklch, var(--fg) 45%, var(--bg));
-  white-space: pre;
-}
 
 /* ── Signed payments rail card ─────────────────────────────────────────── */
 .spec-rail-payments {
@@ -490,7 +473,6 @@
   margin: 0;
   height: 146px;
   padding: 0;
-  font-family: var(--font-commit-mono), ui-monospace, monospace;
   font-size: 7px;
   line-height: 0.9;
   letter-spacing: 0;
@@ -565,19 +547,25 @@
   background: rgba(255, 255, 255, 0.08) !important;
   color: var(--fg);
 }
-.spec-agent-id-empty-mark {
+.specimen-shell .spec-agent-id-empty-mark {
   position: relative;
   z-index: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  padding: 12px 0;
-  font-family: var(--font-commit-mono), ui-monospace, monospace;
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  color: color-mix(in oklch, var(--fg) 46%, var(--bg));
-  border-top: 1px solid var(--line-thin);
-  border-bottom: 1px solid var(--line-thin);
+  margin: 0;
+  padding: 0;
+  height: 100px;
+  font-family: 'Commit Mono', ui-monospace, monospace;
+  font-size: 7px;
+  line-height: 0.9;
+  letter-spacing: 0;
+  white-space: pre;
+  color: color-mix(in oklch, var(--fg) 35%, var(--bg));
+  overflow: hidden;
+  user-select: none;
+  background: transparent !important;
+}
+.specimen-shell.dark .spec-agent-id-empty-mark {
+  color: color-mix(in oklch, var(--fg) 45%, var(--bg));
+  background: transparent !important;
 }
 .spec-agent-id-empty-copy {
   position: relative;
@@ -587,11 +575,33 @@
   line-height: 1.45;
   color: color-mix(in oklch, var(--fg) 70%, var(--bg));
 }
-.spec-agent-id-action {
-  position: relative;
-  z-index: 1;
+.spec-agent-ticker {
+  display: inline-block;
+  height: 14px;
+  overflow: hidden;
+  vertical-align: bottom;
+}
+.spec-agent-ticker-track {
   display: block;
-  border: 1px solid var(--line);
+  animation: spec-ticker-scroll 10s ease-in-out infinite;
+}
+.spec-agent-ticker-track span {
+  display: block;
+  height: 14px;
+  line-height: 14px;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: color-mix(in oklch, var(--fg) 40%, var(--bg));
+}
+@keyframes spec-ticker-scroll {
+  0%, 12% { transform: translateY(0); }
+  16%, 26% { transform: translateY(-14px); }
+  30%, 40% { transform: translateY(-28px); }
+  44%, 54% { transform: translateY(-42px); }
+  58%, 68% { transform: translateY(-56px); }
+  72%, 82% { transform: translateY(-70px); }
+  86%, 100% { transform: translateY(-84px); }
 }
 
 /* Session card / pending card */
@@ -614,7 +624,6 @@
 }
 .spec-session-agent-link {
   width: max-content;
-  font-family: var(--font-commit-mono), ui-monospace, monospace;
   font-size: 10px;
   letter-spacing: 0.04em;
   color: color-mix(in oklch, var(--fg) 58%, var(--bg));
@@ -643,6 +652,9 @@
   letter-spacing: 0.06em;
   opacity: 0.7;
 }
+.spec-agent-id-card-empty .spec-pill {
+  border: none;
+}
 .spec-meta-grid {
   display: grid;
   grid-template-columns: 80px 1fr;
@@ -666,7 +678,6 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  font-family: var(--font-commit-mono), ui-monospace, monospace;
   font-size: 10px;
   letter-spacing: 0.04em;
   color: color-mix(in oklch, var(--fg) 72%, var(--bg));
@@ -832,7 +843,6 @@
   font-size: 12px;
 }
 .spec-payment-sub {
-  font-family: var(--font-commit-mono), ui-monospace, monospace;
   font-size: 10px;
   letter-spacing: 0.04em;
   color: color-mix(in oklch, var(--fg) 55%, var(--bg));
@@ -843,7 +853,6 @@
   align-items: center;
   justify-content: flex-end;
   min-width: 66px;
-  font-family: var(--font-commit-mono), ui-monospace, monospace;
   font-size: 10px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -1122,10 +1131,6 @@
   }
 
   .spec-terminal-body {
-    min-height: 50vh;
-    max-height: 50vh;
-  }
-  .spec-terminal-offline {
     min-height: 50vh;
     max-height: 50vh;
   }

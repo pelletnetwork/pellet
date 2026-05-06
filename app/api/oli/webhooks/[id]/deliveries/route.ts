@@ -7,7 +7,7 @@ import { requireOwner } from "@/lib/wallet/owner-auth";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// GET /api/oli/webhooks/[id]/deliveries?limit=&before_id=
+// GET /api/webhooks/[id]/deliveries?limit=&before_id=
 // Paginated by created_at desc; cursor uses the row's id (uuid) and we
 // resolve before by created_at + id ordering. Simple keyset on created_at
 // is fine for v1 since we expect limited delivery volume per sub.

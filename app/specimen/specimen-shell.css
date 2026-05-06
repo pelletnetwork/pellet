@@ -128,107 +128,46 @@ body:has(.specimen-shell) main {
 }
 
 .spec-nav {
-  display: grid;
-  grid-template-columns: repeat(3, 112px);
+  display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 24px;
   font-size: 12px;
   justify-self: center;
 }
-.spec-nav-group {
+.spec-nav-link {
+  color: color-mix(in oklch, var(--fg) 65%, var(--bg));
+  text-decoration: none;
+  letter-spacing: 0.02em;
+  padding: 4px 0;
   position: relative;
-  display: flex;
-  justify-content: center;
+  transition: color 120ms ease;
 }
-.spec-nav-trigger {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  padding: 5px 8px;
-  border: 0;
-  background: transparent;
-  color: color-mix(in oklch, var(--fg) 72%, var(--bg));
-  cursor: pointer;
-  font: inherit;
-  letter-spacing: 0;
-  list-style: none;
-  white-space: nowrap;
-  transition: color 120ms ease, opacity 120ms ease;
-}
-.spec-nav-trigger:hover,
-.spec-nav-trigger:focus-visible,
-.spec-nav-group-open .spec-nav-trigger {
-  color: var(--fg);
-  outline: none;
-}
-.spec-nav-label {
-  display: inline-block;
-  position: relative;
-}
-.spec-nav-label::after {
+.spec-nav-link::after {
   content: "";
   position: absolute;
   left: 0;
   right: 0;
-  bottom: -7px;
+  bottom: -2px;
   height: 1px;
   background: currentColor;
   opacity: 0;
-  transform: scaleX(0.45);
+  transform: scaleX(0.4);
   transition: opacity 140ms ease, transform 140ms ease;
 }
-.spec-nav-trigger:hover .spec-nav-label::after,
-.spec-nav-trigger:focus-visible .spec-nav-label::after,
-.spec-nav-group-open .spec-nav-label::after {
-  opacity: 0.7;
-  transform: scaleX(1);
-}
-.spec-nav-group-active > .spec-nav-trigger {
-  color: var(--fg);
-}
-.spec-nav-menu {
-  position: absolute;
-  top: calc(100% + 14px);
-  left: 50%;
-  z-index: 40;
-  display: none;
-  min-width: 172px;
-  transform: translateX(-50%);
-  flex-direction: column;
-  padding: 7px 0;
-  border: 0;
-  background: color-mix(in oklch, var(--bg) 94%, var(--fg));
-  box-shadow:
-    0 18px 38px color-mix(in oklch, var(--ink) 32%, transparent),
-    inset 0 1px 0 color-mix(in oklch, var(--fg) 12%, transparent);
-}
-.spec-nav-group-open .spec-nav-menu {
-  display: flex;
-}
-.spec-nav-menu-item {
-  display: flex;
-  align-items: center;
-  min-height: 30px;
-  padding: 7px 12px;
-  border: 0;
-  color: color-mix(in oklch, var(--fg) 68%, var(--bg));
-  white-space: nowrap;
-  transition: background 120ms ease, color 120ms ease;
-}
-.spec-nav-menu-item:hover,
-.spec-nav-menu-item:focus-visible,
-.spec-nav-menu-item-active {
+.spec-nav-link:hover,
+.spec-nav-link:focus-visible {
   color: var(--fg);
   outline: none;
 }
-.spec-nav-menu-item-active {
-  background: color-mix(in oklch, var(--fg) 7%, transparent);
+.spec-nav-link:hover::after,
+.spec-nav-link:focus-visible::after,
+.spec-nav-link-active::after {
+  opacity: 0.7;
+  transform: scaleX(1);
 }
-.spec-nav-menu-item:hover,
-.spec-nav-menu-item:focus-visible {
-  background: color-mix(in oklch, var(--fg) 5%, transparent);
+.spec-nav-link-active {
+  color: var(--fg);
 }
 
 .spec-status {
@@ -420,7 +359,7 @@ body:has(.specimen-shell) main {
  * The DeviceApproval form ships with `dev-*` styles + inline `style={...}`
  * blocks tuned for the standalone /wallet/device page (dark fill, Instrument
  * Serif, blue accent). When embedded inside the specimen shell at
- * /oli/wallet/dashboard/pair we (1) remap the `--color-*` tokens it reads
+ * /wallet/dashboard/pair we (1) remap the `--color-*` tokens it reads
  * via inline styles to specimen equivalents, and (2) override the `dev-*`
  * classes via CSS. Both layers are needed because inline `background:
  * var(--color-bg-base)` beats class-level rules. Scoped to .specimen-shell

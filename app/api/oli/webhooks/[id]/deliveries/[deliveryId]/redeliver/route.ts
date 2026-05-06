@@ -9,7 +9,7 @@ import { attemptDelivery } from "@/lib/oli/webhooks/dispatcher";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// POST /api/oli/webhooks/[id]/deliveries/[deliveryId]/redeliver
+// POST /api/webhooks/[id]/deliveries/[deliveryId]/redeliver
 // Forces a fresh attempt on a delivery row regardless of its current status
 // (delivered/dead/retry). Resets the row to 'queued' and fires after the
 // response goes out so the user gets immediate feedback.

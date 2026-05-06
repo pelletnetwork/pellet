@@ -65,7 +65,7 @@ export default async function OAuthAuthorizePage({
   const userId = await readUserSession();
   if (!userId) {
     const returnTo = `/oauth/authorize?${search.toString()}`;
-    redirect(`/oli/wallet/sign-in?returnTo=${encodeURIComponent(returnTo)}`);
+    redirect(`/wallet/sign-in?returnTo=${encodeURIComponent(returnTo)}`);
   }
 
   return (

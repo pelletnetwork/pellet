@@ -7,7 +7,7 @@ import { requireOwner } from "@/lib/wallet/owner-auth";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// POST /api/oli/webhooks/[id]/resume — re-arm a paused or auto-disabled sub.
+// POST /api/webhooks/[id]/resume — re-arm a paused or auto-disabled sub.
 // Resets consecutive_failures so the auto-disable threshold starts fresh.
 // pending_verify subs cannot be resumed via this endpoint — they must
 // complete /verify first.

@@ -7,8 +7,8 @@ import { requireOwner } from "@/lib/wallet/owner-auth";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// GET    /api/oli/webhooks/[id] — detail with delivery counts.
-// DELETE /api/oli/webhooks/[id] — soft-delete (status='deleted').
+// GET    /api/webhooks/[id] — detail with delivery counts.
+// DELETE /api/webhooks/[id] — soft-delete (status='deleted').
 
 type DeliveryCounts = {
   delivered: number;

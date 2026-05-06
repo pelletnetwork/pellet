@@ -50,7 +50,7 @@ test("/api/agents returns the seeded list (legacy v0 surface)", async ({ request
 });
 
 test("/oli renders the dashboard with sidebar", async ({ page }) => {
-  await page.goto("/oli");
+  await page.goto("/wallet");
   await expect(page.locator("aside.oli-sidebar")).toBeVisible();
   await expect(page.locator("h1")).toContainText("Dashboard");
 });
