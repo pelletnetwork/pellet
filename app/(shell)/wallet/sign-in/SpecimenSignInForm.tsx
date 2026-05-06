@@ -49,7 +49,7 @@ export function SpecimenSignInForm({ basePath = "/wallet" }: { basePath?: string
       .fromTo(el.querySelectorAll(".spec-signin-bullets li"), { y: 14 }, { autoAlpha: 1, y: 0, stagger: 0.08 }, 0.2)
       .fromTo(el.querySelector(".spec-signin-card")!, { y: 20 }, { autoAlpha: 1, y: 0 }, 0.15);
 
-    return () => tl.kill();
+    return () => { tl.kill(); };
   }, []);
 
   const onSignIn = async () => {
