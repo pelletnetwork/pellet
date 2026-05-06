@@ -324,6 +324,31 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4), 0 16px 48px rgba(0, 0, 0, 0.35) !important;
 }
 
+.spec-faucet-btn {
+  margin-top: 2px;
+  padding: 6px 14px;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-family: inherit;
+  border: 1px solid color-mix(in oklch, var(--fg) 15%, transparent);
+  border-radius: 6px;
+  background: transparent;
+  color: color-mix(in oklch, var(--fg) 60%, var(--bg));
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
+  align-self: flex-start;
+}
+.spec-faucet-btn:hover {
+  background: color-mix(in oklch, var(--fg) 6%, transparent);
+  color: var(--fg);
+  border-color: color-mix(in oklch, var(--fg) 30%, transparent);
+}
+.spec-faucet-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .spec-wallet-tabs-float {
   display: flex;
   align-items: center;

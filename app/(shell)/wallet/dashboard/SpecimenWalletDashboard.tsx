@@ -443,6 +443,7 @@ export function SpecimenWalletDashboard({
   const [revoking, setRevoking] = useState<string | null>(null);
   const [swapFrom, setSwapFrom] = useState<Balance | null>(null);
   const [sendFrom, setSendFrom] = useState<Balance | null>(null);
+  const [dripping, setDripping] = useState(false);
 
   const totalUsd = balances.reduce((acc, b) => acc + Number(b.display), 0);
   const usdce = balances.find((b) => b.symbol === "USDC.e");
@@ -583,6 +584,26 @@ export function SpecimenWalletDashboard({
         <div className="spec-kpi-card">
           <span className="spec-strip-label">TOTAL BALANCE</span>
           <span className="spec-strip-value spec-strip-value-lg">{fmtUsd(totalUsd)}</span>
+          <button
+            type="button"
+            className="spec-faucet-btn"
+            disabled={dripping}
+            onClick={async () => {
+              setDripping(true);
+              try {
+                const res = await fetch("/api/wallet/faucet", { method: "POST" });
+                const d = await res.json();
+                if (!res.ok) { alert(d.error ?? "Faucet failed"); return; }
+                window.location.reload();
+              } catch {
+                alert("Faucet request failed");
+              } finally {
+                setDripping(false);
+              }
+            }}
+          >
+            {dripping ? "DRIPPING…" : "TESTNET FAUCET"}
+          </button>
         </div>
         <div className="spec-kpi-card spec-balances-card">
           <div className="spec-col-head">

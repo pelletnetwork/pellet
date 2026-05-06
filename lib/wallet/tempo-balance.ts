@@ -17,9 +17,8 @@ const TIP20_ABI = parseAbi([
   "function symbol() view returns (string)",
 ]);
 
-// Moderato pathUSD canonical address from tokenlist.tempo.xyz/list/42431.
-// (Verified live during phase 3.B research.)
-const PATHUSD_MODERATO: Address = "0x20c0000000000000000000004f3edf3b8cb0001a";
+// Moderato demo stable (AlphaUSD) — use chain config's demoStable, not a
+// hardcoded address. The old 0x…001a was uninitialized on-chain.
 
 export type WalletBalance = {
   symbol: string;
@@ -41,7 +40,7 @@ export async function readWalletBalances(account: Address): Promise<WalletBalanc
     { address: chain.usdcE, symbol: "USDC.e" },
   ];
   if (chain.chainId === tempoModerato.id) {
-    tokens.push({ address: PATHUSD_MODERATO, symbol: "pathUSD" });
+    tokens.push({ address: chain.demoStable, symbol: "pathUSD" });
   }
   if (chain.usdt0) {
     tokens.push({ address: chain.usdt0, symbol: "USDT0" });

@@ -38,7 +38,7 @@ const MODERATO: ChainConfig = {
   usdcE: "0x20c0000000000000000000009e8d7eb59b783726",
   // No public USDC.e faucet on Moderato; pathUSD is the canonical test
   // stable for end-to-end demos. Funded via tempo_fundAddress RPC method.
-  demoStable: "0x20c0000000000000000000000000000000000001", // pathUSD — TODO confirm exact addr from tokenlist
+  demoStable: "0x20c0000000000000000000000000000000000001", // AlphaUSD — on-chain symbol; displayed as "pathUSD" in UI
   usdt0: null,
 };
 
