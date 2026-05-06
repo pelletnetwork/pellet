@@ -67,15 +67,27 @@ Rendered inside the terminal card area in monospace, not a separate UI:
 When the terminal bridge connects and no agent has been paired to this wallet, the shell session starts with a guided welcome instead of a bare prompt. This runs as a shell script (`.pellet/welcome.sh`) that the bridge executes on first connection:
 
 ```
-  welcome to pellet
+  pellet
 
-  let's connect your first agent.
-  type its name to get started:
+  which agent? (type name)
+  > claude
 
-  $ _
+  found claude at ~/.claude/settings.json
+  add pellet wallet to claude's MCP servers? (y/n)
+  > y
+
+  done. launching claude...
 ```
 
-The user types `claude`, `codex`, or any CLI name. The shell runs it normally — the agent launches, discovers wallet context via environment variables (`PELLET_WALLET_ADDRESS`, etc.), and the pairing completes as a side effect of usage. No tokens to copy, no separate pairing page.
+Simple ASCII wordmark at the top, then a guided flow:
+1. User types agent name (claude, codex, etc.)
+2. Script detects the agent's config file (e.g. `~/.claude/settings.json` for Claude)
+3. Asks permission to add Pellet MCP server to the agent's config
+4. Writes the MCP entry, then launches the agent
+
+The agent starts with wallet context via MCP — pairing completes as a side effect of usage. No tokens, no separate page. Three keystrokes.
+
+For unrecognized agents, falls back to showing the MCP config snippet to paste manually.
 
 After the first agent connection, subsequent terminal sessions drop straight to a normal shell prompt. The onboarding only runs once (tracked via a `.pellet/.onboarded` flag file).
 
