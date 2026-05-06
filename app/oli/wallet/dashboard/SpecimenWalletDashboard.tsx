@@ -5,8 +5,7 @@ import Link from "next/link";
 import { AgentIdentityCard } from "@/components/oli/AgentIdentityCard";
 import { SpecimenPaymentRow } from "@/components/oli/SpecimenPaymentRow";
 import { WalletTabs } from "@/components/oli/WalletTabs";
-import { ChatDrawer } from "@/app/wallet/dashboard/ChatDrawer";
-import { ChatRailCard } from "@/app/wallet/dashboard/ChatRailCard";
+import { TerminalCard } from "@/app/wallet/dashboard/TerminalCard";
 
 type User = {
   id: string;
@@ -682,78 +681,26 @@ export function SpecimenWalletDashboard({
       )}
 
       <section className="spec-cols" style={{ paddingBottom: 48 }}>
-        <ActivityColumn payments={signedPayments7d} basePath={basePath} />
+        <ActivityColumn />
         <RightRail
           sessions={sessions}
           agents={connectedAgents}
           basePath={basePath}
+          payments={signedPayments7d}
           revoking={revoking}
           onRevoke={onRevoke}
           expiredCount={revokedOrExpired.length}
-          chatMessages={chatMessages}
         />
       </section>
 
-      <ChatDrawer agentNames={Object.fromEntries(connectedAgents.map((a) => [a.id, a.clientName.replace(/\s*\(.*\)$/, "")]))} initialMessages={chatMessages} />
     </div>
   );
 }
 
-function ActivityColumn({
-  payments,
-  basePath,
-}: {
-  payments: Payment[];
-  basePath: string;
-}) {
+function ActivityColumn() {
   return (
     <div className="spec-col-activity">
-      <div className="spec-col-head">
-        <span className="spec-col-head-left">SIGNED PAYMENTS · 7D</span>
-        <span className="spec-col-head-right">
-          <span>
-            <span style={{ opacity: 0.55 }}>COUNT</span> {payments.length}
-          </span>
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-            <span className="spec-legend-square spec-legend-square-filled" />
-            <span>STREAMING</span>
-          </span>
-        </span>
-      </div>
-
-      {payments.length === 0 ? (
-        <div
-          style={{
-            padding: "32px 0",
-            textAlign: "center",
-            opacity: 0.6,
-            fontSize: 12,
-          }}
-        >
-          No signed payments in the last 7 days. Once an authorized agent calls{" "}
-          <code style={{ opacity: 0.8 }}>pellet pay</code>, they show up here.
-        </div>
-      ) : (
-        <>
-          <div className="spec-activity-head">
-            <span className="spec-pay-col-when" style={{ width: 80, flexShrink: 0 }}>WHEN</span>
-            <span className="spec-pay-col-tx" style={{ width: 92, flexShrink: 0 }}>TX</span>
-            <span style={{ flex: 1, minWidth: 0 }}>PAYMENT / POLICY</span>
-            <span className="spec-pay-col-session spec-cell-r" style={{ width: 86, flexShrink: 0 }}>
-              SESSION
-            </span>
-            <span className="spec-pay-col-amount spec-cell-r" style={{ width: 100, flexShrink: 0 }}>
-              AMOUNT
-            </span>
-            <span style={{ width: 70, flexShrink: 0 }} className="spec-cell-r">
-              STATUS
-            </span>
-          </div>
-          {payments.map((p) => (
-            <SpecimenPaymentRow key={p.id} payment={p} basePath={basePath} />
-          ))}
-        </>
-      )}
+      <TerminalCard />
     </div>
   );
 }
@@ -762,30 +709,52 @@ function RightRail({
   sessions,
   agents,
   basePath,
+  payments,
   revoking,
   onRevoke,
   expiredCount,
-  chatMessages = [],
 }: {
   sessions: Session[];
   agents: Agent[];
   basePath: string;
+  payments: Payment[];
   revoking: string | null;
   onRevoke: (id: string) => void;
   expiredCount: number;
-  chatMessages?: ChatMsg[];
 }) {
   const active = sessions.filter((s) => sessionState(s) === "active");
   const pending = sessions.filter((s) => sessionState(s) === "pending");
   const visibleActive = active.slice(0, 4);
   const primaryAgent = agents[0] ?? null;
-  const agentNames: Record<string, string> = {};
-  for (const a of agents) agentNames[a.id] = a.clientName.replace(/\s*\(.*\)$/, "");
   return (
     <div className="spec-col-rail">
       <AgentIdentityCard agent={primaryAgent} basePath={basePath} />
 
-      <ChatRailCard basePath={basePath} agentNames={agentNames} initialMessages={chatMessages} />
+      <div className="spec-rail-payments">
+        <div className="spec-col-head">
+          <span className="spec-col-head-left">SIGNED PAYMENTS</span>
+          <span className="spec-col-head-right">
+            <span>{payments.length} total</span>
+          </span>
+        </div>
+        <div className="spec-rail-payments-scroll">
+          {payments.length === 0 ? (
+            <div style={{ padding: "16px 0", opacity: 0.5, fontSize: 11, textAlign: "center" }}>
+              No signed payments yet.
+            </div>
+          ) : (
+            payments.map((p) => (
+              <SpecimenPaymentRow key={p.id} payment={p} basePath={basePath} />
+            ))
+          )}
+        </div>
+        <Link
+          href={`${basePath}/dashboard/txs`}
+          className="spec-rail-payments-link"
+        >
+          View all transactions →
+        </Link>
+      </div>
 
       <div className="spec-col-head">
         <span className="spec-col-head-left">ACTIVE SESSION KEYS</span>
