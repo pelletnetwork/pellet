@@ -103,10 +103,23 @@ export function TerminalCard() {
       const ro = new ResizeObserver(() => fit.fit());
       ro.observe(root);
 
+      function syncTheme() {
+        if (!root) return;
+        const s = getComputedStyle(root);
+        const newBg = s.getPropertyValue("--term-bg").trim() || "#ffffff";
+        const newFg = s.getPropertyValue("--term-fg").trim() || "#1a1a1a";
+        term.options.theme = { background: newBg, foreground: newFg, cursor: newFg };
+      }
+
+      const shell = document.querySelector(".specimen-shell");
+      const mo = shell ? new MutationObserver(() => syncTheme()) : null;
+      if (shell) mo?.observe(shell, { attributes: true, attributeFilter: ["class"] });
+
       connect();
 
       return () => {
         ro.disconnect();
+        mo?.disconnect();
         term.dispose();
       };
     }

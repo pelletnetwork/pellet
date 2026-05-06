@@ -212,7 +212,7 @@
   border-radius: 12px;
   overflow: hidden;
   background: var(--term-bg, var(--bg));
-  border: 1px solid color-mix(in oklch, var(--fg) 8%, var(--bg));
+  border: none;
   --term-bg: var(--bg);
   --term-fg: var(--fg);
 }
