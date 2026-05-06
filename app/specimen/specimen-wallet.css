@@ -202,6 +202,99 @@
   border-radius: 20px !important;
   box-shadow: none !important;
 }
+
+/* ── Terminal card ──────────────────────────────────────────────────────── */
+.spec-terminal-card {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.spec-terminal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 12px;
+}
+
+.spec-terminal-status {
+  font-size: 10px;
+  letter-spacing: 0.06em;
+}
+.spec-terminal-status[data-status="connected"] { opacity: 0.55; }
+.spec-terminal-status[data-status="connecting"] { opacity: 0.4; }
+.spec-terminal-status[data-status="disconnected"] { opacity: 0.3; }
+
+.spec-terminal-body {
+  flex: 1;
+  min-height: 300px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--term-bg, var(--bg));
+  border: 1px solid color-mix(in oklch, var(--fg) 8%, var(--bg));
+  --term-bg: var(--bg);
+  --term-fg: var(--fg);
+}
+.specimen-shell.dark .spec-terminal-body {
+  --term-bg: var(--bg);
+  --term-fg: var(--fg);
+}
+
+.spec-terminal-body .xterm {
+  padding: 12px 14px;
+}
+.spec-terminal-body .xterm-viewport {
+  border-radius: 12px;
+}
+
+.spec-terminal-offline {
+  flex: 1;
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  border: 1px solid color-mix(in oklch, var(--fg) 8%, var(--bg));
+  background: color-mix(in oklch, var(--fg) 3%, var(--bg));
+}
+.spec-terminal-offline pre {
+  font-family: 'Commit Mono', ui-monospace, monospace;
+  font-size: 12px;
+  line-height: 1.7;
+  color: color-mix(in oklch, var(--fg) 45%, var(--bg));
+  white-space: pre;
+}
+
+/* ── Signed payments rail card ─────────────────────────────────────────── */
+.spec-rail-payments {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.spec-rail-payments-scroll {
+  max-height: 280px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.spec-rail-payments-scroll::-webkit-scrollbar { width: 3px; }
+.spec-rail-payments-scroll::-webkit-scrollbar-track { background: transparent; }
+.spec-rail-payments-scroll::-webkit-scrollbar-thumb { background: var(--line-thin, var(--line)); }
+
+.spec-rail-payments-link {
+  display: block;
+  padding: 10px 0 0;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: inherit;
+  opacity: 0.45;
+  transition: opacity 0.15s ease;
+}
+.spec-rail-payments-link:hover {
+  opacity: 0.8;
+}
 .spec-wallet-float .chat-rail-input-wrap textarea {
   outline: none !important;
   box-shadow: none !important;
@@ -1029,6 +1122,15 @@
   }
   .spec-col-rail {
     padding: 0;
+  }
+
+  .spec-terminal-body {
+    min-height: 50vh;
+    max-height: 50vh;
+  }
+  .spec-terminal-offline {
+    min-height: 50vh;
+    max-height: 50vh;
   }
 
   .spec-wallet-float .spec-cols {
