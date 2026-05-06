@@ -1821,8 +1821,12 @@
   }
 
   /* ── Bubbles — tighter for thumbs ───────────────────────────────────── */
+  .spec-chat-bubble-wrap {
+    width: 100%;
+  }
   .spec-chat-content {
     max-width: 82%;
+    min-width: min-content;
     font-size: 15px;
     padding: 8px 12px;
     border-radius: 18px !important;
