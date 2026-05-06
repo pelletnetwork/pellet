@@ -65,6 +65,7 @@ type InitResponse = {
     sponsor_url: string | null;
     explorer_url: string;
     usdc_e: `0x${string}`;
+    demo_stable?: `0x${string}`;
   };
   account_keychain_address: `0x${string}`;
   expiry_unix: number;
@@ -278,9 +279,19 @@ export function SpecimenConnectedAgents({
             limit: BigInt(init.spend_cap_wei),
             period: 86400,
           },
+          ...(init.chain.demo_stable && init.chain.demo_stable !== init.chain.usdc_e
+            ? [{
+                token: init.chain.demo_stable,
+                limit: BigInt(init.spend_cap_wei),
+                period: 86400,
+              }]
+            : []),
         ],
         scopes: [
           { address: init.chain.usdc_e, selector: TRANSFER_WITH_MEMO },
+          ...(init.chain.demo_stable && init.chain.demo_stable !== init.chain.usdc_e
+            ? [{ address: init.chain.demo_stable, selector: TRANSFER_WITH_MEMO }]
+            : []),
         ],
       });
       txHash = result.receipt.transactionHash as `0x${string}`;

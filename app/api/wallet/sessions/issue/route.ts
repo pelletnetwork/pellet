@@ -96,6 +96,7 @@ export async function POST(req: Request) {
       sponsor_url: chain.sponsorUrl,
       explorer_url: chain.explorerUrl,
       usdc_e: chain.usdcE,
+      demo_stable: chain.demoStable,
     },
     account_keychain_address: ACCOUNT_KEYCHAIN_ADDRESS,
     expiry_unix: Math.floor(expiresAt.getTime() / 1000),
