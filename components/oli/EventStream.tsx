@@ -11,7 +11,6 @@ import {
 } from "@/lib/oli/format";
 import type { RecentEventRow } from "@/lib/oli/queries";
 import { ProvenanceBadge } from "./ProvenanceBadge";
-import Link from "next/link";
 
 // ── Top-level ─────────────────────────────────────────────────────────────
 
@@ -150,13 +149,15 @@ function EventRow({
             <span className="oli-event-row-routed">{routedSuffix}</span>
           )}
         </span>
-        <Link
-          href={`/oli/event/${event.id}`}
+        <a
+          href={`https://explore.tempo.xyz/tx/${event.txHash}`}
+          target="_blank"
+          rel="noopener noreferrer"
           className="oli-event-row-tx-link"
           onClick={(e) => e.stopPropagation()}
         >
           <span className="oli-event-row-tx">tx {shortHash(event.txHash)}</span>
-        </Link>
+        </a>
         <ProvenanceBadge
           sourceBlock={event.sourceBlock}
           methodologyVersion={event.methodologyVersion}
@@ -197,7 +198,6 @@ type FieldDef = {
   copy?: string | null;
   external?: string;
   sub?: string | null;
-  link?: string;
 };
 
 function EventDetailPanel({
@@ -224,7 +224,6 @@ function EventDetailPanel({
     {
       label: "Agent",
       value: event.agentLabel,
-      link: `/oli/agents/${event.agentId}`,
     },
     {
       label: "Counterparty",
@@ -255,7 +254,6 @@ function EventDetailPanel({
             label: "Routed to",
             value: `fp:${event.routedFingerprint.slice(0, 6)}…${event.routedFingerprint.slice(-4)}`,
             copy: event.routedFingerprint,
-            link: `/oli/providers/fp_${event.routedFingerprint}`,
             sub: "pattern-b grouping (provider not yet identified)",
           } satisfies FieldDef,
         ]
@@ -323,17 +321,7 @@ function FieldRow({ field, delay }: { field: FieldDef; delay: number }) {
     >
       <dt>{field.label}</dt>
       <dd>
-        {field.link ? (
-          <a
-            href={field.link}
-            className="oli-event-detail-action"
-            style={{ color: "var(--color-text-primary)", fontSize: 13 }}
-          >
-            {field.value}
-          </a>
-        ) : (
-          <span>{field.value}</span>
-        )}
+        <span>{field.value}</span>
 
         {field.copy && (
           <button

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 
 export type AgentIdentity = {
@@ -73,8 +73,7 @@ type AgentAsciiPreset = "dense-field" | "dense-field-alt" | "cloud-field";
 
 const AGENT_ASCII_PRESET: AgentAsciiPreset = "dense-field";
 
-function denseAsciiFrame(seed: string, frame: number): string[] {
-  const cols = 104;
+function denseAsciiFrame(seed: string, frame: number, cols = 104): string[] {
   const rows = 23;
   const ramp = ".::--==++**##%%@@00112233445566778899";
   const h = hash(seed);
@@ -134,8 +133,7 @@ function denseAsciiFrame(seed: string, frame: number): string[] {
   });
 }
 
-function denseAltAsciiFrame(seed: string, frame: number): string[] {
-  const cols = 104;
+function denseAltAsciiFrame(seed: string, frame: number, cols = 104): string[] {
   const rows = 23;
   const ramp = "   ..:::---===+++***###%%%@@99887766554433221100";
   const h = hash(`${seed}:alt`);
@@ -225,8 +223,7 @@ function denseAltAsciiFrame(seed: string, frame: number): string[] {
   });
 }
 
-function cloudAsciiFrame(seed: string, frame: number): string[] {
-  const cols = 104;
+function cloudAsciiFrame(seed: string, frame: number, cols = 104): string[] {
   const rows = 23;
   const ramp = "   ....::::---===+++***###%%%@@0123456789";
   const h = hash(seed);
@@ -297,15 +294,15 @@ function agentAsciiPreset(agent: AgentIdentity): AgentAsciiPreset {
   return AGENT_ASCII_PRESET;
 }
 
-function asciiFrame(agent: AgentIdentity, frame: number): string[] {
+function asciiFrame(agent: AgentIdentity, frame: number, cols = 104): string[] {
   switch (agentAsciiPreset(agent)) {
     case "dense-field-alt":
-      return denseAltAsciiFrame(agent.clientId, frame);
+      return denseAltAsciiFrame(agent.clientId, frame, cols);
     case "cloud-field":
-      return cloudAsciiFrame(agent.clientId, frame);
+      return cloudAsciiFrame(agent.clientId, frame, cols);
     case "dense-field":
     default:
-      return denseAsciiFrame(agent.clientId, frame);
+      return denseAsciiFrame(agent.clientId, frame, cols);
   }
 }
 
@@ -317,6 +314,21 @@ export function AgentIdentityCard({
   basePath: string;
 }) {
   const [frame, setFrame] = useState(0);
+  const asciiRef = useRef<HTMLPreElement>(null);
+  const [cols, setCols] = useState(104);
+
+  useEffect(() => {
+    const el = asciiRef.current;
+    if (!el) return;
+    const measure = () => {
+      const charW = 7 * 0.6;
+      setCols(Math.ceil(el.clientWidth / charW));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   useEffect(() => {
     const prefersReducedMotion = window.matchMedia(
@@ -330,8 +342,8 @@ export function AgentIdentityCard({
   }, []);
 
   const art = useMemo(
-    () => (agent ? asciiFrame(agent, frame) : []),
-    [agent, frame],
+    () => (agent ? asciiFrame(agent, frame, cols) : []),
+    [agent, frame, cols],
   );
 
   if (!agent) {
@@ -366,7 +378,7 @@ export function AgentIdentityCard({
         <span className="spec-agent-id-provider">{providerLabel(agent)}</span>
         <span className="spec-agent-id-name">{agent.clientName.replace(/\s*\(.*\)$/, "")}</span>
       </div>
-      <pre className="spec-agent-id-ascii" aria-hidden="true">{art.map((line, index) => (
+      <pre className="spec-agent-id-ascii" ref={asciiRef} aria-hidden="true">{art.map((line, index) => (
         <span key={index}>{line}</span>
       ))}</pre>
       <div className="spec-agent-id-meta">
@@ -380,7 +392,6 @@ export function AgentIdentityCard({
         <span>{shortId(agent.clientId)}</span>
       </div>
       <div className="spec-agent-id-actions">
-        <Link href={`${basePath}/chat?agent=${agent.id}`}>CHAT</Link>
         <Link href={`${basePath}/dashboard/agents`}>MANAGE</Link>
       </div>
     </section>

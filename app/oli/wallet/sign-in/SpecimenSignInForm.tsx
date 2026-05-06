@@ -88,7 +88,7 @@ export function SpecimenSignInForm({ basePath = "/oli/wallet" }: { basePath?: st
         <p className="spec-signin-lede">
           Self-custody wallet on Tempo. Your address is bound to a passkey on
           your device — Touch ID, Face ID, or a hardware key. Every payment is
-          a signed transaction recorded to the open ledger.
+          a signed transaction on Tempo.
         </p>
         <ul className="spec-signin-bullets">
           <li>

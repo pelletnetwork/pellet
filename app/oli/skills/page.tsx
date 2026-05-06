@@ -37,7 +37,7 @@ const SKILLS: Skill[] = [
     status: "live",
     installUrl: "https://pellet.network/skill.md#pellet-wallet",
     category: "payments",
-    bio: "Open agent wallet on Tempo. Pair once with a passkey, set on-chain spending caps, agent pays autonomously within those caps via the Pellet MCP server. Every payment is a public Tempo tx with a deep-linkable explorer URL. Live on Moderato testnet; mainnet pending.",
+    bio: "Agent wallet on Tempo. Pair once with a passkey, set on-chain spending caps, agent pays autonomously within those caps via the Pellet MCP server. Every payment is a signed Tempo tx. Live on Moderato testnet; mainnet pending.",
     shipped: "2026-04-29",
     link: { label: "pellet.network/wallet", href: "/wallet" },
   },

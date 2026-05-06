@@ -170,7 +170,7 @@ function PageHeader({ currentHours }: { currentHours: number }) {
         <SpecimenTimeToggle current={currentHours} />
       </div>
       <div className="spec-page-subhead">
-        <span>The open ledger of the agent economy.</span>
+        <span>The wallet that connects to your AI.</span>
         <span className="spec-page-subhead-dot">·</span>
         <Clock />
       </div>

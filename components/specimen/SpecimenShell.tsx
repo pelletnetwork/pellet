@@ -22,19 +22,6 @@ type NavGroup = {
 
 const NAV_GROUPS: NavGroup[] = [
   {
-    label: "Network",
-    items: [
-      { label: "Ledger", href: "/oli", exact: true, match: ["/oli/event"] },
-      { label: "Agents", href: "/oli/agents" },
-      {
-        label: "Services",
-        href: "/oli/services",
-        match: ["/oli/providers"],
-      },
-      { label: "Methodology", href: "/oli/methodology" },
-    ],
-  },
-  {
     label: "Wallet",
     items: [
       {
@@ -48,9 +35,8 @@ const NAV_GROUPS: NavGroup[] = [
         ],
       },
       { label: "Connect Agent", href: "/oli/wallet/onboard" },
-      { label: "Chat", href: "/oli/wallet/chat" },
       {
-        label: "Connected Agents",
+        label: "Agents",
         href: "/oli/wallet/dashboard/agents",
       },
     ],

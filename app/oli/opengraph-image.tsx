@@ -5,7 +5,7 @@ import { join } from "path";
 // nodejs runtime so we can read font files from disk via fs. ImageResponse
 // (next/og) supports both runtimes; nodejs is more reliable for font loading.
 export const runtime = "nodejs";
-export const alt = "Pellet OLI — Open-Ledger Interface for Tempo";
+export const alt = "Pellet — Agent Wallet on Tempo";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -103,8 +103,8 @@ export default async function Image() {
               fontWeight: 400,
             }}
           >
-            <span>Open-Ledger</span>
-            <span>Interface</span>
+            <span>Agent</span>
+            <span>Wallet</span>
           </div>
         </div>
 

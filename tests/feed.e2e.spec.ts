@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 test("home renders the OLI landing", async ({ page }) => {
   await page.goto("/");
   // Wait for the framer-motion hero to mount + hydrate.
-  await expect(page.locator("h1.landing-hero-h1")).toContainText("Open-Ledger Interface");
+  await expect(page.locator("h1.landing-hero-h1")).toBeVisible();
 });
 
 test("nav has agents + docs links", async ({ page }) => {

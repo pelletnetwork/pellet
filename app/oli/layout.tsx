@@ -6,17 +6,17 @@ import "./oli-theme.css";
 import "../specimen/specimen.css";
 
 const OG_DESCRIPTION =
-  "Decoded autonomous economic activity on Tempo. Per-event provenance, per-service revenue, per-provider attribution recovered on-chain.";
+  "Agent wallet on Tempo. Manage finances, approve spends, and monitor activity for your AI agents.";
 
 export const metadata: Metadata = {
   title: {
-    default: "Pellet OLI — Open-Ledger Interface for Tempo",
-    template: "%s — Pellet OLI",
+    default: "Pellet — Agent Wallet on Tempo",
+    template: "%s — Pellet",
   },
   description: OG_DESCRIPTION,
   metadataBase: new URL("https://pellet.network"),
   openGraph: {
-    title: "Pellet OLI — Open-Ledger Interface for Tempo",
+    title: "Pellet — Agent Wallet on Tempo",
     description: OG_DESCRIPTION,
     url: "https://pellet.network/oli",
     siteName: "Pellet",
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     site: "@pelletnetwork",
     creator: "@pelletnetwork",
-    title: "Pellet OLI — Open-Ledger Interface for Tempo",
+    title: "Pellet — Agent Wallet on Tempo",
     description: OG_DESCRIPTION,
   },
 };

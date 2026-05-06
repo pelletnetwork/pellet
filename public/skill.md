@@ -1,11 +1,11 @@
 ---
-name: pellet-oli
-description: Query the open-ledger interface (OLI) for autonomous economic activity on Tempo. Use this skill to look up live revenue, transaction counts, and per-service attribution for the Tempo MPP network — including which providers underly the Tempo MPP Gateway aggregator. Useful when an agent or user asks "which AI service is making the most money on Tempo right now," "how much did Anthropic earn through MPP today," "what's the revenue mix between USDC.e and USDT0," or any other question about the live economic graph of agent payments on Tempo.
+name: pellet-wallet
+description: Query Pellet for autonomous economic activity on Tempo. Look up live revenue, transaction counts, and per-service attribution for the Tempo MPP network — including which providers underly the Tempo MPP Gateway aggregator. Useful when an agent or user asks "which AI service is making the most money on Tempo right now," "how much did Anthropic earn through MPP today," "what's the revenue mix between USDC.e and USDT0," or any other question about the live economic graph of agent payments on Tempo.
 ---
 
-# Pellet OLI
+# Pellet
 
-Pellet OLI ([pellet.network/oli](https://pellet.network/oli)) decodes autonomous economic activity on Tempo. Every datapoint is recovered from on-chain state — no off-chain inputs, no self-reporting. This skill exposes the OLI dataset as a set of HTTP endpoints you can call directly from an agent.
+Pellet ([pellet.network](https://pellet.network)) is the agent wallet on Tempo. It decodes autonomous economic activity from on-chain state — no off-chain inputs, no self-reporting. This skill exposes the dataset as a set of HTTP endpoints you can call directly from an agent.
 
 ## When to use
 
@@ -95,11 +95,11 @@ GET https://pellet.network/api/oli/services/tempo-gateway-mpp
 → { head: {...}, trend: [...], recent: [...], providers: [...] }
 ```
 
-## Sister product · Pellet Wallet (live on testnet)
+## Pellet Wallet (live on testnet)
 
-OLI is the **read** side. [Pellet Wallet](https://pellet.network/wallet) is the **write** side — an open agent wallet on Tempo where every payment auto-records to this ledger. USDC-native, passkey-derived self-custody, public audit trail.
+[Pellet Wallet](https://pellet.network/wallet) is a self-custody agent wallet on Tempo. USDC-native, passkey-derived, on-chain spend caps.
 
-**Install Pellet Wallet as an MCP server** so the agent can call `pellet_pay` directly:
+**Install as an MCP server** so the agent can call `pellet_pay` directly:
 
 ```json
 {
@@ -114,9 +114,9 @@ OLI is the **read** side. [Pellet Wallet](https://pellet.network/wallet) is the 
 
 User pairs once with `npx -y @pelletnetwork/cli auth start` (passkey ceremony in browser, picks spend caps); after that the agent can call `pellet_pay({ to, amount_usdc, memo })` autonomously within those caps. Tempo's `AccountKeychain` enforces caps on-chain.
 
-When the wallet ships, agents will be able to do both via Pellet:
-- **Read** — query OLI for any historical or live agent-payment activity on Tempo
-- **Write** — sign x402 challenges and settle on Tempo, with the resulting tx automatically observable here
+Agents can do both via Pellet:
+- **Read** — query historical or live agent-payment activity on Tempo
+- **Write** — sign x402 challenges and settle on Tempo
 
 ## Distribution graph
 

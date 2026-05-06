@@ -327,7 +327,7 @@ export function DeviceApproval({ initialCode }: { initialCode: string }) {
         lede: "Your agent is authorized on Tempo. The CLI received a bearer token and is ready to make calls against your wallet.",
         bullets: [
           "Agent key is live with on-chain spend caps.",
-          "Every call signs and posts to the open ledger.",
+          "Every call signs and posts to Tempo.",
           "Revoke any time from your wallet dashboard.",
         ],
       };
@@ -345,7 +345,7 @@ export function DeviceApproval({ initialCode }: { initialCode: string }) {
     }
     return {
       title: "Connect agent",
-      lede: "Pair a CLI or agent runtime with your Pellet wallet. The agent gets a scoped session key with on-chain spend caps — every payment posts to the open ledger.",
+      lede: "Pair a CLI or agent runtime with your Pellet wallet. The agent gets a scoped session key with on-chain spend caps — every payment posts to Tempo.",
       bullets: [
         "Pair an agent with a per-call spend cap and an expiry.",
         "Each call signs against your passkey and posts to Tempo.",

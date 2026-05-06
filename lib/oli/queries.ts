@@ -1000,8 +1000,7 @@ export async function searchOli(q: string): Promise<SearchHit[]> {
       id: r.address,
       label: r.label,
       sub: `${r.address.slice(0, 10)}…${r.address.slice(-6)}${r.category ? ` · ${r.category}` : ""}`,
-      // No detail page for addresses yet — link out to Tempo explorer.
-      href: `https://explorer.tempo.foundation/address/${r.address}`,
+      href: `https://explore.tempo.xyz/address/${r.address}`,
     });
   }
 

@@ -581,13 +581,6 @@ a:focus-visible {
 }
 .oli-leaderboard-link:hover { background: rgba(255,255,255,0.02); }
 
-/* ── Explorer graphics ── */
-.explorer-graphics {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin-bottom: 24px;
-}
 
 /* ── Responsive ── */
 @media (max-width: 768px) {
@@ -726,13 +719,6 @@ a:focus-visible {
     display: none;
   }
 
-  .explorer-main-grid {
-    grid-template-columns: minmax(0, 1fr) !important;
-  }
-
-  .explorer-graphics {
-    grid-template-columns: minmax(0, 1fr);
-  }
 
   /* ── Mobile polish — landing hero & sections ── */
   .hero-wrap {
@@ -765,25 +751,6 @@ a:focus-visible {
     grid-template-columns: 1fr !important;
   }
 
-  /* ── Explorer ── */
-  .explorer-page {
-    padding: 24px 16px 48px !important;
-  }
-  .explorer-stats {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 10px !important;
-  }
-  .explorer-stats > div {
-    padding: 18px 12px !important;
-  }
-  .explorer-stats > div > div:first-child {
-    font-size: 17px !important;
-    margin-bottom: 6px !important;
-  }
-  .explorer-graphics {
-    grid-template-columns: 1fr !important;
-    gap: 14px !important;
-  }
   /* Supply distribution — switch to 2-col grid on mobile (3-col is too cramped) */
   .supply-grid {
     grid-template-columns: 1fr 1fr !important;
@@ -803,15 +770,6 @@ a:focus-visible {
     gap: 8px !important;
   }
 
-  /* Prevent any explorer-page descendant from overflowing viewport */
-  .explorer-page {
-    overflow-x: hidden;
-  }
-  .explorer-page > div,
-  .explorer-page .explorer-main-grid > div {
-    min-width: 0;
-    max-width: 100%;
-  }
 
   /* ── Stablecoin detail page ── */
   .stable-hero-h1 {

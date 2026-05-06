@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { readUserSession } from "@/lib/wallet/challenge-cookie";
 import { listConnectedAgents } from "@/lib/db/wallet-agent-connections";
+import { loadDashboardData } from "@/lib/wallet/dashboard-data";
 import { SpecimenConnectedAgents } from "./SpecimenConnectedAgents";
 
 export const metadata: Metadata = {
@@ -16,7 +17,10 @@ export default async function OliWalletAgentsPage() {
   const userId = await readUserSession();
   if (!userId) redirect("/oli/wallet/sign-in");
 
-  const agents = await listConnectedAgents(userId);
+  const [agents, data] = await Promise.all([
+    listConnectedAgents(userId),
+    loadDashboardData(userId),
+  ]);
 
   return (
     <SpecimenConnectedAgents
@@ -34,6 +38,8 @@ export default async function OliWalletAgentsPage() {
         activeTokenCount: agent.activeTokenCount,
         webhookEnabled: agent.webhookEnabled,
       }))}
+      sessions={data?.sessions ?? []}
+      payments={data?.payments ?? []}
     />
   );
 }

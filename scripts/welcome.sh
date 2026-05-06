@@ -64,9 +64,10 @@ case "$AGENT_NAME" in
       echo ""
       echo "  launching claude..."
     fi
-    echo ""
+    sleep 1
     mkdir -p "$HOME/.pellet"
     touch "$FLAG"
+    printf '\033[2J\033[3J\033[H'
     exec claude
     ;;
   codex)
@@ -76,9 +77,10 @@ case "$AGENT_NAME" in
     echo "    \"pellet\": $MCP_ENTRY"
     echo ""
     echo "  launching codex..."
-    echo ""
+    sleep 1
     mkdir -p "$HOME/.pellet"
     touch "$FLAG"
+    printf '\033[2J\033[3J\033[H'
     exec codex
     ;;
   *)
@@ -88,9 +90,10 @@ case "$AGENT_NAME" in
     echo "    \"pellet\": $MCP_ENTRY"
     echo ""
     echo "  dropping to shell..."
-    echo ""
+    sleep 1
     mkdir -p "$HOME/.pellet"
     touch "$FLAG"
+    printf '\033[2J\033[3J\033[H'
     exec "$SHELL"
     ;;
 esac

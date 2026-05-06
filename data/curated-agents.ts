@@ -1,11 +1,8 @@
 // Curated allowlist of watched entities for v0.
 //
-// v0 framing: "agent" loosely covers any autonomous on-chain actor — AI
-// agents in the strict sense, plus protocol entities (bridge mint authorities,
-// issuer addresses) that fire automatically. The OLI is the interface for
-// watching the open ledger; what counts as an agent is how its activity reads
-// to a human spectator (autonomous, repeated, programmatic), not the
-// implementation underneath.
+// "Agent" loosely covers any autonomous on-chain actor — AI agents in the
+// strict sense, plus protocol entities (bridge mint authorities, issuer
+// addresses) that fire automatically.
 //
 // Seed addresses below are forensically-verified Tempo entities from the
 // prior pellet-tempo-archive. Real AI agents get added as they emerge.

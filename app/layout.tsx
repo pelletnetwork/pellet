@@ -22,22 +22,22 @@ const commitMono = localFont({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://pellet.network"),
-  title: "Pellet — Open-Ledger Interface on Tempo",
+  title: "Pellet — Agent Wallet on Tempo",
   description:
-    "Open-Ledger Interface on Tempo. Every peg, every policy, every flow — tracked natively across the public ledger and the mainnet/zone boundary.",
+    "The wallet that connects to your AI. Manage agent finances, approve spends, and monitor activity — all on Tempo.",
   openGraph: {
-    title: "Pellet — Open-Ledger Interface on Tempo",
+    title: "Pellet — Agent Wallet on Tempo",
     description:
-      "The canonical interface for autonomous agent activity on Tempo. MPP-native API + MCP server.",
+      "The wallet that connects to your AI. Manage agent finances, approve spends, and monitor activity — all on Tempo.",
     url: "https://pellet.network",
     siteName: "Pellet",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Pellet — Open-Ledger Interface on Tempo",
+    title: "Pellet — Agent Wallet on Tempo",
     description:
-      "The canonical interface for autonomous agent activity on Tempo. MPP-native API + MCP server.",
+      "The wallet that connects to your AI. Manage agent finances, approve spends, and monitor activity — all on Tempo.",
     site: "@pelletnetwork",
   },
 };
