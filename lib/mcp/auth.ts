@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, and, isNull, isNotNull, gt, desc } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { walletUsers, walletSessions } from "@/lib/db/schema";
 import { mcpResourceUrl, issuerUrl } from "@/lib/oauth/issuer";
@@ -80,13 +80,32 @@ export async function authenticateMcpRequest(
   const user = userRows[0];
   if (!user) return forbiddenResponse("token user not found");
 
-  // Optional session linkage (the Tempo Access Key the agent acts under).
+  // Session linkage: the Tempo Access Key the agent acts under.
+  // Prefer the explicit link on the token; fall back to the user's most
+  // recent active+authorized session so re-auth via new DCR clients
+  // doesn't break spending.
   let session: typeof walletSessions.$inferSelect | null = null;
   if (token.sessionId) {
     const rows = await db
       .select()
       .from(walletSessions)
       .where(eq(walletSessions.id, token.sessionId))
+      .limit(1);
+    session = rows[0] ?? null;
+  }
+  if (!session) {
+    const rows = await db
+      .select()
+      .from(walletSessions)
+      .where(
+        and(
+          eq(walletSessions.userId, token.userId),
+          isNull(walletSessions.revokedAt),
+          isNotNull(walletSessions.authorizeTxHash),
+          gt(walletSessions.expiresAt, new Date()),
+        ),
+      )
+      .orderBy(desc(walletSessions.createdAt))
       .limit(1);
     session = rows[0] ?? null;
   }

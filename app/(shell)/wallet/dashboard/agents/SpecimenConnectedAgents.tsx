@@ -393,11 +393,11 @@ export function SpecimenConnectedAgents({
                   <span className="spec-meta-label">scopes</span>
                   <span>{a.scopes.map((s) => s.replace(/^wallet:/, "")).join(" · ")}</span>
                   <span className="spec-meta-label">connected</span>
-                  <span>{fmtAgo(a.connectedAt)}</span>
+                  <span suppressHydrationWarning>{fmtAgo(a.connectedAt)}</span>
                   <span className="spec-meta-label">last seen</span>
-                  <span>{fmtAgo(a.lastSeenAt)}</span>
+                  <span suppressHydrationWarning>{fmtAgo(a.lastSeenAt)}</span>
                   <span className="spec-meta-label">token</span>
-                  <span>{fmtUntil(a.tokenExpiresAt)}</span>
+                  <span suppressHydrationWarning>{fmtUntil(a.tokenExpiresAt)}</span>
                   <span className="spec-meta-label">transport</span>
                   <span>{a.webhookEnabled ? "webhook" : "poll"}</span>
                   <span className="spec-meta-label">access key</span>
@@ -512,9 +512,9 @@ export function SpecimenConnectedAgents({
                   </div>
                   <div className="spec-meta-grid">
                     <span className="spec-meta-label">issued</span>
-                    <span>{fmtAgo(s.createdAt)}</span>
+                    <span suppressHydrationWarning>{fmtAgo(s.createdAt)}</span>
                     <span className="spec-meta-label">expires</span>
-                    <span>{fmtUntil(s.expiresAt)}</span>
+                    <span suppressHydrationWarning>{fmtUntil(s.expiresAt)}</span>
                     <span className="spec-meta-label">per call</span>
                     <span>≤ {fmtUsd(perCall, 4)} / call</span>
                     <span className="spec-meta-label">total cap</span>
@@ -563,7 +563,7 @@ export function SpecimenConnectedAgents({
                   <span className={`spec-status-pill spec-status-pill-${p.status === "confirmed" ? "ok" : "pending"}`}>
                     {p.status}
                   </span>
-                  <span style={{ opacity: 0.55, minWidth: 60, textAlign: "right" }}>{fmtAgo(p.createdAt)}</span>
+                  <span suppressHydrationWarning style={{ opacity: 0.55, minWidth: 60, textAlign: "right" }}>{fmtAgo(p.createdAt)}</span>
                 </div>
               </div>
             ))
