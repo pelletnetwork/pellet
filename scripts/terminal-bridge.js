@@ -1,55 +1,103 @@
-commit 43ca231d8220eecf600a83ffde798c6c7466233c
-Author: myelectricfiles <268790358+myelectricfiles@users.noreply.github.com>
-Date:   Wed May 6 22:03:06 2026 -0500
+#!/usr/bin/env node
 
-    fix: reset terminal pty after 5s disconnect (sign-out resets banner)
-    
-    Tab switching reconnects instantly so pty is preserved. Sign-out
-    leaves the bridge disconnected long enough for the cleanup timer
-    to kill the pty, so sign-in gets a fresh banner.
-    
-    Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
+const { WebSocketServer } = require("ws");
+const pty = require("node-pty");
+const os = require("os");
+const path = require("path");
 
-diff --git a/scripts/terminal-bridge.js b/scripts/terminal-bridge.js
-index 8e45931..732758d 100755
---- a/scripts/terminal-bridge.js
-+++ b/scripts/terminal-bridge.js
-@@ -13,6 +13,7 @@ let scrollback = "";
- let interacted = false;
- let client = null;
- let sessionAddr = null;
-+let cleanupTimer = null;
- 
- function spawnPty() {
-   const onboarded = require("fs").existsSync(
-@@ -60,6 +61,11 @@ const wss = new WebSocketServer({ host: "127.0.0.1", port: PORT });
- console.log(`pellet terminal bridge listening on ws://localhost:${PORT}`);
- 
- wss.on("connection", (ws) => {
-+  if (cleanupTimer) {
-+    clearTimeout(cleanupTimer);
-+    cleanupTimer = null;
-+  }
-+
-   if (client) {
-     client.removeAllListeners?.();
-     client.close(4001, "replaced by new connection");
-@@ -106,6 +112,17 @@ wss.on("connection", (ws) => {
-   setTimeout(() => sendInit(), 200);
- 
-   ws.on("close", () => {
--    if (client === ws) client = null;
-+    if (client === ws) {
-+      client = null;
-+      cleanupTimer = setTimeout(() => {
-+        if (!client && term) {
-+          term.kill();
-+          term = null;
-+          scrollback = "";
-+          interacted = false;
-+          sessionAddr = null;
-+        }
-+      }, 5000);
-+    }
-   });
- });
+const PORT = parseInt(process.env.PELLET_TERMINAL_PORT || "7778", 10);
+const SHELL = process.env.SHELL || "/bin/zsh";
+const SCROLLBACK_BYTES = 16 * 1024;
+
+let term = null;
+let client = null;
+let scrollback = "";
+let sessionAddr = null;
+
+function spawn() {
+  if (term) return;
+  scrollback = "";
+  const t = pty.spawn(SHELL, [], {
+    name: "xterm-256color",
+    cols: 80,
+    rows: 24,
+    cwd: path.resolve(__dirname, ".."),
+    env: {
+      ...process.env,
+      TERM: "xterm-256color",
+      SHELL,
+      ZDOTDIR: path.resolve(__dirname, "pellet-shell"),
+    },
+  });
+  term = t;
+
+  t.onData((data) => {
+    if (term !== t) return;
+    scrollback += data;
+    if (scrollback.length > SCROLLBACK_BYTES * 2) {
+      scrollback = scrollback.slice(-SCROLLBACK_BYTES);
+    }
+    if (client?.readyState === 1) client.send(data);
+  });
+
+  t.onExit(() => {
+    if (term !== t) return;
+    term = null;
+    scrollback = "";
+    if (client?.readyState === 1) client.close();
+    client = null;
+  });
+}
+
+const wss = new WebSocketServer({ host: "127.0.0.1", port: PORT });
+
+wss.on("error", (err) => {
+  if (err.code === "EADDRINUSE") {
+    console.log(`terminal bridge: port ${PORT} in use, exiting`);
+    process.exit(0);
+  }
+  throw err;
+});
+
+wss.on("listening", () => {
+  console.log(`pellet terminal bridge ws://localhost:${PORT}`);
+});
+
+wss.on("connection", (ws) => {
+  if (client) {
+    client.removeAllListeners?.();
+    client.close(4001, "replaced");
+  }
+  client = ws;
+
+  ws.on("message", (msg) => {
+    const str = msg.toString();
+    try {
+      const parsed = JSON.parse(str);
+      if (parsed.type === "session") {
+        const addr = parsed.address || "";
+        if (sessionAddr && addr !== sessionAddr && term) {
+          term.kill();
+          term = null;
+          scrollback = "";
+        }
+        sessionAddr = addr;
+
+        const fresh = !term;
+        if (!term) spawn();
+        ws.send(JSON.stringify({ type: "init", fresh }));
+        if (!fresh && scrollback) ws.send(scrollback);
+        return;
+      }
+      if (parsed.type === "resize" && parsed.cols && parsed.rows) {
+        if (term) term.resize(parsed.cols, parsed.rows);
+        return;
+      }
+    } catch {}
+    if (term) term.write(str);
+  });
+
+  ws.on("close", () => {
+    if (client === ws) client = null;
+  });
+});

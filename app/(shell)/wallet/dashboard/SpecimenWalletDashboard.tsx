@@ -191,7 +191,6 @@ function SendModal({
               placeholder="0.00"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              autoFocus
             />
           </div>
 
@@ -513,7 +512,6 @@ function SwapModal({
                 setAmount(e.target.value);
                 setQuote(null);
               }}
-              autoFocus
             />
             <span className="spec-swap-input-symbol">{from.symbol}</span>
           </div>
@@ -677,18 +675,18 @@ export function SpecimenWalletDashboard({
     if (!el) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-    const targets = [
-      el.querySelector(".spec-page-header"),
-      ...el.querySelectorAll(".spec-kpi-stack > *"),
-      el.querySelector(".spec-cols"),
-    ].filter(Boolean);
+    const header = el.querySelector(".spec-page-header");
+    const kpis = el.querySelectorAll(".spec-kpi-stack > *");
+    const cols = el.querySelector(".spec-cols");
 
-    gsap.set(targets, { autoAlpha: 0, y: 14 });
+    const fadeTargets = [header, ...kpis].filter(Boolean);
+    gsap.set(fadeTargets, { autoAlpha: 0, y: 14 });
+    if (cols) gsap.set(cols, { opacity: 0, y: 14 });
 
     const tl = gsap.timeline({ defaults: { duration: 0.55, ease: "power2.out" } });
-    tl.to(el.querySelector(".spec-page-header")!, { autoAlpha: 1, y: 0 }, 0)
-      .to(el.querySelectorAll(".spec-kpi-stack > *"), { autoAlpha: 1, y: 0, stagger: 0.06 }, 0.08)
-      .to(el.querySelector(".spec-cols")!, { autoAlpha: 1, y: 0 }, 0.22);
+    tl.to(header!, { autoAlpha: 1, y: 0 }, 0)
+      .to(kpis, { autoAlpha: 1, y: 0, stagger: 0.06 }, 0.08)
+      .to(cols!, { opacity: 1, y: 0 }, 0.22);
 
     return () => { tl.kill(); };
   }, []);

@@ -1,11 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
-
-const WS_URL = `ws://localhost:${typeof window !== "undefined" ? (window as any).__PELLET_TERMINAL_PORT || 7778 : 7778}/`;
-const RECONNECT_DELAYS = [1000, 2000, 4000, 8000];
-
-type Status = "connecting" | "connected" | "disconnected";
+import { useEffect, useRef } from "react";
 
 function truncAddr(addr: string) {
   return addr.length <= 14 ? addr : addr.slice(0, 6) + "···" + addr.slice(-4);
@@ -24,7 +19,6 @@ function writeBanner(
   address: string,
   paired: number,
   agents: number,
-  sessions: number,
 ) {
   const { rst, bold, dim, blue } = ANSI;
 
@@ -38,15 +32,15 @@ function writeBanner(
     dim + "│ " + rst + pad(content, vis) + dim + " │" + rst;
   const empty = row("", 0);
 
-  const title = `${blue}${bold}>_${rst} ${bold}Pellet Wallet${rst} ${dim}(v0.1.0)${rst}`;
-  const titleVis = ">_ Pellet Wallet (v0.1.0)".length;
-
-  const label = (l: string, w = 12) => `${dim}${l.padEnd(w)}${rst}`;
-  const val = (v: string) => v;
+  const title = `${blue}${bold}>_${rst} ${bold}Pellet Agent${rst}`;
+  const titleVis = ">_ Pellet Agent".length;
 
   const addrStr = truncAddr(address);
   const pairedStr = `${paired} device${paired !== 1 ? "s" : ""}`;
   const agentStr = agents > 0 ? `${agents} connected` : "none";
+
+  const label = (l: string, w = 12) => `${dim}${l.padEnd(w)}${rst}`;
+  const val = (v: string) => v;
 
   const col2 = 28;
   const pair = (l1: string, v1: string, v1len: number, l2: string, v2: string, v2len: number) => {
@@ -64,8 +58,12 @@ function writeBanner(
     row(title, titleVis),
     empty,
     pair("network:", "tempo", 5, "paired:", pairedStr, pairedStr.length),
-    pair("address:", addrStr, addrStr.length, "agent:", agentStr, agentStr.length),
+    pair("wallet:", addrStr, addrStr.length, "agents:", agentStr, agentStr.length),
     bot,
+    "",
+    `  ${dim}connect your agent to this wallet.`,
+    `  it gets an address, a balance, and`,
+    `  the ability to pay as it works.${rst}`,
     "",
   ];
 
@@ -83,86 +81,41 @@ interface TerminalCardProps {
 
 export function TerminalCard({ address = "", paired = 0, agents = 0, sessions = 0 }: TerminalCardProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const termRef = useRef<any>(null);
-  const wsRef = useRef<WebSocket | null>(null);
-  const fitRef = useRef<any>(null);
-  const retryRef = useRef(0);
-  const addressRef = useRef(address);
-  addressRef.current = address;
-  const [status, setStatus] = useState<Status>("connecting");
-
-  const bannerClearedRef = useRef(false);
-  const showBannerRef = useRef(true);
-
-  const connect = useCallback(() => {
-    if (wsRef.current?.readyState === WebSocket.OPEN) return;
-
-    setStatus("connecting");
-    const ws = new WebSocket(WS_URL);
-    wsRef.current = ws;
-
-    ws.onopen = () => {
-      setStatus("connected");
-      retryRef.current = 0;
-      ws.send(JSON.stringify({ type: "session", address: addressRef.current }));
-      if (fitRef.current) {
-        fitRef.current.fit();
-        const term = termRef.current;
-        if (term) {
-          ws.send(JSON.stringify({ type: "resize", cols: term.cols, rows: term.rows }));
-        }
-      }
-    };
-
-    ws.onmessage = (e) => {
-      const term = termRef.current;
-      if (!term) return;
-
-      try {
-        const msg = JSON.parse(e.data);
-        if (msg.type === "init") {
-          if (!msg.fresh) {
-            showBannerRef.current = false;
-            bannerClearedRef.current = true;
-            term.write("\x1b[2J\x1b[H");
-            term.clear();
-          }
-          return;
-        }
-      } catch {}
-
-      term.write(e.data);
-    };
-
-    ws.onclose = () => {
-      setStatus("disconnected");
-      const delay = RECONNECT_DELAYS[Math.min(retryRef.current, RECONNECT_DELAYS.length - 1)];
-      retryRef.current++;
-      setTimeout(connect, delay);
-    };
-
-    ws.onerror = () => ws.close();
-  }, []);
+  const statusRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
-    if (!containerRef.current) return;
-    let disposed = false;
+    const root = containerRef.current;
+    if (!root) return;
 
-    async function init() {
+    let disposed = false;
+    let term: any;
+    let ws: WebSocket | null = null;
+    let fit: any;
+    let ro: ResizeObserver | null = null;
+
+    function setStatus(s: string) {
+      const el = statusRef.current;
+      if (!el) return;
+      el.dataset.status = s;
+      if (s === "connected") {
+        el.innerHTML = '<span class="spec-terminal-pulse"></span>LIVE';
+      } else {
+        el.textContent = s === "connecting" ? "CONNECTING" : "OFFLINE";
+      }
+    }
+
+    (async () => {
       const { Terminal } = await import("@xterm/xterm");
       const { FitAddon } = await import("@xterm/addon-fit");
       await import("@xterm/xterm/css/xterm.css");
 
       if (disposed) return;
 
-      const root = containerRef.current;
-      if (!root) return;
-
       const styles = getComputedStyle(root);
       const bg = styles.getPropertyValue("--term-bg").trim() || "#ffffff";
       const fg = styles.getPropertyValue("--term-fg").trim() || "#1a1a1a";
 
-      const term = new Terminal({
+      term = new Terminal({
         cursorBlink: true,
         fontSize: 13,
         lineHeight: 1.4,
@@ -171,83 +124,89 @@ export function TerminalCard({ address = "", paired = 0, agents = 0, sessions = 
         allowProposedApi: true,
       });
 
-      const fit = new FitAddon();
+      fit = new FitAddon();
       term.loadAddon(fit);
+      term.open(root);
+      fit.fit();
 
       try {
         const { WebglAddon } = await import("@xterm/addon-webgl");
         term.loadAddon(new WebglAddon());
       } catch {}
 
-      term.open(root);
-      fit.fit();
-      termRef.current = term;
-      fitRef.current = fit;
-
-      if (address) writeBanner(term, term.cols, address, paired, agents, sessions);
-
-      term.onData((data) => {
-        if (!bannerClearedRef.current && data.includes("\r")) {
-          bannerClearedRef.current = true;
-          term.write("\x1b[2J\x1b[H");
-          term.clear();
-        }
-        if (wsRef.current?.readyState === WebSocket.OPEN) {
-          wsRef.current.send(data);
-        }
-      });
-
-      term.onResize(({ cols, rows }) => {
-        if (wsRef.current?.readyState === WebSocket.OPEN) {
-          wsRef.current.send(JSON.stringify({ type: "resize", cols, rows }));
-        }
-      });
-
-      const ro = new ResizeObserver(() => fit.fit());
+      ro = new ResizeObserver(() => fit?.fit());
       ro.observe(root);
 
-      function syncTheme() {
-        if (!root) return;
-        const s = getComputedStyle(root);
-        const newBg = s.getPropertyValue("--term-bg").trim() || "#ffffff";
-        const newFg = s.getPropertyValue("--term-fg").trim() || "#1a1a1a";
-        term.options.theme = { background: newBg, foreground: newFg, cursor: newFg };
-      }
+      term.onData((data: string) => {
+        if (ws?.readyState === WebSocket.OPEN) ws.send(data);
+      });
+
+      term.onResize(({ cols, rows }: { cols: number; rows: number }) => {
+        if (ws?.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: "resize", cols, rows }));
+        }
+      });
 
       const shell = document.querySelector(".specimen-shell");
-      const mo = shell ? new MutationObserver(() => syncTheme()) : null;
-      if (shell) mo?.observe(shell, { attributes: true, attributeFilter: ["class"] });
-
-      connect();
-
-      return () => {
-        ro.disconnect();
-        mo?.disconnect();
-        term.dispose();
-      };
-    }
-
-    const cleanup = init();
-    return () => {
-      disposed = true;
-      cleanup.then((fn) => fn?.());
-      if (wsRef.current) {
-        wsRef.current.onclose = null;
-        wsRef.current.close();
-        wsRef.current = null;
+      if (shell) {
+        new MutationObserver(() => {
+          if (!root) return;
+          const s = getComputedStyle(root);
+          const newBg = s.getPropertyValue("--term-bg").trim() || "#ffffff";
+          const newFg = s.getPropertyValue("--term-fg").trim() || "#1a1a1a";
+          term.options.theme = { background: newBg, foreground: newFg, cursor: newFg };
+        }).observe(shell, { attributes: true, attributeFilter: ["class"] });
       }
-      bannerClearedRef.current = false;
-      showBannerRef.current = true;
+
+      setStatus("connecting");
+
+      ws = new WebSocket("ws://localhost:7778/");
+
+      ws.onopen = () => {
+
+        setStatus("connected");
+        ws!.send(JSON.stringify({ type: "session", address }));
+        fit.fit();
+        ws!.send(JSON.stringify({ type: "resize", cols: term.cols, rows: term.rows }));
+      };
+
+      let bannerDone = false;
+      ws.onmessage = (e) => {
+        try {
+          const msg = JSON.parse(e.data);
+          if (msg.type === "init") {
+            if (!bannerDone) {
+              writeBanner(term, term.cols, address, paired, agents);
+              bannerDone = true;
+            }
+            return;
+          }
+        } catch {}
+        term.write(e.data);
+      };
+
+      ws.onclose = () => setStatus("disconnected");
+      ws.onerror = () => ws?.close();
+
+      term.focus();
+    })();
+
+    return () => {
+
+      disposed = true;
+      if (ws) { ws.onclose = null; ws.close(); ws = null; }
+      if (ro) ro.disconnect();
+      if (term) term.dispose();
     };
-  }, [connect]);
+  }, [address, paired, agents, sessions]);
 
   return (
     <div className="spec-terminal-card">
       <div className="spec-terminal-head">
         <span className="spec-col-head-left">TERMINAL</span>
         <span className="spec-col-head-right">
-          <span className="spec-terminal-status" data-status={status}>
-            {status === "connected" ? "LIVE" : status === "connecting" ? "CONNECTING" : "OFFLINE"}
+          <span ref={statusRef} className="spec-terminal-status" data-status="connecting">
+            CONNECTING
           </span>
         </span>
       </div>
