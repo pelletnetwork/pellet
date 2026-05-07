@@ -214,9 +214,27 @@
   font-size: 10px;
   letter-spacing: 0.06em;
 }
-.spec-terminal-status[data-status="connected"] { opacity: 0.55; }
+.spec-terminal-status[data-status="connected"] { opacity: 0.55; display: flex; align-items: center; gap: 6px; }
 .spec-terminal-status[data-status="connecting"] { opacity: 0.4; }
 .spec-terminal-status[data-status="disconnected"] { opacity: 0.3; }
+
+.spec-terminal-pulse {
+  display: inline-block;
+  width: 6px;
+  min-width: 6px;
+  height: 6px;
+  min-height: 6px;
+  aspect-ratio: 1;
+  background: #4ade80;
+  flex-shrink: 0;
+  border-radius: 9999px !important;
+  animation: spec-pulse 2s ease-in-out infinite;
+}
+
+@keyframes spec-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
 
 .spec-terminal-body {
   flex: 1;
@@ -1658,5 +1676,100 @@
     grid-template-columns: 1fr;
     gap: 12px;
   }
+}
+
+/* ── Balance card flip ───────────────────────────────────────────────────── */
+
+.spec-kpi-card-flip {
+  cursor: pointer;
+  user-select: none;
+}
+.spec-kpi-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.spec-kpi-arrow {
+  display: flex;
+  align-items: center;
+  color: color-mix(in oklch, var(--fg) 35%, var(--bg));
+  transition: color 0.15s;
+}
+.spec-kpi-card-flip:hover .spec-kpi-arrow {
+  color: var(--fg);
+}
+
+/* ── Prompt card ────────────────────────────────────────────────────────── */
+
+.spec-prompt-card {
+  gap: 10px !important;
+}
+.spec-prompt-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.spec-prompt-viewall {
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: color-mix(in oklch, var(--fg) 30%, var(--bg));
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.spec-prompt-viewall:hover {
+  color: var(--fg);
+}
+.spec-prompt-cats {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.spec-prompt-cat {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 9px;
+  font-weight: 500;
+  font-family: inherit;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in oklch, var(--fg) 35%, var(--bg));
+  cursor: pointer;
+}
+.spec-prompt-cat:hover {
+  color: color-mix(in oklch, var(--fg) 65%, var(--bg));
+}
+.spec-prompt-cat-active {
+  color: var(--fg);
+}
+.spec-prompt-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  flex: 1;
+}
+.spec-prompt-text {
+  flex: 1;
+  font-size: 11px;
+  letter-spacing: 0.01em;
+  color: color-mix(in oklch, var(--fg) 55%, var(--bg));
+  line-height: 1.6;
+}
+.spec-prompt-action {
+  background: none;
+  border: none;
+  color: color-mix(in oklch, var(--fg) 28%, var(--bg));
+  cursor: pointer;
+  padding: 3px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  margin-top: 1px;
+}
+.spec-prompt-action:hover {
+  color: var(--fg);
 }
 

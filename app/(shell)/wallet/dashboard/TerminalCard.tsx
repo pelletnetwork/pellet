@@ -248,6 +248,7 @@ export function TerminalCard({ address = "", paired = 0, agents = 0, sessions = 
         <span className="spec-col-head-left">TERMINAL</span>
         <span className="spec-col-head-right">
           <span className="spec-terminal-status" data-status={status}>
+            {status === "connected" && <span className="spec-terminal-pulse" />}
             {status === "connected" ? "LIVE" : status === "connecting" ? "CONNECTING" : "OFFLINE"}
           </span>
         </span>

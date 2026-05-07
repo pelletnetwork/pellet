@@ -3,6 +3,8 @@ import { registerBalanceTool } from "./tools/balance";
 import { registerThreadTools } from "./tools/thread";
 import { registerSpendTools } from "./tools/spend";
 import { registerMppRequestTool } from "./tools/mpp-request";
+import { registerMppServicesTool } from "./tools/mpp-services";
+import { registerSessionInfoTool } from "./tools/session-info";
 import type { McpAuthInfo } from "./auth";
 
 // Build a per-request McpServer with auth bound via closure. We don't
@@ -12,10 +14,15 @@ import type { McpAuthInfo } from "./auth";
 //
 // Tools registered:
 //   * wallet.balance.get             (scope: wallet:read)
+//   * wallet.session.info            (scope: wallet:read)
 //   * wallet.thread.post             (scope: wallet:chat)
 //   * wallet.thread.list             (scope: wallet:chat)
+//   * wallet.thread.await            (scope: wallet:chat)
+//   * wallet.thread.signal_typing    (scope: wallet:chat)
 //   * wallet.spend.request_approval  (scope: wallet:spend:request)
-//   * wallet.spend.execute           (scope: wallet:spend:authorized) — v1 stub
+//   * wallet.spend.execute           (scope: wallet:spend:authorized)
+//   * wallet.mpp.request             (scope: wallet:spend:authorized)
+//   * wallet.mpp.services            (scope: wallet:read)
 //
 // Add new tools here by importing their register* function and calling it
 // with (server, () => auth).
@@ -42,6 +49,8 @@ export function buildPelletMcpServer(auth: McpAuthInfo): McpServer {
   registerThreadTools(server, getAuth);
   registerSpendTools(server, getAuth);
   registerMppRequestTool(server, getAuth);
+  registerMppServicesTool(server, getAuth);
+  registerSessionInfoTool(server, getAuth);
 
   return server;
 }

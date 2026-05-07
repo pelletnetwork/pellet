@@ -138,13 +138,16 @@ function SendModal({
     setSending(true);
     setError(null);
     try {
-      const res = await fetch("/api/wallet/send", {
+      const parsed = parseFloat(amount);
+      if (isNaN(parsed) || parsed <= 0) { setError("Invalid amount"); setSending(false); return; }
+      const amountWei = BigInt(Math.round(parsed * 1e6)).toString();
+      const res = await fetch("/api/wallet/pay", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          token: from.address,
+          token: from.address as `0x${string}`,
           to,
-          amount,
+          amount_wei: amountWei,
         }),
       });
       const d = await res.json();
@@ -226,6 +229,95 @@ function SendModal({
             {sending ? "SENDING…" : "SEND"}
           </button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+const PROMPT_CATEGORIES = [
+  {
+    label: "Research",
+    prompts: [
+      "find the latest funding rounds in AI infrastructure this week.",
+      "compare gas fees across L2s for a $500 stablecoin transfer.",
+    ],
+  },
+  {
+    label: "AI",
+    prompts: [
+      "summarize this PDF and extract the key financial terms.",
+      "generate a competitor analysis for on-chain payment protocols.",
+    ],
+  },
+  {
+    label: "Travel",
+    prompts: [
+      "find flights from SFO to NYC next Friday under $300.",
+      "book a hotel near Times Square for 2 nights, budget $200/night.",
+    ],
+  },
+  {
+    label: "Web",
+    prompts: [
+      "scrape the pricing page of three competitor products and compare.",
+      "monitor this URL for changes and alert me when the status updates.",
+    ],
+  },
+];
+
+function PromptCard() {
+  const [catIdx, setCatIdx] = useState(0);
+  const [promptIdx, setPromptIdx] = useState(0);
+  const cat = PROMPT_CATEGORIES[catIdx];
+  const prompt = cat.prompts[promptIdx];
+
+  function cycle() {
+    const nextP = promptIdx + 1;
+    if (nextP < cat.prompts.length) {
+      setPromptIdx(nextP);
+    } else {
+      const nextC = (catIdx + 1) % PROMPT_CATEGORIES.length;
+      setCatIdx(nextC);
+      setPromptIdx(0);
+    }
+  }
+
+  function copy() {
+    navigator.clipboard.writeText(prompt);
+  }
+
+  return (
+    <div className="spec-kpi-card spec-prompt-card">
+      <div className="spec-prompt-head">
+        <div className="spec-prompt-cats">
+          {PROMPT_CATEGORIES.map((c, i) => (
+            <button
+              key={c.label}
+              type="button"
+              className={`spec-prompt-cat${i === catIdx ? " spec-prompt-cat-active" : ""}`}
+              onClick={() => { setCatIdx(i); setPromptIdx(0); }}
+            >
+              {c.label}
+            </button>
+          ))}
+        </div>
+        <Link href="/wallet/dashboard/services" className="spec-prompt-viewall">
+          View all
+        </Link>
+      </div>
+      <div className="spec-prompt-row">
+        <button type="button" className="spec-prompt-action" onClick={cycle} title="Next prompt">
+          <svg width="8" height="8" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true">
+            <path d="M3 1l4 4-4 4" />
+          </svg>
+        </button>
+        <span className="spec-prompt-text">{prompt}</span>
+        <button type="button" className="spec-prompt-action" onClick={copy} title="Copy">
+          <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.2" aria-hidden="true">
+            <rect x="4" y="4" width="8" height="8" rx="1" />
+            <path d="M10 4V2.5A.5.5 0 009.5 2H2.5a.5.5 0 00-.5.5v7a.5.5 0 00.5.5H4" />
+          </svg>
+        </button>
       </div>
     </div>
   );
@@ -533,6 +625,7 @@ export function SpecimenWalletDashboard({
   const [swapFrom, setSwapFrom] = useState<Balance | null>(null);
   const [sendFrom, setSendFrom] = useState<Balance | null>(null);
   const [dripping, setDripping] = useState(false);
+  const [showSent, setShowSent] = useState(false);
 
   const totalUsd = balances.reduce((acc, b) => acc + Number(b.display), 0);
   const usdce = balances.find((b) => b.symbol === "USDC.e");
@@ -693,30 +786,56 @@ export function SpecimenWalletDashboard({
       </section>
 
       <section className="spec-kpi-stack">
-        <div className="spec-kpi-card">
-          <span className="spec-strip-label">TOTAL BALANCE</span>
-          <span className="spec-strip-value spec-strip-value-lg">{fmtUsd(totalUsd)}</span>
-          {testnet && (
-            <button
-              type="button"
-              className="spec-faucet-btn"
-              disabled={dripping}
-              onClick={async () => {
-                setDripping(true);
-                try {
-                  const res = await fetch("/api/wallet/faucet", { method: "POST" });
-                  const d = await res.json();
-                  if (!res.ok) { alert(d.error ?? "Faucet failed"); return; }
-                  window.location.reload();
-                } catch {
-                  alert("Faucet request failed");
-                } finally {
-                  setDripping(false);
-                }
-              }}
-            >
-              {dripping ? "DRIPPING…" : "TESTNET FAUCET"}
-            </button>
+        <div className="spec-kpi-card spec-kpi-card-flip" onClick={() => setShowSent((v) => !v)}>
+          {!showSent ? (
+            <>
+              <div className="spec-kpi-card-head">
+                <span className="spec-strip-label">TOTAL BALANCE</span>
+                <span className="spec-kpi-arrow">
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.2"><path d="M3 1l4 4-4 4" /></svg>
+                </span>
+              </div>
+              <span className="spec-strip-value spec-strip-value-lg">{fmtUsd(totalUsd)}</span>
+              {testnet && (
+                <button
+                  type="button"
+                  className="spec-faucet-btn"
+                  disabled={dripping}
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    setDripping(true);
+                    try {
+                      const res = await fetch("/api/wallet/faucet", { method: "POST" });
+                      const d = await res.json();
+                      if (!res.ok) { alert(d.error ?? "Faucet failed"); return; }
+                      window.location.reload();
+                    } catch {
+                      alert("Faucet request failed");
+                    } finally {
+                      setDripping(false);
+                    }
+                  }}
+                >
+                  {dripping ? "DRIPPING…" : "TESTNET FAUCET"}
+                </button>
+              )}
+            </>
+          ) : (
+            <>
+              <div className="spec-kpi-card-head">
+                <span className="spec-strip-label">SENT · 30D</span>
+                <span className="spec-kpi-arrow spec-kpi-arrow-back">
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.2"><path d="M7 1l-4 4 4 4" /></svg>
+                </span>
+              </div>
+              <span className="spec-strip-value spec-strip-value-md">{fmtUsdCompact(sent30d)}</span>
+              <span className="spec-strip-sub">
+                <span>{sent30dCount} settlement{sent30dCount === 1 ? "" : "s"}</span>
+                <span className="spec-strip-sub-faint">
+                  {sent30dCount > 0 ? `avg ${fmtUsd(sent30dAvg, 4)}` : "—"}
+                </span>
+              </span>
+            </>
           )}
         </div>
         <div className="spec-kpi-card spec-balances-card">
@@ -766,16 +885,7 @@ export function SpecimenWalletDashboard({
             ))
           )}
         </div>
-        <div className="spec-kpi-card">
-          <span className="spec-strip-label">SENT · 30D</span>
-          <span className="spec-strip-value spec-strip-value-md">{fmtUsdCompact(sent30d)}</span>
-          <span className="spec-strip-sub">
-            <span>{sent30dCount} settlement{sent30dCount === 1 ? "" : "s"}</span>
-            <span className="spec-strip-sub-faint">
-              {sent30dCount > 0 ? `avg ${fmtUsd(sent30dAvg, 4)}` : "—"}
-            </span>
-          </span>
-        </div>
+        <PromptCard />
         <div className="spec-kpi-card">
           <div className="spec-col-head">
             <span className="spec-col-head-left">KEYS &amp; DEVICES</span>

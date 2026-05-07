@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireSession } from "@/lib/wallet/bearer-auth";
+import { requireSessionOrCookie } from "@/lib/wallet/bearer-auth";
 import { executePayment } from "@/lib/wallet/execute-payment";
 import { isAddress } from "viem";
 import { rateLimit } from "@/lib/rate-limit";
@@ -16,7 +16,7 @@ type PayBody = {
 };
 
 export async function POST(req: Request) {
-  const resolved = await requireSession(req, { requireOnChainAuthorize: true });
+  const resolved = await requireSessionOrCookie(req, { requireOnChainAuthorize: true });
   if (resolved instanceof NextResponse) return resolved;
   const { session, user } = resolved;
 
