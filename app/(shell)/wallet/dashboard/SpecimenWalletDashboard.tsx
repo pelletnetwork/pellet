@@ -955,6 +955,7 @@ export function SpecimenWalletDashboard({
       </section>
 
     </div>
+    </>
   );
 }
 
@@ -1114,6 +1115,5 @@ function RightRail({
         </div>
       )}
     </div>
-    </>
   );
 }
