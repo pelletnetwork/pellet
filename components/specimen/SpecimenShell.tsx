@@ -63,7 +63,7 @@ function TopBar({
             {link.label}
           </Link>
         ))}
-        {!isWalletApp && <ThemeToggleButton dark={dark} onToggle={onToggleTheme} />}
+        <ThemeToggleButton dark={dark} onToggle={onToggleTheme} />
         {!isSignIn && !isWalletApp && (
           <button
             type="button"
