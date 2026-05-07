@@ -24,11 +24,13 @@ function Logo() {
 
 export function Nav() {
   const pathname = usePathname();
-  if (pathname === "/" || pathname === "/wallet") return null;
+  if (pathname === "/") return null;
   return <NavContent />;
 }
 
 function NavContent() {
+  const pathname = usePathname();
+  const isWallet = pathname.startsWith("/wallet");
   const [open, setOpen] = useState(false);
   const [systemStatus, setSystemStatus] = useState<"ok" | "drift" | "fail" | "unknown">("unknown");
 
@@ -48,17 +50,19 @@ function NavContent() {
       <div className="nav-inner">
         <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
           <Logo />
-          <nav className="nav-links">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="nav-link"
-              >
-                <span className="nav-link-label">{link.label}</span>
-              </Link>
-            ))}
-          </nav>
+          {!isWallet && (
+            <nav className="nav-links">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="nav-link"
+                >
+                  <span className="nav-link-label">{link.label}</span>
+                </Link>
+              ))}
+            </nav>
+          )}
         </div>
 
         <div className="nav-right" style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -86,24 +90,26 @@ function NavContent() {
           </Link>
         </div>
 
-        <button className="nav-mobile-toggle" onClick={() => setOpen((o) => !o)} aria-label="Toggle menu">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5">
-            {open ? (
-              <>
-                <line x1="4" y1="4" x2="16" y2="16" />
-                <line x1="16" y1="4" x2="4" y2="16" />
-              </>
-            ) : (
-              <>
-                <line x1="3" y1="5" x2="17" y2="5" />
-                <line x1="3" y1="10" x2="17" y2="10" />
-                <line x1="3" y1="15" x2="17" y2="15" />
-              </>
-            )}
-          </svg>
-        </button>
+        {!isWallet && (
+          <button className="nav-mobile-toggle" onClick={() => setOpen((o) => !o)} aria-label="Toggle menu">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5">
+              {open ? (
+                <>
+                  <line x1="4" y1="4" x2="16" y2="16" />
+                  <line x1="16" y1="4" x2="4" y2="16" />
+                </>
+              ) : (
+                <>
+                  <line x1="3" y1="5" x2="17" y2="5" />
+                  <line x1="3" y1="10" x2="17" y2="10" />
+                  <line x1="3" y1="15" x2="17" y2="15" />
+                </>
+              )}
+            </svg>
+          </button>
+        )}
 
-        {open ? (
+        {open && !isWallet ? (
           <nav className="nav-mobile-menu">
             {navLinks.map((link) => (
               <Link
