@@ -65,30 +65,32 @@ function NavContent() {
           )}
         </div>
 
-        <div className="nav-right" style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <Link
-            href="/status"
-            className="nav-status"
-            aria-label="System status"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              fontFamily: "var(--font-mono)",
-              fontSize: 11,
-              color: "var(--color-text-tertiary)",
-              textDecoration: "none",
-            }}
-          >
-            <span
-              className="status-dot"
-              style={systemStatus === "drift" || systemStatus === "fail" ? { background: "var(--color-warning)" } : undefined}
-            />
-            <span className="nav-status-text">
-              {systemStatus === "ok" || systemStatus === "unknown" ? "operational" : systemStatus === "drift" ? "drift" : "incident"}
-            </span>
-          </Link>
-        </div>
+        {!isWallet && (
+          <div className="nav-right" style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <Link
+              href="/status"
+              className="nav-status"
+              aria-label="System status"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                fontFamily: "var(--font-mono)",
+                fontSize: 11,
+                color: "var(--color-text-tertiary)",
+                textDecoration: "none",
+              }}
+            >
+              <span
+                className="status-dot"
+                style={systemStatus === "drift" || systemStatus === "fail" ? { background: "var(--color-warning)" } : undefined}
+              />
+              <span className="nav-status-text">
+                {systemStatus === "ok" || systemStatus === "unknown" ? "operational" : systemStatus === "drift" ? "drift" : "incident"}
+              </span>
+            </Link>
+          </div>
+        )}
 
         {!isWallet && (
           <button className="nav-mobile-toggle" onClick={() => setOpen((o) => !o)} aria-label="Toggle menu">
