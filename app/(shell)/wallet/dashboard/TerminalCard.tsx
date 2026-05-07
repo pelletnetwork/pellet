@@ -11,6 +11,8 @@ const ANSI = {
   bold: "\x1b[1m",
   dim: "\x1b[2m",
   blue: "\x1b[38;5;67m",
+  cyan: "\x1b[38;5;109m",
+  white: "\x1b[97m",
 } as const;
 
 function writeBanner(
@@ -60,15 +62,120 @@ function writeBanner(
     pair("network:", "tempo", 5, "paired:", pairedStr, pairedStr.length),
     pair("wallet:", addrStr, addrStr.length, "agents:", agentStr, agentStr.length),
     bot,
-    "",
-    `  ${dim}connect your agent to this wallet.`,
-    `  it gets an address, a balance, and`,
-    `  the ability to pay as it works.${rst}`,
-    "",
   ];
 
   for (const line of lines) {
     term.writeln(line);
+  }
+}
+
+function buildOnboardText(address: string): string[] {
+  const { rst, bold, dim, blue, cyan, white } = ANSI;
+
+  return [
+    `  ${white}${bold}welcome to pellet.${rst}`,
+    "",
+    `  ${dim}your wallet is live on tempo. here's what just happened:${rst}`,
+    "",
+    `  ${cyan}1.${rst} ${dim}your passkey generated a P-256 key pair on this device${rst}`,
+    `  ${cyan}2.${rst} ${dim}we derived your tempo address from that public key${rst}`,
+    `  ${cyan}3.${rst} ${dim}no seed phrase, no private key export — your device IS the key${rst}`,
+    "",
+    `  ${dim}your address:${rst} ${bold}${address}${rst}`,
+    "",
+    `  ${dim}─────────────────────────────────────────${rst}`,
+    "",
+    `  ${white}${bold}next: connect an agent.${rst}`,
+    "",
+    `  ${dim}pellet turns your wallet into something your AI can use.${rst}`,
+    `  ${dim}any agent that speaks MCP can connect — claude code, chatgpt,${rst}`,
+    `  ${dim}cursor, gemini, or anything custom.${rst}`,
+    "",
+    `  ${dim}for ${rst}${bold}claude code${rst}${dim}, run this in a separate terminal:${rst}`,
+    "",
+    `  ${cyan}  $ claude mcp add pellet --transport http ${blue}https://pellet.network/mcp${rst}`,
+    "",
+    `  ${dim}for ${rst}${bold}claude.ai${rst}${dim} or ${rst}${bold}chatgpt${rst}${dim}:${rst}`,
+    "",
+    `  ${dim}  settings → connectors → add → paste the URL:${rst}`,
+    `  ${cyan}  https://pellet.network/mcp${rst}`,
+    "",
+    `  ${dim}when your agent first connects, an OAuth popup will ask you to${rst}`,
+    `  ${dim}approve its permissions. you choose what it can do:${rst}`,
+    "",
+    `  ${cyan}•${rst} ${dim}read${rst}       ${dim}— check balances and transaction history${rst}`,
+    `  ${cyan}•${rst} ${dim}chat${rst}       ${dim}— send messages through the wallet${rst}`,
+    `  ${cyan}•${rst} ${dim}spend${rst}      ${dim}— pay for APIs and services (with limits you set)${rst}`,
+    "",
+    `  ${dim}─────────────────────────────────────────${rst}`,
+    "",
+    `  ${white}${bold}what happens after you connect:${rst}`,
+    "",
+    `  ${cyan}1.${rst} ${dim}your agent gets a session token scoped to your wallet${rst}`,
+    `  ${cyan}2.${rst} ${dim}you set a spend budget — per-session or per-service${rst}`,
+    `  ${cyan}3.${rst} ${dim}the agent can discover and pay for APIs as it works${rst}`,
+    `  ${cyan}4.${rst} ${dim}every transaction is logged here in your dashboard${rst}`,
+    "",
+    `  ${dim}your agent never sees your private key. it gets a scoped${rst}`,
+    `  ${dim}session that you can revoke at any time.${rst}`,
+    "",
+    `  ${dim}─────────────────────────────────────────${rst}`,
+    "",
+    `  ${white}${bold}this terminal is yours.${rst}`,
+    "",
+    `  ${dim}this is a fully functional shell running on your machine.${rst}`,
+    `  ${dim}you can use it the same way you'd use any terminal —${rst}`,
+    `  ${dim}run commands, launch claude code, codex, hermes, or any${rst}`,
+    `  ${dim}CLI agent directly from here.${rst}`,
+    "",
+    `  ${dim}everything your agent does through this wallet is visible${rst}`,
+    `  ${dim}in the dashboard to your right.${rst}`,
+    "",
+    `  ${dim}─────────────────────────────────────────${rst}`,
+    "",
+    `  ${dim}visit${rst} ${cyan}/wallet/onboard${rst} ${dim}for agent-specific setup guides${rst}`,
+    `  ${dim}or connect your first agent and come back here.${rst}`,
+    "",
+  ];
+}
+
+async function typeLines(
+  term: any,
+  lines: string[],
+  signal: AbortSignal,
+) {
+  const delay = (ms: number) =>
+    new Promise<void>((r) => {
+      const id = setTimeout(r, ms);
+      signal.addEventListener("abort", () => { clearTimeout(id); r(); }, { once: true });
+    });
+
+  for (const line of lines) {
+    if (signal.aborted) return;
+
+    if (line === "") {
+      term.writeln("");
+      await delay(80);
+      continue;
+    }
+
+    // Split ANSI sequences from visible characters so we can type
+    // visible chars one at a time while writing escape codes instantly.
+    const parts = line.split(/(\x1b\[[^m]*m)/);
+    for (const part of parts) {
+      if (signal.aborted) return;
+      if (part.startsWith("\x1b[")) {
+        term.write(part);
+      } else {
+        for (const ch of part) {
+          if (signal.aborted) return;
+          term.write(ch);
+          await delay(12);
+        }
+      }
+    }
+    term.writeln("");
+    await delay(40);
   }
 }
 
@@ -92,6 +199,7 @@ export function TerminalCard({ address = "", paired = 0, agents = 0, sessions = 
     let ws: WebSocket | null = null;
     let fit: any;
     let ro: ResizeObserver | null = null;
+    const typeAbort = new AbortController();
 
     function setStatus(s: string) {
       const el = statusRef.current;
@@ -138,6 +246,7 @@ export function TerminalCard({ address = "", paired = 0, agents = 0, sessions = 
       ro.observe(root);
 
       term.onData((data: string) => {
+        typeAbort.abort();
         if (ws?.readyState === WebSocket.OPEN) ws.send(data);
       });
 
@@ -163,7 +272,6 @@ export function TerminalCard({ address = "", paired = 0, agents = 0, sessions = 
       ws = new WebSocket("ws://localhost:7778/");
 
       ws.onopen = () => {
-
         setStatus("connected");
         ws!.send(JSON.stringify({ type: "session", address }));
         fit.fit();
@@ -178,6 +286,9 @@ export function TerminalCard({ address = "", paired = 0, agents = 0, sessions = 
             if (!bannerDone) {
               writeBanner(term, term.cols, address, paired, agents);
               bannerDone = true;
+              if (sessions === 0 && agents === 0) {
+                typeLines(term, buildOnboardText(address), typeAbort.signal);
+              }
             }
             return;
           }
@@ -192,8 +303,8 @@ export function TerminalCard({ address = "", paired = 0, agents = 0, sessions = 
     })();
 
     return () => {
-
       disposed = true;
+      typeAbort.abort();
       if (ws) { ws.onclose = null; ws.close(); ws = null; }
       if (ro) ro.disconnect();
       if (term) term.dispose();

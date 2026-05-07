@@ -1,4 +1,5 @@
 PROMPT='pellet %F{67}>_%f '
+PROMPT_EOL_MARK=""
 HISTFILE="${HOME}/.zsh_history"
 HISTSIZE=2000
 SAVEHIST=2000
