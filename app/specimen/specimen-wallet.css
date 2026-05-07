@@ -1704,72 +1704,90 @@
 .spec-prompt-card {
   gap: 10px !important;
 }
-.spec-prompt-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
 .spec-prompt-viewall {
-  font-size: 9px;
-  font-weight: 400;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-size: 11px;
   text-decoration: none;
-  color: color-mix(in oklch, var(--fg) 30%, var(--bg));
-  white-space: nowrap;
-  flex-shrink: 0;
+  color: inherit;
+  opacity: 0.55;
 }
 .spec-prompt-viewall:hover {
-  color: var(--fg);
+  opacity: 1;
 }
 .spec-prompt-cats {
   display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
+  gap: 12px;
 }
 .spec-prompt-cat {
   background: none;
   border: none;
   padding: 0;
-  font-size: 9px;
-  font-weight: 500;
+  font-size: 10px;
+  font-weight: 400;
   font-family: inherit;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: color-mix(in oklch, var(--fg) 35%, var(--bg));
+  color: color-mix(in oklch, var(--fg) 30%, var(--bg));
   cursor: pointer;
+  transition: color 0.12s;
 }
 .spec-prompt-cat:hover {
-  color: color-mix(in oklch, var(--fg) 65%, var(--bg));
+  color: color-mix(in oklch, var(--fg) 60%, var(--bg));
 }
 .spec-prompt-cat-active {
   color: var(--fg);
+  font-weight: 500;
+}
+.spec-prompt-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  flex: 1;
 }
 .spec-prompt-row {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
-  flex: 1;
+  gap: 6px;
+  padding: 7px 0;
+  border-top: 1px solid color-mix(in oklch, var(--fg) 5%, var(--bg));
+}
+.spec-prompt-row:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+.spec-prompt-row:last-child {
+  padding-bottom: 0;
+}
+.spec-prompt-chevron {
+  flex-shrink: 0;
+  color: color-mix(in oklch, var(--fg) 20%, var(--bg));
+  margin-top: 4px;
 }
 .spec-prompt-text {
   flex: 1;
   font-size: 11px;
   letter-spacing: 0.01em;
-  color: color-mix(in oklch, var(--fg) 55%, var(--bg));
-  line-height: 1.6;
+  color: color-mix(in oklch, var(--fg) 50%, var(--bg));
+  line-height: 1.5;
 }
 .spec-prompt-action {
   background: none;
   border: none;
-  color: color-mix(in oklch, var(--fg) 28%, var(--bg));
+  color: color-mix(in oklch, var(--fg) 20%, var(--bg));
   cursor: pointer;
-  padding: 3px;
+  padding: 2px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  margin-top: 1px;
+  margin-top: 4px;
+  transition: color 0.12s;
 }
 .spec-prompt-action:hover {
   color: var(--fg);
+}
+.spec-prompt-foot {
+  margin-top: auto;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: color-mix(in oklch, var(--fg) 30%, var(--bg));
 }
 
