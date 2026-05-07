@@ -24,6 +24,7 @@ function TopBar({
 }) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const isSignIn = pathname === "/wallet/sign-in" || pathname === "/wallet";
+  const isWalletApp = pathname.startsWith("/wallet/dashboard");
 
   useEffect(() => {
     setMobileNavOpen(false);
@@ -52,7 +53,7 @@ function TopBar({
         aria-label="Pellet sections"
       />
       <div className="spec-topbar-actions">
-        {!isSignIn && NAV_LINKS.map((link) => (
+        {!isSignIn && !isWalletApp && NAV_LINKS.map((link) => (
           <Link
             key={link.href}
             href={link.href}
@@ -62,8 +63,8 @@ function TopBar({
             {link.label}
           </Link>
         ))}
-        <ThemeToggleButton dark={dark} onToggle={onToggleTheme} />
-        {!isSignIn && (
+        {!isWalletApp && <ThemeToggleButton dark={dark} onToggle={onToggleTheme} />}
+        {!isSignIn && !isWalletApp && (
           <button
             type="button"
             className="spec-mobile-nav-toggle"
