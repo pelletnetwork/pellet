@@ -53,21 +53,21 @@ function TopBar({
         aria-label="Pellet sections"
       />
       <div className="spec-topbar-actions">
-        {!isSignIn && !isWalletApp && NAV_LINKS.map((link) => (
+        {!isSignIn && NAV_LINKS.map((link) => (
           <Link
             key={link.href}
             href={link.href}
-            className={`spec-nav-link${pathname.startsWith(link.href) ? " spec-nav-link-active" : ""}`}
+            className={`spec-nav-link${pathname.startsWith(link.href) ? " spec-nav-link-active" : ""}${isWalletApp ? " spec-hide-mobile" : ""}`}
             onClick={() => setMobileNavOpen(false)}
           >
             {link.label}
           </Link>
         ))}
         <ThemeToggleButton dark={dark} onToggle={onToggleTheme} />
-        {!isSignIn && !isWalletApp && (
+        {!isSignIn && (
           <button
             type="button"
-            className="spec-mobile-nav-toggle"
+            className={`spec-mobile-nav-toggle${isWalletApp ? " spec-hide-mobile" : ""}`}
             aria-label={mobileNavOpen ? "Close navigation" : "Open navigation"}
             aria-expanded={mobileNavOpen}
             onClick={() => setMobileNavOpen((open) => !open)}

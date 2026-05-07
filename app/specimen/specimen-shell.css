@@ -556,6 +556,9 @@ body:has(.specimen-shell) main {
 }
 
 @media (max-width: 720px) {
+  .spec-hide-mobile {
+    display: none !important;
+  }
   .spec-status-strip {
     padding: 0 12px;
     height: 36px;
