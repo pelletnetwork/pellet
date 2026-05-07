@@ -87,7 +87,12 @@ export function TerminalCard({ address = "", paired = 0, agents = 0, sessions = 
   const wsRef = useRef<WebSocket | null>(null);
   const fitRef = useRef<any>(null);
   const retryRef = useRef(0);
+  const addressRef = useRef(address);
+  addressRef.current = address;
   const [status, setStatus] = useState<Status>("connecting");
+
+  const bannerClearedRef = useRef(false);
+  const showBannerRef = useRef(true);
 
   const connect = useCallback(() => {
     if (wsRef.current?.readyState === WebSocket.OPEN) return;
@@ -99,6 +104,7 @@ export function TerminalCard({ address = "", paired = 0, agents = 0, sessions = 
     ws.onopen = () => {
       setStatus("connected");
       retryRef.current = 0;
+      ws.send(JSON.stringify({ type: "session", address: addressRef.current }));
       if (fitRef.current) {
         fitRef.current.fit();
         const term = termRef.current;
@@ -109,7 +115,23 @@ export function TerminalCard({ address = "", paired = 0, agents = 0, sessions = 
     };
 
     ws.onmessage = (e) => {
-      termRef.current?.write(e.data);
+      const term = termRef.current;
+      if (!term) return;
+
+      try {
+        const msg = JSON.parse(e.data);
+        if (msg.type === "init") {
+          if (!msg.fresh) {
+            showBannerRef.current = false;
+            bannerClearedRef.current = true;
+            term.write("\x1b[2J\x1b[H");
+            term.clear();
+          }
+          return;
+        }
+      } catch {}
+
+      term.write(e.data);
     };
 
     ws.onclose = () => {
@@ -164,11 +186,9 @@ export function TerminalCard({ address = "", paired = 0, agents = 0, sessions = 
 
       if (address) writeBanner(term, term.cols, address, paired, agents, sessions);
 
-      let bannerCleared = false;
-
       term.onData((data) => {
-        if (!bannerCleared && data.includes("\r")) {
-          bannerCleared = true;
+        if (!bannerClearedRef.current && data.includes("\r")) {
+          bannerClearedRef.current = true;
           term.write("\x1b[2J\x1b[H");
           term.clear();
         }
@@ -211,7 +231,13 @@ export function TerminalCard({ address = "", paired = 0, agents = 0, sessions = 
     return () => {
       disposed = true;
       cleanup.then((fn) => fn?.());
-      wsRef.current?.close();
+      if (wsRef.current) {
+        wsRef.current.onclose = null;
+        wsRef.current.close();
+        wsRef.current = null;
+      }
+      bannerClearedRef.current = false;
+      showBannerRef.current = true;
     };
   }, [connect]);
 
